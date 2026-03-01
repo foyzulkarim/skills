@@ -1,0 +1,21 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "foyzulkarim-skills",
+  "description": "Personal Claude Code plugin marketplace by foyzulkarim",
+  "owner": {
+    "name": "foyzulkarim",
+    "email": ""
+  },
+  "plugins": [
+    {
+      "name": "keybindings-help",
+      "description": "Interactively customize Claude Code keyboard shortcuts in ~/.claude/keybindings.json",
+      "version": "1.0.0",
+      "author": {
+        "name": "foyzulkarim"
+      },
+      "source": "./plugins/keybindings-help",
+      "category": "productivity"
+    }
+  ]
+}
