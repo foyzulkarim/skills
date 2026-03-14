@@ -1,0 +1,7 @@
+{
+  "name": "planner",
+  "description": "Feature-level planning agent — structured conversation to uncover requirements, edge cases, and constraints before implementation",
+  "author": {
+    "name": "foyzulkarim"
+  }
+}

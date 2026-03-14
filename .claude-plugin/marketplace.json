@@ -1,10 +1,10 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "foyzulkarim-skills",
-  "description": "Personal Claude Code plugin marketplace by foyzulkarim",
+  "description": "Claude Code plugins for code review, project planning, and test-driven development workflows",
   "owner": {
     "name": "foyzulkarim",
-    "email": ""
+    "email": "foyzulkarim@gmail.com"
   },
   "plugins": [
     {
@@ -16,6 +16,86 @@
       },
       "source": "./plugins/keybindings-help",
       "category": "productivity"
+    },
+    {
+      "name": "review",
+      "description": "Comprehensive code review using 7 parallel agents — works with any repository, language, or framework",
+      "version": "1.0.0",
+      "author": {
+        "name": "foyzulkarim"
+      },
+      "source": "./plugins/review",
+      "category": "code-quality"
+    },
+    {
+      "name": "ts-check",
+      "description": "Deep TypeScript/JavaScript analysis using parallel agents with 2-level code tracing",
+      "version": "1.0.0",
+      "author": {
+        "name": "foyzulkarim"
+      },
+      "source": "./plugins/ts-check",
+      "category": "code-quality"
+    },
+    {
+      "name": "architect",
+      "description": "Strategic project planning — explores problem space, maps domain, decomposes into ordered phases",
+      "version": "1.0.0",
+      "author": {
+        "name": "foyzulkarim"
+      },
+      "source": "./plugins/architect",
+      "category": "planning"
+    },
+    {
+      "name": "planner",
+      "description": "Feature-level planning — structured conversation to uncover requirements, edge cases, and constraints",
+      "version": "1.0.0",
+      "author": {
+        "name": "foyzulkarim"
+      },
+      "source": "./plugins/planner",
+      "category": "planning"
+    },
+    {
+      "name": "spec-to-plan",
+      "description": "Transform a spec or requirements document into a phased project plan with dependency graph",
+      "version": "1.0.0",
+      "author": {
+        "name": "foyzulkarim"
+      },
+      "source": "./plugins/spec-to-plan",
+      "category": "planning"
+    },
+    {
+      "name": "plan-to-phases",
+      "description": "Expand a high-level project plan into detailed phase documents with domain briefings",
+      "version": "1.0.0",
+      "author": {
+        "name": "foyzulkarim"
+      },
+      "source": "./plugins/plan-to-phases",
+      "category": "planning"
+    },
+    {
+      "name": "taskgen",
+      "description": "Generate TDD-ready task specifications from plan artifacts with collaborative test planning",
+      "version": "1.0.0",
+      "author": {
+        "name": "foyzulkarim"
+      },
+      "source": "./plugins/taskgen",
+      "category": "development"
+    },
+    {
+      "name": "tdd",
+      "description": "Test-driven development — collaborative RED-GREEN-REFACTOR cycle, one test at a time",
+      "version": "1.0.0",
+      "author": {
+        "name": "foyzulkarim"
+      },
+      "source": "./plugins/tdd",
+      "category": "development"
     }
   ]
 }

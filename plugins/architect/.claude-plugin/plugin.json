@@ -1,0 +1,7 @@
+{
+  "name": "architect",
+  "description": "Strategic project planning agent — explores problem space, maps domain, decomposes into ordered phases with dependencies",
+  "author": {
+    "name": "foyzulkarim"
+  }
+}

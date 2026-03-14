@@ -1,0 +1,7 @@
+{
+  "name": "ts-check",
+  "description": "Deep TypeScript/JavaScript analysis using parallel agents with 2-level code tracing",
+  "author": {
+    "name": "foyzulkarim"
+  }
+}

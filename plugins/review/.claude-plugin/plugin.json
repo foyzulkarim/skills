@@ -1,0 +1,7 @@
+{
+  "name": "review",
+  "description": "Comprehensive code review using 7 parallel agents — works with any repository, language, or framework",
+  "author": {
+    "name": "foyzulkarim"
+  }
+}
