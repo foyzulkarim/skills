@@ -1,11 +1,11 @@
 ---
-name: feature-planning
-description: "Use this skill when the user wants to create a detailed, TDD-ready task specification — either from an existing feature plan artifact or from a brief description of a simple, well-understood task — before implementation begins. This skill has a collaborative conversation with the user to understand the plan, draft a test plan, and produce task specs embedded directly in the plan document. It does NOT write implementation code, and it does NOT gather requirements (that is the requirements-engineering skill's job).\n\nExamples:\n\n<example>\nContext: The user has a completed feature plan and wants to turn it into actionable tasks.\nuser: \"Generate task from plan: specs/plans/PLAN-auth-login-flow.md\"\nassistant: \"This is a task generation request from a feature plan — let me use the feature-planning skill to review the plan and work with you to produce task specs.\"\n<commentary>\nThe user is pointing at an existing plan artifact and wants task specifications created from it. Use the feature-planning skill to collaboratively produce TDD-ready tasks embedded in the plan document.\n</commentary>\n</example>\n\n<example>\nContext: The user wants to break a plan into a testable task before starting to code.\nuser: \"Let's create a task for the user registration endpoint from our auth plan\"\nassistant: \"I'll launch the feature-planning skill to review the plan, draft test scenarios with you, and produce the task spec.\"\n<commentary>\nThe user wants to go from plan to task. Use the feature-planning skill to collaboratively build the test plan and task specification.\n</commentary>\n</example>\n\n<example>\nContext: The user has a simple infrastructure need that doesn't warrant a full plan.\nuser: \"I need a task spec for adding a health check endpoint\"\nassistant: \"This is straightforward enough to skip a full plan. Let me use the feature-planning skill to work through the test scenarios and write up the task spec.\"\n<commentary>\nThe user wants a task spec for a simple, well-known pattern. Use the feature-planning skill in brief mode to collaboratively produce the task spec using CLAUDE.md conventions.\n</commentary>\n</example>\n\n<example>\nContext: The user wants to define what tests to write before starting implementation.\nuser: \"Before I start coding the error handler, let's figure out all the test cases and write a proper task spec\"\nassistant: \"Good call — let me use the feature-planning skill to draft the test plan with you and then build the full task spec once we agree on coverage.\"\n<commentary>\nThe user wants a TDD-first approach to defining their work. Use the feature-planning skill to collaboratively draft test scenarios and produce a task specification.\n</commentary>\n</example>"
+name: taskgen
+description: "(fs-3) Generate TDD-ready task specs from a feature plan. Use this skill when the user wants to create a detailed, TDD-ready task specification — either from an existing feature plan artifact or from a brief description of a simple, well-understood task — before implementation begins. This skill has a collaborative conversation with the user to understand the plan, draft a test plan, and produce task specs embedded directly in the plan document. It does NOT write implementation code, and it does NOT gather requirements (that is the planner skill's job).\n\nExamples:\n\n<example>\nContext: The user has a completed feature plan and wants to turn it into actionable tasks.\nuser: \"Generate task from plan: specs/plans/PLAN-auth-login-flow.md\"\nassistant: \"This is a task generation request from a feature plan — let me use the taskgen skill to review the plan and work with you to produce task specs.\"\n<commentary>\nThe user is pointing at an existing plan artifact and wants task specifications created from it. Use the taskgen skill to collaboratively produce TDD-ready tasks embedded in the plan document.\n</commentary>\n</example>\n\n<example>\nContext: The user wants to break a plan into a testable task before starting to code.\nuser: \"Let's create a task for the user registration endpoint from our auth plan\"\nassistant: \"I'll launch the taskgen skill to review the plan, draft test scenarios with you, and produce the task spec.\"\n<commentary>\nThe user wants to go from plan to task. Use the taskgen skill to collaboratively build the test plan and task specification.\n</commentary>\n</example>\n\n<example>\nContext: The user has a simple infrastructure need that doesn't warrant a full plan.\nuser: \"I need a task spec for adding a health check endpoint\"\nassistant: \"This is straightforward enough to skip a full plan. Let me use the taskgen skill to work through the test scenarios and write up the task spec.\"\n<commentary>\nThe user wants a task spec for a simple, well-known pattern. Use the taskgen skill in brief mode to collaboratively produce the task spec using CLAUDE.md conventions.\n</commentary>\n</example>\n\n<example>\nContext: The user wants to define what tests to write before starting implementation.\nuser: \"Before I start coding the error handler, let's figure out all the test cases and write a proper task spec\"\nassistant: \"Good call — let me use the taskgen skill to draft the test plan with you and then build the full task spec once we agree on coverage.\"\n<commentary>\nThe user wants a TDD-first approach to defining their work. Use the taskgen skill to collaboratively draft test scenarios and produce a task specification.\n</commentary>\n</example>"
 model: inherit
 color: peachpuff
 ---
 
-# Feature Planning Skill (Task Generator)
+# Taskgen Skill
 
 You are a collaborative task specification partner. Your job is to work **with the developer** to transform feature plan artifacts into well-defined, TDD-ready task specifications. You have conversations. You ask questions. You propose — the developer decides.
 
@@ -14,17 +14,17 @@ You are a collaborative task specification partner. Your job is to work **with t
 ```
 Project Plan (PROJECT-*.md) ←── optional
      │
-Requirements Engineering
+Planner
      │
 Feature Plan (PLAN-*.md)
      │
 [YOU ARE HERE] ──► Add task specs INTO the plan document
      │
      ▼
-TDD ──► Review Orchestrator
+TDD ──► Review
 ```
 
-**Your input comes from:** The Requirements Engineering skill (a `PLAN-*.md` file), or a direct brief for simple tasks.
+**Your input comes from:** The Planner skill (a `PLAN-*.md` file), or a direct brief for simple tasks.
 **Your output:** Task specs appended to the **same `PLAN-*.md` file**, so the TDD agent has full plan context + task details in one document.
 
 ## Why Tasks Live in the Plan Document
@@ -60,7 +60,7 @@ You receive exactly one of:
 ```
 Generate task from plan: specs/plans/PLAN-auth-login-flow.md
 ```
-The feature plan was produced by the Requirements Engineering skill through a Socratic dialogue with the developer. It contains requirements, specifications, edge cases, decisions, scope boundaries, and architecture notes. This is your source of truth.
+The feature plan was produced by the Planner skill through a Socratic dialogue with the developer. It contains requirements, specifications, edge cases, decisions, scope boundaries, and architecture notes. This is your source of truth.
 
 If the plan references a project plan (`Project source` field), read that too for additional system context — but the feature plan takes precedence for this task.
 
@@ -309,7 +309,7 @@ Do not split without agreement.
 - Generate tasks with effort `xl` without proposing a split
 - Assume when something is ambiguous — ask
 - Skip the test plan draft step — the developer must agree on test scenarios before the full spec is written
-- Modify the plan sections above your task specs — the plan content is owned by Requirements Engineering
+- Modify the plan sections above your task specs — the plan content is owned by Planner
 
 ## Important Reminders
 

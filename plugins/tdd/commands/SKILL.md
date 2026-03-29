@@ -1,6 +1,6 @@
 ---
 name: tdd
-description: "Use this skill when the user wants to implement a task specification using test-driven development. Supports two modes: collaborative (default, pauses at every red/green) and auto (runs through all tests autonomously). It does NOT plan features or generate task specs (those are upstream skills).\n\nArguments: Pass 'auto' to run autonomously without pausing for confirmation. Default is collaborative mode.\n\nExamples:\n\n<example>\nContext: The user has a task in a plan document and wants to implement it collaboratively.\nuser: \"Let's implement task T1 from specs/plans/PLAN-auth-login-flow.md\"\nassistant: \"This is a TDD implementation request — let me use the tdd skill to walk through the task one test at a time.\"\n<commentary>\nThe user wants collaborative TDD for a task embedded in a plan document. Use the tdd skill in default (collaborative) mode.\n</commentary>\n</example>\n\n<example>\nContext: The user wants the agent to implement the task autonomously.\nuser: \"/tdd auto T1 from specs/plans/PLAN-scaffolding-core-interfaces.md\"\nassistant: \"I'll run through the full TDD cycle for task T1 autonomously and present a summary when done.\"\n<commentary>\nThe user passed 'auto'. Use the tdd skill in autonomous mode — no pauses between tests.\n</commentary>\n</example>\n\n<example>\nContext: The user wants to start writing tests for an agreed task before coding.\nuser: \"Let's start the TDD cycle for the date range defaults task\"\nassistant: \"I'll use the tdd skill to review the task spec, then we'll work through the tests one at a time.\"\n<commentary>\nThe user wants to begin TDD implementation. Use the tdd skill in default collaborative mode.\n</commentary>\n</example>\n\n<example>\nContext: The user wants to resume a TDD session on a partially implemented task.\nuser: \"Let's continue implementing the error handler task — we got through the first two tests last time\"\nassistant: \"I'll use the tdd skill to pick up where we left off on the remaining test scenarios.\"\n<commentary>\nThe user wants to continue a TDD implementation. Use the tdd skill to review current state and resume the cycle from where it was left.\n</commentary>\n</example>"
+description: "(fs-4) Implement a task spec via RED-GREEN-REFACTOR, one test at a time. Use this skill when the user wants to implement a task specification using test-driven development. Supports two modes: collaborative (default, pauses at every red/green) and auto (runs through all tests autonomously). It does NOT plan features or generate task specs (those are upstream skills).\n\nArguments: Pass 'auto' to run autonomously without pausing for confirmation. Default is collaborative mode.\n\nExamples:\n\n<example>\nContext: The user has a task in a plan document and wants to implement it collaboratively.\nuser: \"Let's implement task T1 from specs/plans/PLAN-auth-login-flow.md\"\nassistant: \"This is a TDD implementation request — let me use the tdd skill to walk through the task one test at a time.\"\n<commentary>\nThe user wants collaborative TDD for a task embedded in a plan document. Use the tdd skill in default (collaborative) mode.\n</commentary>\n</example>\n\n<example>\nContext: The user wants the agent to implement the task autonomously.\nuser: \"/tdd auto T1 from specs/plans/PLAN-scaffolding-core-interfaces.md\"\nassistant: \"I'll run through the full TDD cycle for task T1 autonomously and present a summary when done.\"\n<commentary>\nThe user passed 'auto'. Use the tdd skill in autonomous mode — no pauses between tests.\n</commentary>\n</example>\n\n<example>\nContext: The user wants to start writing tests for an agreed task before coding.\nuser: \"Let's start the TDD cycle for the date range defaults task\"\nassistant: \"I'll use the tdd skill to review the task spec, then we'll work through the tests one at a time.\"\n<commentary>\nThe user wants to begin TDD implementation. Use the tdd skill in default collaborative mode.\n</commentary>\n</example>\n\n<example>\nContext: The user wants to resume a TDD session on a partially implemented task.\nuser: \"Let's continue implementing the error handler task — we got through the first two tests last time\"\nassistant: \"I'll use the tdd skill to pick up where we left off on the remaining test scenarios.\"\n<commentary>\nThe user wants to continue a TDD implementation. Use the tdd skill to review current state and resume the cycle from where it was left.\n</commentary>\n</example>"
 model: inherit
 color: lightgreen
 ---
@@ -35,11 +35,11 @@ You run through the entire TDD cycle without pausing for confirmation. You still
 ```
 Project Plan (PROJECT-*.md) ←── optional
      │
-Requirements Engineering
+Planner
      │
 Feature Plan (PLAN-*.md)
      │
-Feature Planning ──► Tasks embedded in PLAN-*.md
+Taskgen ──► Tasks embedded in PLAN-*.md
      │
 [YOU ARE HERE] ──► Read plan + task from one document
      │
@@ -47,11 +47,11 @@ Feature Planning ──► Tasks embedded in PLAN-*.md
 Working code + passing tests
      │
      ▼
-Review Orchestrator
+Review
 ```
 
-**Your input comes from:** A `PLAN-*.md` file that contains both the feature plan and task specs (added by the Feature Planning skill). You read one document and have full context.
-**Your output feeds into:** The Review Orchestrator skill, which checks the implementation against the plan and task spec. You don't call it — the developer does when they're ready.
+**Your input comes from:** A `PLAN-*.md` file that contains both the feature plan and task specs (added by the Taskgen skill). You read one document and have full context.
+**Your output feeds into:** The Review skill, which checks the implementation against the plan and task spec. You don't call it — the developer does when they're ready.
 
 ## Your Role
 
@@ -81,7 +81,7 @@ The plan document contains two parts:
 
 **1. The Feature Plan (upper half)** — requirements, decisions, edge cases, constraints, architecture notes. This is your background context. Do not modify this section.
 
-**2. The Tasks section (lower half)** — one or more `## Task T[n]` sections appended by the Feature Planning skill. Each task contains:
+**2. The Tasks section (lower half)** — one or more `## Task T[n]` sections appended by the Taskgen skill. Each task contains:
 - A **Test Plan** with test file paths, describe blocks, and test scenarios
 - **Implementation Notes** with layer info, pattern references, key decisions, and libraries
 - **Scope Boundaries** defining what is and isn't in play
@@ -168,7 +168,7 @@ Once every test scenario from the task spec has been through the RED → GREEN �
 2. **Review the task spec's scope boundaries** — confirm you haven't drifted.
 3. **Update the task's status** to `done` in the plan document.
 4. **Summarize what was done:** files created, files modified, all tests passing.
-5. Let the developer know the task is ready for review: "All tests are passing. When you're ready, run the Review Orchestrator against `specs/plans/PLAN-[slug].md`"
+5. Let the developer know the task is ready for review: "All tests are passing. When you're ready, run the Review against `specs/plans/PLAN-[slug].md`"
 
 ## You Must NOT
 
@@ -179,11 +179,11 @@ Once every test scenario from the task spec has been through the RED → GREEN �
 - Modify files in the task spec's "Must NOT modify" list (both modes)
 - Modify the plan sections of the document — only update the task's Status field (both modes)
 - Add requirements not in the task spec (both modes — in collaborative mode raise them as suggestions; in autonomous mode skip them entirely)
-- Call the Review Orchestrator — that's the developer's call when they're ready (both modes)
+- Call the Review — that's the developer's call when they're ready (both modes)
 
 ## Important Reminders
 
 - Read CLAUDE.md (if it exists) before writing any code — follow the project's conventions.
 - Today's date is available for session tracking when resuming.
 - Your output is working code with passing tests, not plans or reviews.
-- When all tests pass, point the developer to the Review Orchestrator skill as the next step.
+- When all tests pass, point the developer to the Review skill as the next step.

@@ -4,15 +4,20 @@ Feature-level planning through structured conversation. Uncovers requirements, e
 
 ## Features
 
-- **5-phase conversation:** Intent → Deep Dive → Edge Cases → Decisions → Plan Generation
+- **5-phase Socratic conversation:** Intent → Deep Dive → Edge Cases → Decisions → Plan Generation
 - Surfaces hidden requirements and failure modes
 - Captures explicit decisions with alternatives and rationale
 - Defines clear scope boundaries (in scope AND out of scope)
+- Supports two entry modes: from a project plan or standalone brief
 - Supports multi-session planning for large features
 
 ## Usage
 
 ```bash
+# Plan a feature from a project plan
+/planner feature F2 from specs/plans/PROJECT-inventory-api.md
+
+# Plan a standalone feature
 /planner
 ```
 
@@ -31,6 +36,7 @@ Saves plan artifacts to `/specs/plans/PLAN-[slug].md` with:
 - Detailed specifications with validation rules and error scenarios
 - Edge cases and failure modes with decisions
 - Scope boundaries and dependencies
+- Architecture notes
 
 ## Workflow
 
@@ -39,4 +45,5 @@ Saves plan artifacts to `/specs/plans/PLAN-[slug].md` with:
   /planner → feature-level plan  ← you are here
     /taskgen → TDD-ready task specs
       /tdd → implementation
+        /review → verification
 ```

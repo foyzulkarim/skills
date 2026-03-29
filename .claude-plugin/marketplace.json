@@ -8,38 +8,8 @@
   },
   "plugins": [
     {
-      "name": "keybindings-help",
-      "description": "Interactively customize Claude Code keyboard shortcuts in ~/.claude/keybindings.json",
-      "version": "1.0.0",
-      "author": {
-        "name": "foyzulkarim"
-      },
-      "source": "./plugins/keybindings-help",
-      "category": "productivity"
-    },
-    {
-      "name": "review",
-      "description": "Comprehensive code review using 7 parallel agents — works with any repository, language, or framework",
-      "version": "1.0.0",
-      "author": {
-        "name": "foyzulkarim"
-      },
-      "source": "./plugins/review",
-      "category": "code-quality"
-    },
-    {
-      "name": "ts-check",
-      "description": "Deep TypeScript/JavaScript analysis using parallel agents with 2-level code tracing",
-      "version": "1.0.0",
-      "author": {
-        "name": "foyzulkarim"
-      },
-      "source": "./plugins/ts-check",
-      "category": "code-quality"
-    },
-    {
       "name": "architect",
-      "description": "Strategic project planning — explores problem space, maps domain, decomposes into ordered phases",
+      "description": "(fs-1) Strategic project planning — 5-phase conversation to explore problem space, map domain, and decompose into ordered phases",
       "version": "1.0.0",
       "author": {
         "name": "foyzulkarim"
@@ -49,7 +19,7 @@
     },
     {
       "name": "planner",
-      "description": "Feature-level planning — structured conversation to uncover requirements, edge cases, and constraints",
+      "description": "(fs-2) Feature-level planning — 5-phase Socratic conversation to uncover requirements, edge cases, and constraints",
       "version": "1.0.0",
       "author": {
         "name": "foyzulkarim"
@@ -58,28 +28,8 @@
       "category": "planning"
     },
     {
-      "name": "spec-to-plan",
-      "description": "Transform a spec or requirements document into a phased project plan with dependency graph",
-      "version": "1.0.0",
-      "author": {
-        "name": "foyzulkarim"
-      },
-      "source": "./plugins/spec-to-plan",
-      "category": "planning"
-    },
-    {
-      "name": "plan-to-phases",
-      "description": "Expand a high-level project plan into detailed phase documents with domain briefings",
-      "version": "1.0.0",
-      "author": {
-        "name": "foyzulkarim"
-      },
-      "source": "./plugins/plan-to-phases",
-      "category": "planning"
-    },
-    {
       "name": "taskgen",
-      "description": "Generate TDD-ready task specifications from plan artifacts with collaborative test planning",
+      "description": "(fs-3) Generate TDD-ready task specifications from plan artifacts — tasks embedded directly in plan documents",
       "version": "1.0.0",
       "author": {
         "name": "foyzulkarim"
@@ -89,13 +39,23 @@
     },
     {
       "name": "tdd",
-      "description": "Test-driven development — collaborative RED-GREEN-REFACTOR cycle, one test at a time",
+      "description": "(fs-4) Test-driven development — collaborative or autonomous RED-GREEN-REFACTOR cycle, one test at a time",
       "version": "1.0.0",
       "author": {
         "name": "foyzulkarim"
       },
       "source": "./plugins/tdd",
       "category": "development"
+    },
+    {
+      "name": "review",
+      "description": "(fs-5) Comprehensive code review with triage-first approach — up to 14 specialized checks, works with any repo/language/framework",
+      "version": "1.0.0",
+      "author": {
+        "name": "foyzulkarim"
+      },
+      "source": "./plugins/review",
+      "category": "code-quality"
     }
   ]
 }

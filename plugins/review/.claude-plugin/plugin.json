@@ -1,6 +1,6 @@
 {
   "name": "review",
-  "description": "Comprehensive code review using 7 parallel agents — works with any repository, language, or framework",
+  "description": "(fs-5) Comprehensive code review with triage-first approach — up to 14 specialized checks, works with any repo/language/framework",
   "author": {
     "name": "foyzulkarim"
   }

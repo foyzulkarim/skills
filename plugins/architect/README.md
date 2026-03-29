@@ -4,10 +4,11 @@ Strategic project planning through collaborative conversation. Explores the prob
 
 ## Features
 
-- **6-phase conversation:** Vision → Domain → Constraints → Scope → Decomposition → Plan Generation
+- **5-phase conversation:** Project Scope → Domain Exploration → Architecture Direction → Phasing & Sequencing → Plan Generation
 - Produces phased project plans with dependency graphs
 - Focuses on outcomes, not implementation details
 - Identifies risk areas and critical paths
+- Supports two input modes: conversational (raw concept) or document-based (existing spec/PRD)
 - Respects developer decisions — suggests, doesn't prescribe
 
 ## Usage
@@ -26,12 +27,12 @@ Then describe your project concept or idea. The architect will guide you through
 
 ## Workflow
 
-This is the entry point of the development pipeline:
+This is the optional entry point of the development pipeline:
 
 ```
 /architect → phased plan  ← you are here
-  /plan-to-phases → detailed phase docs
-    /planner → feature-level plans (optional)
-      /taskgen → TDD-ready task specs
-        /tdd → implementation
+  /planner → feature-level plans
+    /taskgen → TDD-ready task specs
+      /tdd → implementation
+        /review → verification
 ```

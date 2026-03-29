@@ -1,6 +1,6 @@
 {
   "name": "tdd",
-  "description": "Test-driven development agent — collaborative RED-GREEN-REFACTOR cycle, one test at a time",
+  "description": "(fs-4) Test-driven development — collaborative or autonomous RED-GREEN-REFACTOR cycle, one test at a time",
   "author": {
     "name": "foyzulkarim"
   }
