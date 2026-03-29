@@ -1,7 +1,0 @@
-{
-  "name": "tdd",
-  "description": "Test-driven development agent — collaborative RED-GREEN-REFACTOR cycle, one test at a time",
-  "author": {
-    "name": "foyzulkarim"
-  }
-}

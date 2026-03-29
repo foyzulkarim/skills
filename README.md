@@ -1,6 +1,6 @@
 # foyzulkarim/skills — Claude Code Plugin Marketplace
 
-A plugin marketplace for [Claude Code](https://claude.ai/claude-code) with tools for code review, project planning, and test-driven development.
+A plugin marketplace for [Claude Code](https://claude.ai/claude-code) with a structured development pipeline.
 
 ## Add this marketplace
 
@@ -8,81 +8,57 @@ A plugin marketplace for [Claude Code](https://claude.ai/claude-code) with tools
 /add-marketplace foyzulkarim/skills
 ```
 
-## Plugins
+## dev-pipeline
 
-### Code Quality
-
-| Plugin | Command | Description |
-|--------|---------|-------------|
-| [review](./plugins/review) | `/review` | Comprehensive code review using 7 parallel agents — works with any repo, language, or framework |
-| [ts-check](./plugins/ts-check) | `/ts-check` | Deep TypeScript/JavaScript analysis with 2-level code tracing |
-
-### Planning
-
-| Plugin | Command | Description |
-|--------|---------|-------------|
-| [architect](./plugins/architect) | `/architect` | Strategic project planning — domain mapping, phase decomposition, dependency graphs |
-| [planner](./plugins/planner) | `/planner` | Feature-level planning — requirements, edge cases, constraints |
-| [spec-to-plan](./plugins/spec-to-plan) | `/spec-to-plan` | Transform a spec into a phased project plan |
-| [plan-to-phases](./plugins/plan-to-phases) | `/plan-to-phases` | Expand a plan into detailed phase documents |
-
-### Development
-
-| Plugin | Command | Description |
-|--------|---------|-------------|
-| [taskgen](./plugins/taskgen) | `/taskgen` | Generate TDD-ready task specs from plan artifacts |
-| [tdd](./plugins/tdd) | `/tdd` | Collaborative RED-GREEN-REFACTOR cycle, one test at a time |
-
-### Productivity
-
-| Plugin | Command | Description |
-|--------|---------|-------------|
-| [keybindings-help](./plugins/keybindings-help) | `/keybindings-help` | Customize Claude Code keyboard shortcuts |
-
-## Development Pipeline
-
-These plugins form a complete development workflow with two entry points:
-
-**Greenfield projects** — start with `/architect` to explore the problem space and create a phased plan through collaborative conversation.
-
-**Existing specs** — start with `/spec-to-plan` to transform a spec or requirements document into a phased plan.
+A complete development workflow from project planning to code review:
 
 ```
-/architect → phased project plan (greenfield)
-  OR
-/spec-to-plan → phased project plan (from existing spec)
-
-  ↓
-  /plan-to-phases → detailed phase documents
-    /planner → feature-level plans (optional)
-      /taskgen → TDD-ready task specifications
-        /tdd → implementation via RED-GREEN-REFACTOR
-
-/review → code review before merge
-/ts-check → deep TypeScript analysis before merge
+/plan-project → phased project plan    (optional, for multi-feature work)
+  /plan-feature → feature-level plan
+    /generate-tasks → TDD-ready task specs
+      /tdd → implementation
+        /review → verification
 ```
 
-## Install a plugin
+| Skill | Description |
+|-------|-------------|
+| [/plan-project](./dev-pipeline/skills/plan-project) | Strategic project planning — explores problem space, maps domain, decomposes into phases |
+| [/plan-feature](./dev-pipeline/skills/plan-feature) | Feature-level planning — uncovers requirements, edge cases, failure modes, constraints |
+| [/generate-tasks](./dev-pipeline/skills/generate-tasks) | Transform plans into TDD-ready task specs embedded in plan documents |
+| [/tdd](./dev-pipeline/skills/tdd) | Collaborative or autonomous TDD — RED-GREEN-REFACTOR, one test at a time |
+| [/review](./dev-pipeline/skills/review) | Triage-first code review — up to 14 checks, pipeline or general mode |
+| [/commit](./dev-pipeline/skills/commit) | Standalone commit assistant — stages files, drafts conventional commit message, executes after confirmation |
+
+### Install
 
 ```
-/install-plugin foyzulkarim/skills <plugin-name>
+/install-plugin foyzulkarim/skills dev-pipeline
 ```
 
 ## Plugin structure
 
 ```
-plugins/<name>/
+dev-pipeline/
 ├── .claude-plugin/
-│   └── plugin.json      ← metadata (name, description, author)
-├── commands/
-│   └── <name>.md        ← the skill file with YAML frontmatter
-└── README.md            ← usage docs
+│   ├── plugin.json        ← plugin identity
+│   └── marketplace.json   ← marketplace entry
+├── skills/
+│   ├── plan-project/
+│   │   └── SKILL.md
+│   ├── plan-feature/
+│   │   └── SKILL.md
+│   ├── generate-tasks/
+│   │   └── SKILL.md
+│   ├── tdd/
+│   │   └── SKILL.md
+│   └── review/
+│       └── SKILL.md
+└── README.md
 ```
 
 ## Contribute
 
 1. Fork this repo
-2. Create a directory under `plugins/<your-plugin-name>/`
-3. Add `.claude-plugin/plugin.json`, `commands/<your-plugin-name>.md`, and `README.md`
-4. Register the plugin in `.claude-plugin/marketplace.json` at the root
-5. Open a pull request
+2. Add or modify skills under `dev-pipeline/skills/<skill-name>/`
+3. Register the new skill in `dev-pipeline/.claude-plugin/plugin.json` (add an entry to the `skills` array)
+4. Open a pull request

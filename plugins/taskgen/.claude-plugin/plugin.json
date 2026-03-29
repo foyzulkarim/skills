@@ -1,7 +1,0 @@
-{
-  "name": "taskgen",
-  "description": "Generate TDD-ready task specifications from plan artifacts with collaborative test planning",
-  "author": {
-    "name": "foyzulkarim"
-  }
-}

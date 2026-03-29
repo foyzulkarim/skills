@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "foyzulkarim-skills",
-  "description": "Claude Code plugin marketplace with a structured development pipeline",
+  "name": "dev-pipeline",
+  "description": "A structured development pipeline: project planning, feature planning, task generation, TDD implementation, and code review",
   "owner": {
     "name": "foyzulkarim",
     "email": "foyzulkarim@gmail.com"
@@ -14,7 +14,7 @@
       "author": {
         "name": "foyzulkarim"
       },
-      "source": "./dev-pipeline",
+      "source": "./",
       "category": "development"
     }
   ]
