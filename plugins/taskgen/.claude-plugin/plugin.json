@@ -1,7 +1,0 @@
-{
-  "name": "taskgen",
-  "description": "(fs-3) Generate TDD-ready task specifications from plan artifacts — collaborative test planning with tasks embedded directly in plan documents",
-  "author": {
-    "name": "foyzulkarim"
-  }
-}

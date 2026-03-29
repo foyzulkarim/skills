@@ -1,61 +1,21 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "foyzulkarim-skills",
-  "description": "Claude Code plugins for code review, project planning, and test-driven development workflows",
+  "description": "Claude Code plugin marketplace with a structured development pipeline",
   "owner": {
     "name": "foyzulkarim",
     "email": "foyzulkarim@gmail.com"
   },
   "plugins": [
     {
-      "name": "architect",
-      "description": "(fs-1) Strategic project planning — 5-phase conversation to explore problem space, map domain, and decompose into ordered phases with dependencies",
+      "name": "dev-pipeline",
+      "description": "A structured development pipeline: project planning, feature planning, task generation, TDD implementation, and code review",
       "version": "1.0.0",
       "author": {
         "name": "foyzulkarim"
       },
-      "source": "./plugins/architect",
-      "category": "planning"
-    },
-    {
-      "name": "planner",
-      "description": "(fs-2) Feature-level planning — 5-phase Socratic conversation to uncover requirements, edge cases, failure modes, and constraints",
-      "version": "1.0.0",
-      "author": {
-        "name": "foyzulkarim"
-      },
-      "source": "./plugins/planner",
-      "category": "planning"
-    },
-    {
-      "name": "taskgen",
-      "description": "(fs-3) Generate TDD-ready task specifications from plan artifacts with collaborative test planning — tasks embedded directly in plan documents",
-      "version": "1.0.0",
-      "author": {
-        "name": "foyzulkarim"
-      },
-      "source": "./plugins/taskgen",
+      "source": "./dev-pipeline",
       "category": "development"
-    },
-    {
-      "name": "tdd",
-      "description": "(fs-4) Test-driven development — collaborative or autonomous RED-GREEN-REFACTOR cycle, one test at a time",
-      "version": "1.0.0",
-      "author": {
-        "name": "foyzulkarim"
-      },
-      "source": "./plugins/tdd",
-      "category": "development"
-    },
-    {
-      "name": "review",
-      "description": "(fs-5) Comprehensive code review with triage-first approach — up to 14 specialized checks, works with any repo/language/framework",
-      "version": "1.0.0",
-      "author": {
-        "name": "foyzulkarim"
-      },
-      "source": "./plugins/review",
-      "category": "code-quality"
     }
   ]
 }
