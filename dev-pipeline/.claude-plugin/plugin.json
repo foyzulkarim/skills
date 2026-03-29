@@ -4,5 +4,13 @@
   "version": "1.0.0",
   "author": {
     "name": "foyzulkarim"
-  }
+  },
+  "skills": [
+    { "name": "plan-project", "path": "skills/plan-project" },
+    { "name": "plan-feature", "path": "skills/plan-feature" },
+    { "name": "generate-tasks", "path": "skills/generate-tasks" },
+    { "name": "tdd", "path": "skills/tdd" },
+    { "name": "review", "path": "skills/review" },
+    { "name": "commit", "path": "skills/commit" }
+  ]
 }

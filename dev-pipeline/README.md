@@ -10,6 +10,8 @@ A structured development pipeline for Claude Code — from project planning thro
     /generate-tasks → TDD-ready task specs
       /tdd → implementation
         /review → verification
+
+/commit → conventional commit (use at any stage)
 ```
 
 ### /plan-project
@@ -31,6 +33,10 @@ Test-driven development partner. Works through RED-GREEN-REFACTOR one test at a 
 ### /review
 
 Comprehensive code review with a triage-first approach. Proposes relevant checks, runs them as parallel agents, and produces a combined report. Up to 14 specialized checks. Works with any language or framework.
+
+### /commit
+
+Standalone commit assistant. Inspects staged and unstaged changes, asks what to include, infers the conventional commit type from the diff, extracts a task number from the branch name, and drafts a complete commit message for confirmation before executing. Can be used at any stage of the pipeline.
 
 ## Install
 
