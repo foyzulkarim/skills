@@ -8,59 +8,64 @@ A plugin marketplace for [Claude Code](https://claude.ai/claude-code) with tools
 /add-marketplace foyzulkarim/skills
 ```
 
-## Plugins
+## Development Pipeline
 
-### Code Quality
+These plugins form a complete development workflow organized into 5 stages:
+
+### Pipeline Overview
+
+```
+project-planner            (optional, for multi-feature work)
+        |
+        v
+requirements-engineering   (plan a single feature)
+        |
+        v
+feature-planning           (generate TDD-ready task specs)
+        |
+        v
+tdd                        (implement via RED-GREEN-REFACTOR)
+        |
+        v
+review-orchestrator        (verify before merge)
+```
+
+### Stage 1: Project Planner *(optional — for multi-feature work)*
 
 | Plugin | Command | Description |
 |--------|---------|-------------|
-| [review](./plugins/review) | `/review` | Comprehensive code review using 7 parallel agents — works with any repo, language, or framework |
-| [ts-check](./plugins/ts-check) | `/ts-check` | Deep TypeScript/JavaScript analysis with 2-level code tracing |
+| [architect](./plugins/architect) | `/architect` | Strategic project planning — conversational exploration OR spec-to-plan transformation |
 
-### Planning
+### Stage 2: Requirements Engineering *(plan a single feature)*
 
 | Plugin | Command | Description |
 |--------|---------|-------------|
-| [architect](./plugins/architect) | `/architect` | Strategic project planning — domain mapping, phase decomposition, dependency graphs |
-| [planner](./plugins/planner) | `/planner` | Feature-level planning — requirements, edge cases, constraints |
-| [spec-to-plan](./plugins/spec-to-plan) | `/spec-to-plan` | Transform a spec into a phased project plan |
-| [plan-to-phases](./plugins/plan-to-phases) | `/plan-to-phases` | Expand a plan into detailed phase documents |
+| [planner](./plugins/planner) | `/planner` | Requirements engineering — structured conversation for feature requirements, edge cases, decisions, and domain behaviors |
 
-### Development
+### Stage 3: Feature Planning *(generate TDD-ready task specs)*
 
 | Plugin | Command | Description |
 |--------|---------|-------------|
 | [taskgen](./plugins/taskgen) | `/taskgen` | Generate TDD-ready task specs from plan artifacts |
+
+### Stage 4: TDD *(implement via RED-GREEN-REFACTOR)*
+
+| Plugin | Command | Description |
+|--------|---------|-------------|
 | [tdd](./plugins/tdd) | `/tdd` | Collaborative RED-GREEN-REFACTOR cycle, one test at a time |
+
+### Stage 5: Review Orchestrator *(verify before merge)*
+
+| Plugin | Command | Description |
+|--------|---------|-------------|
+| [review](./plugins/review) | `/review` | Comprehensive code review — 7 parallel agents for any repo/language/framework |
+| [ts-check](./plugins/ts-check) | `/ts-check` | Deep TypeScript/JavaScript analysis with 2-level code tracing |
 
 ### Productivity
 
 | Plugin | Command | Description |
 |--------|---------|-------------|
 | [keybindings-help](./plugins/keybindings-help) | `/keybindings-help` | Customize Claude Code keyboard shortcuts |
-
-## Development Pipeline
-
-These plugins form a complete development workflow with two entry points:
-
-**Greenfield projects** — start with `/architect` to explore the problem space and create a phased plan through collaborative conversation.
-
-**Existing specs** — start with `/spec-to-plan` to transform a spec or requirements document into a phased plan.
-
-```
-/architect → phased project plan (greenfield)
-  OR
-/spec-to-plan → phased project plan (from existing spec)
-
-  ↓
-  /plan-to-phases → detailed phase documents
-    /planner → feature-level plans (optional)
-      /taskgen → TDD-ready task specifications
-        /tdd → implementation via RED-GREEN-REFACTOR
-
-/review → code review before merge
-/ts-check → deep TypeScript analysis before merge
-```
 
 ## Install a plugin
 

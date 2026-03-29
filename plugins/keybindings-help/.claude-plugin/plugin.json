@@ -1,7 +1,0 @@
-{
-  "name": "keybindings-help",
-  "description": "Interactively customize Claude Code keyboard shortcuts in ~/.claude/keybindings.json",
-  "author": {
-    "name": "foyzulkarim"
-  }
-}

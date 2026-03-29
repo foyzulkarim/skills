@@ -1,7 +1,0 @@
-{
-  "name": "spec-to-plan",
-  "description": "Transform a spec or requirements document into a phased project plan with ordered phases and dependency graph",
-  "author": {
-    "name": "foyzulkarim"
-  }
-}
