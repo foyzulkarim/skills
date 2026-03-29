@@ -1,0 +1,8 @@
+{
+  "name": "dev-pipeline",
+  "description": "A structured development pipeline: project planning, feature planning, task generation, TDD implementation, and code review",
+  "version": "1.0.0",
+  "author": {
+    "name": "foyzulkarim"
+  }
+}
