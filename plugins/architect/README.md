@@ -5,7 +5,7 @@ Strategic project planning through collaborative conversation. Explores the prob
 ## Features
 
 - **5-phase conversation:** Project Scope → Domain Exploration → Architecture Direction → Phasing & Sequencing → Plan Generation
-- Produces phased project plans with dependency graphs
+- Produces phased project plans with dependency trees
 - Focuses on outcomes, not implementation details
 - Identifies risk areas and critical paths
 - Supports two input modes: conversational (raw concept) or document-based (existing spec/PRD)

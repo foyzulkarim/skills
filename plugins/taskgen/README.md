@@ -8,7 +8,7 @@ Generate TDD-ready task specifications from plan artifacts. Collaboratively buil
 - Collaboratively drafts test plans before writing full specs
 - GIVEN/WHEN/THEN format for all test scenarios
 - Sizes tasks for tight TDD cycles (3-8 test scenarios)
-- Proposes splits for oversized tasks
+- Proposes splits for oversized tasks (with developer agreement)
 - Tasks embedded directly in plan documents — no file sprawl
 
 ## Usage
@@ -33,14 +33,16 @@ Appends task specs to the existing `PLAN-*.md` file with:
 - Test plan with file paths, describe blocks, and scenarios
 - Implementation notes with pattern references
 - Scope boundaries and expected files (new, modified, must-not-touch)
+- TDD Sequence (optional) — suggested test-implementation ordering when order matters
 - Dependencies on other tasks
 - Task status tracking (not started → in progress → done)
 
 ## Workflow
 
 ```
-/planner → feature-level plan
-  /taskgen → TDD-ready task specs  ← you are here
-    /tdd → implementation
-      /review → verification
+/architect → phased plan (optional)
+  /planner → feature-level plan
+    /taskgen → TDD-ready task specs  ← you are here
+      /tdd → implementation
+        /review → verification
 ```

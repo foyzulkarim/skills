@@ -6,6 +6,7 @@ Test-driven development partner. Works through the RED-GREEN-REFACTOR cycle — 
 
 - **Strict TDD cycle:** RED (failing test) → GREEN (minimum code to pass) → REFACTOR
 - One test at a time — never batches or jumps ahead
+- Updates task status in the plan document (not started → in progress → done)
 - **Two modes:** collaborative (default, pauses for confirmation) and autonomous (`auto`, runs without pausing)
 - Reads plan + task spec from a single document for full context
 - Auto-detects testing framework and project conventions
@@ -41,7 +42,9 @@ Test-driven development partner. Works through the RED-GREEN-REFACTOR cycle — 
 ## Workflow
 
 ```
-/taskgen → TDD-ready task specs
-  /tdd → implementation  ← you are here
-    /review → verification
+/architect → phased plan (optional)
+  /planner → feature-level plan
+    /taskgen → TDD-ready task specs
+      /tdd → implementation  ← you are here
+        /review → verification
 ```

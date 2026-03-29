@@ -96,7 +96,7 @@ Establish enough architecture to guide feature planning:
 - What patterns should features follow? (layered architecture, hexagonal, event-driven?)
 - Where are the system boundaries? (API surface, external integrations, data boundaries)
 
-Keep this at the directional level. Don't design individual components — that happens during feature-level requirements engineering.
+Keep this at the directional level. Don't design individual components — that happens during feature-level planning.
 
 ### Phase 4: Phasing & Sequencing (2-4 exchanges)
 
@@ -227,7 +227,7 @@ The following features each need their own Planner session:
 2. **F2: [name]** — [brief guidance]
 ...
 
-Start with: `Planner for: [feature name] (from PROJECT-[slug].md, feature F1)`
+Start with: `/planner for: [feature name] (from PROJECT-[slug].md, feature F1)`
 
 ---
 _This project plan is the input for individual Planner sessions._
@@ -259,7 +259,7 @@ _Each feature listed above should be planned separately before task generation._
 - Anything that makes the plan brittle if you rename a file
 - Specific test values or expected outputs
 
-These decisions are made during feature-level requirements engineering, when the developer has the codebase in front of them and the most context.
+These decisions are made during feature-level planning, when the developer has the codebase in front of them and the most context.
 
 ## Conversation Style Rules
 

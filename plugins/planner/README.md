@@ -4,7 +4,7 @@ Feature-level planning through structured conversation. Uncovers requirements, e
 
 ## Features
 
-- **5-phase Socratic conversation:** Intent → Deep Dive → Edge Cases → Decisions → Plan Generation
+- **5-phase Socratic conversation:** Intent → Deep Dive → Edge Cases → Behaviors & Decisions → Plan Generation
 - Surfaces hidden requirements and failure modes
 - Captures explicit decisions with alternatives and rationale
 - Defines clear scope boundaries (in scope AND out of scope)
@@ -37,6 +37,7 @@ Saves plan artifacts to `/specs/plans/PLAN-[slug].md` with:
 - Edge cases and failure modes with decisions
 - Scope boundaries and dependencies
 - Architecture notes
+- Open questions (if any)
 
 ## Workflow
 

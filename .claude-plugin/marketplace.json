@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "architect",
-      "description": "(fs-1) Strategic project planning — 5-phase conversation to explore problem space, map domain, and decompose into ordered phases",
+      "description": "(fs-1) Strategic project planning — 5-phase conversation to explore problem space, map domain, and decompose into ordered phases with dependencies",
       "version": "1.0.0",
       "author": {
         "name": "foyzulkarim"
@@ -19,7 +19,7 @@
     },
     {
       "name": "planner",
-      "description": "(fs-2) Feature-level planning — 5-phase Socratic conversation to uncover requirements, edge cases, and constraints",
+      "description": "(fs-2) Feature-level planning — 5-phase Socratic conversation to uncover requirements, edge cases, failure modes, and constraints",
       "version": "1.0.0",
       "author": {
         "name": "foyzulkarim"
@@ -29,7 +29,7 @@
     },
     {
       "name": "taskgen",
-      "description": "(fs-3) Generate TDD-ready task specifications from plan artifacts — tasks embedded directly in plan documents",
+      "description": "(fs-3) Generate TDD-ready task specifications from plan artifacts with collaborative test planning — tasks embedded directly in plan documents",
       "version": "1.0.0",
       "author": {
         "name": "foyzulkarim"

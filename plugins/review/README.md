@@ -6,7 +6,7 @@ Comprehensive code review with a triage-first approach. Proposes relevant checks
 
 - **Triage-first:** Proposes which checks to run before spending tokens — developer confirms scope
 - **Up to 14 specialized checks** (grouped below)
-- **Two review modes:** Pipeline (verify implementation against a plan) and General (PR, branch, staged, diff)
+- **Two review modes:** Pipeline (verify implementation against a plan, always includes Task Completion Verification) and General (PR, branch, staged, diff)
 - **2-Level Tracing Protocol** for deep analysis on TypeScript, runtime, async, React/Next.js, Express, and database patterns
 - **Tech stack auto-detection:** Languages, frameworks, databases, testing frameworks
 - **Language-agnostic:** Adapts advice to the detected stack
@@ -60,12 +60,24 @@ Comprehensive code review with a triage-first approach. Proposes relevant checks
 /install-plugin foyzulkarim/skills review
 ```
 
+## Workflow
+
+This is the final stage of the development pipeline:
+
+```
+/architect → phased plan (optional)
+  /planner → feature-level plan
+    /taskgen → TDD-ready task specs
+      /tdd → implementation
+        /review → verification  ← you are here
+```
+
 ## Output
 
 Generates a `CODE-REVIEW-*.md` report with:
 - Metadata (tech stack, checks run/skipped, files/lines changed)
 - Verdict: PASS / PASS WITH FINDINGS / FAIL (pipeline) or APPROVE / APPROVE WITH COMMENTS / REQUEST CHANGES (general)
-- Findings by category with 5-level severity ratings (Critical, High, Medium, Low, Manual)
+- Findings by category with 4 severity levels (Critical, High, Medium, Low) plus Manual checks flagged for developer verification
 - Inline review comments with suggested fixes in collaborative tone
 - Manual checks required
 - Prioritized action items
