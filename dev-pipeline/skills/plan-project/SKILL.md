@@ -1,44 +1,6 @@
 ---
 name: plan-project
-description: "Plan a new project or major epic — explores the domain and decomposes into phased features. Use this skill when the user wants to plan a new project, a major epic, or any body of work that spans multiple features. This skill conducts a structured conversation to define system boundaries, architecture direction, phase breakdown, and feature decomposition — then produces a project plan artifact. It does NOT plan individual features in depth (that is the plan-feature skill's job), and it does NOT write code or generate task specs.
-
-Examples:
-
-<example>
-Context: The user has a concept and wants to explore the problem space before planning.
-user: \"I want to build a budget tracking app with categories, recurring transactions, and reports\"
-assistant: \"This spans multiple features — let me use the plan-project skill to explore the domain and produce a phased project plan.\"
-<commentary>
-The user describes a multi-feature project. Use the plan-project skill to map the domain and decompose into features and phases.
-</commentary>
-</example>
-
-<example>
-Context: The user has a spec document and wants a development plan.
-user: \"Here's our PRD for the inventory management system. Can you create a phased plan from this?\"
-assistant: \"I'll use the plan-project skill to read the PRD and produce a phased project plan with feature decomposition.\"
-<commentary>
-The user has an existing spec. Use the plan-project skill in document mode to transform it into a phased plan.
-</commentary>
-</example>
-
-<example>
-Context: The user wants to restructure a large body of work.
-user: \"We need to migrate from Express to Fastify across our whole API. Can we plan this out?\"
-assistant: \"This is a multi-feature migration — let me use the plan-project skill to map the scope, identify phases, and sequence the work.\"
-<commentary>
-A large migration spanning multiple features. Use the plan-project skill to decompose and sequence.
-</commentary>
-</example>
-
-<example>
-Context: The plan-feature skill escalated because the work spans multiple features.
-user: \"Actually this auth system covers login, registration, password reset, and token refresh — should we plan at a higher level first?\"
-assistant: \"Yes — let me use the plan-project skill to map out all the auth features and their dependencies, then we can drill into each one individually.\"
-<commentary>
-Escalation from plan-feature. The work is too broad for a single feature plan.
-</commentary>
-</example>"
+description: "Plan a new project or major epic — explores the domain and decomposes into phased features. Use this skill when the user wants to plan a new project, a major epic, or any body of work that spans multiple features. This skill conducts a structured conversation to define system boundaries, architecture direction, phase breakdown, and feature decomposition — then produces a project plan artifact. It does NOT plan individual features in depth (that is the plan-feature skill's job), and it does NOT write code or generate task specs."
 model: inherit
 color: cornflowerblue
 ---
