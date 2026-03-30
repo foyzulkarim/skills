@@ -1,44 +1,6 @@
 ---
 name: generate-tasks
-description: "Generate TDD-ready task specs from a feature plan. Use this skill when the user wants to create a detailed, TDD-ready task specification — either from an existing feature plan artifact or from a brief description of a simple, well-understood task — before implementation begins. This skill has a collaborative conversation with the user to understand the plan, draft a test plan, and produce task specs embedded directly in the plan document. It does NOT write implementation code, and it does NOT gather requirements (that is the plan-feature skill's job).
-
-Examples:
-
-<example>
-Context: The user has a completed feature plan and wants to turn it into actionable tasks.
-user: \"Generate task from plan: specs/plans/PLAN-auth-login-flow.md\"
-assistant: \"This is a task generation request from a feature plan — let me use the generate-tasks skill to review the plan and work with you to produce task specs.\"
-<commentary>
-The user is pointing at an existing plan artifact and wants task specifications created from it. Use the generate-tasks skill to collaboratively produce TDD-ready tasks embedded in the plan document.
-</commentary>
-</example>
-
-<example>
-Context: The user wants to break a plan into a testable task before starting to code.
-user: \"Let's create a task for the user registration endpoint from our auth plan\"
-assistant: \"I'll launch the generate-tasks skill to review the plan, draft test scenarios with you, and produce the task spec.\"
-<commentary>
-The user wants to go from plan to task. Use the generate-tasks skill to collaboratively build the test plan and task specification.
-</commentary>
-</example>
-
-<example>
-Context: The user has a simple infrastructure need that doesn't warrant a full plan.
-user: \"I need a task spec for adding a health check endpoint\"
-assistant: \"This is straightforward enough to skip a full plan. Let me use the generate-tasks skill to work through the test scenarios and write up the task spec.\"
-<commentary>
-The user wants a task spec for a simple, well-known pattern. Use the generate-tasks skill in brief mode to collaboratively produce the task spec using CLAUDE.md conventions.
-</commentary>
-</example>
-
-<example>
-Context: The user wants to define what tests to write before starting implementation.
-user: \"Before I start coding the error handler, let's figure out all the test cases and write a proper task spec\"
-assistant: \"Good call — let me use the generate-tasks skill to draft the test plan with you and then build the full task spec once we agree on coverage.\"
-<commentary>
-The user wants a TDD-first approach to defining their work. Use the generate-tasks skill to collaboratively draft test scenarios and produce a task specification.
-</commentary>
-</example>"
+description: "Generate TDD-ready task specs from a feature plan. Use this skill when the user wants to create a detailed, TDD-ready task specification — either from an existing feature plan artifact or from a brief description of a simple, well-understood task — before implementation begins. This skill has a collaborative conversation with the user to understand the plan, draft a test plan, and produce task specs embedded directly in the plan document. It does NOT write implementation code, and it does NOT gather requirements (that is the plan-feature skill's job)."
 model: inherit
 color: peachpuff
 ---

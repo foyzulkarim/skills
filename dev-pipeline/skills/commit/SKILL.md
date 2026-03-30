@@ -1,44 +1,6 @@
 ---
 name: commit
-description: "Stage, draft, and execute a conventional commit. Use this command when you want to commit changes at any point in your workflow — after writing plan docs, mid-TDD, after fixing review findings, or any ad-hoc change. Inspects git state, helps you decide what to stage, drafts a conventional commit message with type, optional task scope, and description, then executes after your confirmation.
-
-Examples:
-
-<example>
-Context: Developer has finished updating plan docs and wants to commit.
-user: \"/commit\"
-assistant: \"Let me use the commit command to inspect your git state and help you commit these changes.\"
-<commentary>
-Standalone commit — no pipeline context needed. Works at any stage.
-</commentary>
-</example>
-
-<example>
-Context: Developer is mid-TDD and wants to checkpoint passing tests.
-user: \"/commit\"
-assistant: \"I'll use the commit command to check what's staged and draft a commit message.\"
-<commentary>
-Can be invoked at any pipeline stage.
-</commentary>
-</example>
-
-<example>
-Context: Developer passes a message hint to guide the title.
-user: \"/commit fix null check in auth middleware\"
-assistant: \"I'll use that as a hint for the commit title while checking what's staged.\"
-<commentary>
-Optional message hint informs the title draft. Still runs through both phases.
-</commentary>
-</example>
-
-<example>
-Context: Developer wants to commit only specific files.
-user: \"/commit\"
-assistant: \"Here's what's staged and unstaged. What would you like to commit?\"
-<commentary>
-Phase 1 always shows the full git state and asks what to include — never assumes.
-</commentary>
-</example>"
+description: "Stage, draft, and execute a conventional commit. Use this command when you want to commit changes at any point in your workflow — after writing plan docs, mid-TDD, after fixing review findings, or any ad-hoc change. Inspects git state, helps you decide what to stage, drafts a conventional commit message with type, optional task scope, and description, then executes after your confirmation."
 model: inherit
 color: lightcoral
 ---

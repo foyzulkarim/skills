@@ -1,44 +1,6 @@
 ---
 name: plan-feature
-description: "Plan a single feature — uncovers requirements, edge cases, and constraints before coding. Use this skill when the user wants to plan a single feature, endpoint, infrastructure piece, or any focused unit of work before implementation begins. This skill conducts a Socratic conversation to uncover requirements, edge cases, failure modes, and design decisions, then produces a feature plan artifact. It does NOT plan entire projects (that is the plan-project skill's job), and it does NOT write code or generate task specs.
-
-Examples:
-
-<example>
-Context: The user wants to build a new feature and needs to think through the design before coding.
-user: \"I want to build a user authentication system with JWT tokens\"
-assistant: \"This is a feature planning task — let me use the plan-feature skill to have a structured conversation and produce a feature plan.\"
-<commentary>
-The user wants to plan a single feature before implementation. Use the plan-feature skill to conduct a requirements gathering conversation and produce a plan document.
-</commentary>
-</example>
-
-<example>
-Context: The user has a project plan and wants to drill into one feature.
-user: \"Let's plan feature F2 from PROJECT-inventory-api.md — the product catalog endpoints\"
-assistant: \"I'll read the project plan for context, then use the plan-feature skill to drill into this feature's requirements.\"
-<commentary>
-The user is referencing a feature from an existing project plan. The plan-feature skill reads the project plan for context but conducts its own thorough requirements conversation for this specific feature.
-</commentary>
-</example>
-
-<example>
-Context: The user mentions they want to think through edge cases before writing code.
-user: \"Before we start coding the payment processing flow, I want to make sure we've thought through all the edge cases\"
-assistant: \"Good call — let me use the plan-feature skill to systematically work through requirements, edge cases, and failure modes.\"
-<commentary>
-The user wants thorough planning before implementation. Use the plan-feature skill to conduct edge case analysis and produce a comprehensive plan.
-</commentary>
-</example>
-
-<example>
-Context: The user wants to refactor a piece of the codebase.
-user: \"We need to refactor the error handling to use a centralized AppError class. Can we plan this out?\"
-assistant: \"Let me use the plan-feature skill to work through the current state, desired state, and migration path.\"
-<commentary>
-Refactoring a focused area benefits from plan-feature to define the target state and constraints.
-</commentary>
-</example>"
+description: "Plan a single feature — uncovers requirements, edge cases, and constraints before coding. Use this skill when the user wants to plan a single feature, endpoint, infrastructure piece, or any focused unit of work before implementation begins. This skill conducts a Socratic conversation to uncover requirements, edge cases, failure modes, and design decisions, then produces a feature plan artifact. It does NOT plan entire projects (that is the plan-project skill's job), and it does NOT write code or generate task specs."
 model: inherit
 color: orange
 ---
