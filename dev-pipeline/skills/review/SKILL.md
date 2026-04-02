@@ -1,6 +1,6 @@
 ---
 name: review
-description: "Review and verify code before merge — triage-first with up to 14 checks. Use this skill when the user wants to review and verify implemented code before considering a task complete or opening a PR. This skill triages what checks are relevant, then runs only the selected checks as parallel agents and produces a combined report. It supports two modes: pipeline review (verifying task implementation against a plan) and general review (PR, branch, or staged changes). It does NOT write or fix code — it flags findings for the developer to address."
+description: "Review and verify code before merge — triage-first with up to 16 checks. Use this skill when the user wants to review and verify implemented code before considering a task complete or opening a PR. This skill triages what checks are relevant, then runs only the selected checks as parallel agents and produces a combined report. It supports two modes: pipeline review (verifying task implementation against a plan) and general review (PR, branch, or staged changes). It does NOT write or fix code — it flags findings for the developer to address."
 model: inherit
 color: lightsalmon
 ---
@@ -112,7 +112,10 @@ Report the detected stack to the developer as part of the triage proposal.
 Before talking to the developer, silently:
 
 1. **Pipeline mode:** Read the plan document (plan + embedded task spec). Note what kind of work it is.
-2. **General mode:** Gather the diff. Identify changed files, languages, and scope.
+2. **General mode:** Gather the diff. Identify changed files, languages, and scope. For PR mode, also read:
+   - The PR title and description (`gh pr view {number} --json title,body`) — this contains the developer's stated intent.
+   - Commit messages (`git log {base}..{head} --oneline`) — these explain the progression of changes.
+   - Use this intent context to distinguish intentional patterns from bugs during review.
 3. Detect the tech stack.
 4. Note the nature of the work: new feature, refactoring, infrastructure, documentation, bug fix.
 
@@ -140,7 +143,14 @@ Example triage conversation:
 
 ### Step 3: Launch Selected Checks
 
-Once the developer confirms, launch **all selected checks in parallel** as agents (single message with multiple Agent tool calls). Each agent receives the relevant context (diff, tech stack, severity scale, and — for pipeline mode — the plan/task spec content).
+Once the developer confirms, launch **all selected checks in parallel** as agents (single message with multiple Agent tool calls). Each agent receives:
+
+- **Filtered diff:** Only files relevant to the agent's domain. For example, the React agent gets only `.tsx`/`.jsx`/`.css` files; the Database agent gets only files with query/model/migration changes; the Security agent gets route handlers and middleware. Do NOT send the entire diff to every agent.
+- **Tech stack summary:** Detected languages, frameworks, and tools.
+- **Severity scale and false positive mitigation rules.**
+- **CLAUDE.md content** (if it exists) for project conventions.
+- **Pipeline mode only:** The plan/task spec content.
+- **General PR mode only:** PR description and commit message summary for intent context.
 
 ## Available Checks
 
@@ -228,7 +238,7 @@ Once the developer confirms, launch **all selected checks in parallel** as agent
 **Focus areas:**
 - Time complexity of algorithms — flag O(n²), O(n³) patterns
 - Space complexity and memory usage
-- N+1 query patterns (especially with ORMs)
+- N+1 query patterns — **only flag if no ORM/database layer is involved** (pure API call loops, repeated computation). Database-specific N+1 is owned by Check #14 (Database Patterns).
 - Missing caching opportunities
 - Unnecessary computations inside loops
 - Large data structure operations (deep clones, large array copies)
@@ -299,6 +309,8 @@ For Critical/High findings: explain the attack vector briefly.
 - Configuration documentation (new env vars, config options)
 - Migration guides (if breaking changes)
 - CLAUDE.md updated if new patterns were introduced
+- Internal accuracy of changed docs — file paths, directory references, import paths, and config examples actually match the project structure
+- Cross-reference consistency — when docs reference other files or directories, verify those targets exist
 
 Evaluate: could a new team member understand these changes from the documentation alone?
 
@@ -390,6 +402,7 @@ For each new/updated dependency, assess: size impact, maintenance status, risk.
 - Server/client boundaries (missing 'use client'/'use server', non-serializable props across boundary)
 - Derived state that should be computed, not stored in useState
 - Context overuse causing unnecessary re-renders
+- Next.js file-based routing violations — non-route files (tests, utilities, helpers, constants) placed under `pages/` or `app/` directories that Next.js will treat as routes, causing build failures or unintentionally shipping non-page code
 
 **When to skip:** No React/Next.js files changed, projects without React.
 
@@ -416,7 +429,7 @@ For each new/updated dependency, assess: size impact, maintenance status, risk.
 **Purpose:** Database query and ORM analysis. Uses 2-level tracing.
 
 **Focus areas:**
-- N+1 query patterns — query inside a loop, fetching relations separately instead of with include/join
+- N+1 query patterns — query inside a loop, fetching relations separately instead of with include/join. **This check owns all database/ORM N+1 analysis** (Performance check #4 handles non-database N+1 like repeated API calls).
 - Transaction issues — related writes without transaction, transaction scope too large, missing rollback
 - Connection pool — long-running operations holding connections, missing release in error paths
 - Query injection — string interpolation in raw queries, user input without parameterization
@@ -426,6 +439,47 @@ For each new/updated dependency, assess: size impact, maintenance status, risk.
 For each finding, estimate query impact: "With N records, this means M queries."
 
 **When to skip:** No database operations in the diff, projects without database dependencies.
+
+---
+
+### 15. Migration & Breaking Changes
+
+**Purpose:** Identifies backward compatibility risks, breaking changes, and migration safety issues.
+
+**Focus areas:**
+- API contract changes — removed/renamed fields, changed response shapes, modified status codes
+- Database migration safety — destructive operations (DROP, column removal), missing rollback strategy, data migration for existing rows
+- Breaking changes to shared libraries, packages, or internal SDKs consumed by other services
+- Feature flag usage for incremental rollout of risky changes
+- Environment variable additions/removals — are all environments updated?
+- URL/route changes that could break existing clients or bookmarks
+- Event/message schema changes that affect downstream consumers
+- Deprecation notices for removed functionality
+
+For each finding, assess: who is affected? How many consumers? Is there a migration path?
+
+**When to skip:** Internal-only changes with no external consumers, test-only changes, documentation, purely additive changes (new endpoints/fields with no modifications to existing ones).
+
+---
+
+### 16. Accessibility
+
+**Purpose:** Identifies accessibility (a11y) issues in frontend code. Applies to React, Next.js, and any HTML-generating code.
+
+**Focus areas:**
+- Missing ARIA attributes — `aria-label`, `aria-describedby`, `role` on interactive elements
+- Keyboard navigation — interactive elements not reachable via Tab, missing `onKeyDown`/`onKeyPress` handlers for click-only elements
+- Semantic HTML — `<div>` or `<span>` used where `<button>`, `<nav>`, `<main>`, `<section>`, `<article>` is appropriate
+- Form accessibility — inputs without associated `<label>`, missing `htmlFor`/`id` pairs, no error announcements
+- Focus management — focus not moved after dynamic content changes (modals, route transitions, toast notifications)
+- Image `alt` text — missing or non-descriptive `alt` attributes on `<img>` tags
+- Color contrast — hardcoded color values that may not meet WCAG AA (4.5:1 for text, 3:1 for large text)
+- ARIA live regions — dynamic content updates not announced to screen readers
+- Heading hierarchy — skipped heading levels (`h1` → `h3`), multiple `h1` tags
+
+For each finding, reference the relevant WCAG 2.1 criterion (e.g., "WCAG 2.1.1 Keyboard").
+
+**When to skip:** No frontend/UI files changed, backend-only projects, API-only changes, test-only changes.
 
 ---
 
@@ -440,6 +494,16 @@ For each significant function in the diff (functions with logic, not just type d
 3. **Find callees (1 level down)** — read the function body, identify key project function calls, read those implementations to understand dependencies.
 4. **Analyze with full context** — now you understand who calls this, what this calls, and the function itself. Apply domain-specific checks.
 
+### Tracing Depth Limits
+
+To prevent token explosion:
+
+- **Max functions to trace per agent:** 8 significant functions. If the diff contains more, prioritize: public/exported functions first, then hot-path functions, then helpers.
+- **Max callers per function:** 5. If more exist, note "N+ callers found, showing top 5 by relevance."
+- **Max callees per function:** 5. Focus on project functions, skip standard library / framework calls.
+- **Stop tracing when:** You've read enough to make a confident assessment. Do not trace further just for completeness.
+- **If context window is tight:** Skip callee tracing (level down) and focus on caller tracing (level up), as caller context is more useful for identifying real-world impact.
+
 Agents using this protocol must include **Tracing Notes** in their output showing their work:
 ```
 **Function:** `createUser` in `src/services/user.service.ts`
@@ -447,6 +511,67 @@ Agents using this protocol must include **Tracing Notes** in their output showin
 **Call frequency:** Hot path — called on every registration request
 **Why this matters:** [explanation based on traced context]
 ```
+
+## False Positive Mitigation
+
+Agents must minimize noise. For every potential finding, before reporting it:
+
+1. **Check for intent signals** — look for comments (`// intentional`, `// TODO`, `// HACK:`), documentation, or commit messages that explain why a pattern was chosen.
+2. **Assess confidence** — assign one of:
+   - **High confidence:** The pattern is clearly wrong regardless of context (e.g., SQL injection with string interpolation, missing `await` on a returned promise).
+   - **Medium confidence:** The pattern is usually wrong but could be intentional (e.g., `any` usage, missing error handling). Include a brief note: *"This may be intentional — if so, a comment explaining why would help future readers."*
+   - **Low confidence:** The pattern looks suspicious but you lack context to be sure. **Do not report low-confidence findings as standalone items.** Instead, group them in a "Observations" subsection at the end of the check, clearly marked as non-actionable.
+3. **Check project conventions** — a pattern that violates generic best practices but matches the project's established convention (visible in CLAUDE.md or surrounding code) is NOT a finding.
+
+When in doubt, ask "Would a senior engineer on this project flag this?" — not "Does this violate a textbook rule?"
+
+## Agent Review Checklist Protocol
+
+Each agent must build an internal checklist **before** starting analysis. This prevents losing focus mid-review and ensures systematic coverage.
+
+### Agent-Level Checklist
+
+Every agent, immediately after receiving its context, must:
+
+1. **List the files** in scope for this check (from the filtered diff).
+2. **Build a per-file todo** — for each file, list the specific things to check based on the agent's focus areas.
+3. **Work through the checklist systematically** — check each item, mark it done, record any findings.
+4. **Include the completed checklist** in the output as a "Coverage" section.
+
+Example (Security agent):
+```
+### Coverage Checklist
+- [x] `src/routes/auth.ts` — input validation ✅, SQL injection ✅, auth checks ✅ → Finding #1
+- [x] `src/routes/users.ts` — input validation ✅, auth checks ⚠️ → Finding #2
+- [x] `src/middleware/cors.ts` — CORS config ✅, no issues
+- [x] `src/utils/token.ts` — JWT handling ✅, expiry ✅, no issues
+```
+
+This ensures:
+- No file is accidentally skipped
+- The developer can see exactly what was reviewed
+- The agent stays focused and doesn't drift
+
+### Orchestrator Checklist
+
+The main reviewer (not the agents) maintains a top-level orchestration checklist to track the overall review process:
+
+```
+## Review Progress
+- [x] Preflight checks passed
+- [x] Diff gathered ({N} files, {M} lines)
+- [x] Tech stack detected: {stack}
+- [x] PR description/commit messages read (general mode)
+- [x] CLAUDE.md read for project conventions
+- [x] Triage proposed and developer confirmed
+- [ ] Agents launched: {list of checks}
+- [ ] Agent results collected
+- [ ] Findings deduplicated
+- [ ] Report compiled
+- [ ] Verdict determined
+```
+
+Update this checklist as you progress. This is your own tracking mechanism — include it in the report's metadata section as "Review Process" so the developer can see the workflow was thorough.
 
 ## Agent Output Format
 
@@ -461,6 +586,18 @@ All agents produce findings in this shared format:
 
 Performance and Database agents add an **Impact** column.
 Security agents add a **Risk** column.
+
+### Zero-Findings Output
+
+When an agent finds no issues, output exactly:
+
+```
+## {Check Name}
+**Result:** ✅ No findings.
+**Files reviewed:** {list of files}
+```
+
+Do not pad with verbose "everything looks good" commentary. A clean check is a clean check.
 
 ### Review Comments
 
@@ -526,6 +663,16 @@ Create the report. For general mode, save to the repository root. For pipeline m
 | **Files Changed** | {count} |
 | **Lines Changed** | +{additions} / -{deletions} |
 
+## Review Process
+- [x] Preflight checks passed
+- [x] Diff gathered ({N} files, {M} lines)
+- [x] Tech stack detected
+- [x] Context read (CLAUDE.md, PR description)
+- [x] Triage agreed with developer
+- [x] {N} agents launched
+- [x] Results collected and deduplicated
+- [x] Report compiled
+
 ## Verdict: {verdict}
 
 {2-3 sentence summary. What's good. What needs attention.}
@@ -573,8 +720,38 @@ The report is your primary output, but the conversation isn't over. The develope
 
 - **Disagree** with a finding: "Finding #3 is intentional because..." → Accept and adjust verdict if appropriate.
 - **Ask for clarification:** "What's wrong with the type in auth.service.ts?" → Explain with specific code references.
-- **Re-review after fixes:** "I've addressed the must-fix items, re-run" → Re-read files, focus on areas that had findings. Don't re-run checks that already passed.
+- **Re-review after fixes:** See Re-review Protocol below.
 - **Focused re-review:** "Just re-check security" → Run only the requested check.
+
+### Re-review Protocol
+
+When the developer says they've addressed findings and wants a re-review:
+
+1. **Load the original report** — reference its finding numbers and severities.
+2. **Build a verification checklist** from the original must-fix and should-fix findings:
+   ```
+   Re-review Checklist:
+   - [ ] #1 (🔴 Critical): SQL injection in auth.ts:45 — verify parameterized
+   - [ ] #3 (🟠 High): Missing null check in user.service.ts:89 — verify added
+   - [ ] #5 (🟡 Medium): Dead code in utils.ts:12 — verify removed
+   ```
+3. **Re-read only the files that had findings.** Do NOT re-run checks that already passed clean.
+4. **Verify each finding** — mark as ✅ Resolved, ⚠️ Partially resolved, or ❌ Still present.
+5. **Check for regressions** — did the fix introduce new issues in the same file?
+6. **Produce a delta report**, not a full new report:
+   ```markdown
+   ## Re-review Report
+
+   **Original report:** {date/reference}
+   **Findings addressed:** {X of Y}
+
+   | # | Original Finding | Status | Notes |
+   |---|-----------------|--------|-------|
+   | 1 | SQL injection in auth.ts:45 | ✅ Resolved | Now uses parameterized query |
+   | 3 | Missing null check | ⚠️ Partial | Added check but no test for null case |
+
+   **Updated Verdict:** {new verdict}
+   ```
 
 ## You Must NOT
 
@@ -590,7 +767,7 @@ The report is your primary output, but the conversation isn't over. The develope
 ## Important Reminders
 
 - The triage conversation should be brief — 1-2 exchanges, not a deep discussion. You're proposing a checklist, not planning a feature.
-- Read CLAUDE.md before running Code Quality, Convention, or Pattern checks — ground findings in the project's actual conventions, not generic best practices.
+- **Every agent** must read CLAUDE.md (if it exists) before starting analysis — not just Code Quality checks. Security agents need to know about auth middleware conventions. Test agents need to know test structure conventions. React agents need to know component patterns. Ground all findings in the project's actual conventions, not generic best practices.
 - For pipeline mode, the plan source chain matters: plan document → task spec → implementation. Trace decisions back to their origin.
 - Today's date should be used in review reports.
 - If the developer asks for a re-review after fixes, focus on areas that had findings — don't repeat passed checks.
