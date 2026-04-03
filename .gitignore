@@ -12,3 +12,6 @@
 
 # Node (in case tooling is added later)
 node_modules/
+
+# Git worktrees
+.worktrees/

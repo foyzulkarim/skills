@@ -32,9 +32,9 @@ The developer's input usually contains hints about where the task lives. Parse i
 
 **Detection rules — check in this order:**
 
-1. **Jira ticket key** — pattern `[A-Z]+-\d+` (e.g. `TASK-42`, `PROJ-123`). This is the most specific signal.
-2. **GitHub issue number** — pattern `#\d+` (e.g. `#87`, `#301`). Often appears as "issue #87".
-3. **File path** — contains `/` and ends in `.md`, `.txt`, `.yaml`, `.yml`, or `.json` (e.g. `/specs/prds/auth-password-reset.md`).
+1. **Jira ticket key** — pattern `^[A-Z]+-\d+$` (e.g. `TASK-42`, `PROJ-123`). This is the most specific signal. Only the matched group is passed to the CLI — never the full user input.
+2. **GitHub issue or PR number** — pattern `#\d+` (e.g. `#87`, `#301`). Often appears as "issue #87".
+3. **File path** — starts with `/`, `./`, or `../` and ends in `.md`, `.txt`, `.yaml`, `.yml`, or `.json` (e.g. `/specs/prds/auth-password-reset.md`). Reject any path containing `..` (path traversal).
 4. **No pattern matched** — fall through to ad-hoc conversation.
 
 When a pattern is detected, **confirm before fetching**:
@@ -58,6 +58,8 @@ Ask for the identifier explicitly — don't auto-generate it. The developer know
 
 ### Phase 2: Fetch & Merge
 
+**Source Merging** — After fetching from a remote tracker, ask about local specs to layer on top.
+
 Once the source is confirmed, fetch the task details.
 
 **Before fetching from a remote source, check that the CLI tool is available:**
@@ -79,11 +81,20 @@ acli jira issue view <TICKET-KEY>
 ```
 Extract the summary, description, type, and key.
 
+If the command fails, check the exit code and report an actionable error:
+- Auth error → suggest refreshing `acli` authentication
+- Network error → suggest checking the network connection
+- Not found → suggest verifying the ticket key
+
 **GitHub** — fetch with `gh`:
 ```bash
 gh issue view <NUMBER> --json title,body,labels
 ```
-Extract the title, body, and labels.
+If this fails with a "not found" error, try the fallback:
+```bash
+gh pr view <NUMBER> --json title,body,labels
+```
+The number might reference a pull request rather than an issue. If both fail, report an actionable error (auth, network, or not found).
 
 **Local file** — read the file directly and extract the task title and scope.
 
@@ -100,6 +111,7 @@ From whatever source(s), you should now have:
 - **Task title** (a short summary)
 - **Task type** (feature, fix, refactor, chore, docs, etc.)
 - **Task details** (description, acceptance criteria, notes)
+- **Source(s)** (Jira, GitHub, local file, ad-hoc)
 
 ### Phase 3: Branch Check & Sync
 
@@ -113,7 +125,7 @@ git branch --show-current
 
 > *"You're already on `feat/TASK-42/add-auth`. Want to continue here, or create a fresh branch?"*
 
-If they choose to stay, skip to Phase 4 (hand-off). The branch and remote are already set up.
+If they choose to stay, skip to Phase 5 (Context File). The branch and remote are already set up.
 
 **If the current branch has a different task number/key:**
 
@@ -129,10 +141,12 @@ Sync with the default branch:
 git fetch origin
 ```
 
-Detect the default branch — try `main` first. If it doesn't exist:
+Detect the default branch — try `git checkout main` first. If it fails, fall back to:
 ```bash
 git remote show origin | grep 'HEAD branch'
 ```
+
+If neither method detects the default branch, ask the developer: *"I couldn't detect the default branch. Which branch should I sync from?"*
 
 Then:
 ```bash
@@ -140,7 +154,7 @@ git checkout <default-branch>
 git pull origin <default-branch>
 ```
 
-**Dirty working tree** — always check `git status` before switching. If there are uncommitted changes:
+**Dirty working tree** — always check `git status` before any branch operation (switching or creating). If there are uncommitted changes:
 
 > *"You have uncommitted changes on `$(git branch --show-current)`. Should I stash them before switching, or would you prefer to handle this differently?"*
 
@@ -159,6 +173,15 @@ Where:
 - **task-number**: The issue/ticket key as-is (e.g. `TASK-42`, `87`), or the developer-provided identifier
 - **slug**: 2-4 word kebab-case summary derived from the task title
 
+**Slug derivation rules:** Drop articles (a, an, the), prepositions (for, with, via), and helper verbs (is, be, has). Keep the core action and object. Hyphenate between words.
+
+Examples:
+- "Add user authentication" → `add-user-auth`
+- "Fix null pointer in payment flow" → `fix-null-pointer-payment`
+- "Remove legacy API endpoints" → `remove-legacy-api`
+
+**Slug validation:** Only allow characters `[a-z0-9-]`. Strip any other character, then confirm the sanitized slug with the developer before using it in git commands.
+
 **Examples:**
 
 | Task Source | Type | Number | Title | Branch Name |
@@ -167,6 +190,8 @@ Where:
 | GitHub #123 | fix | 123 | Null pointer in payment flow | `fix/123/null-pointer-payment` |
 | Local spec | refactor | remove-legacy-api | Remove legacy API endpoints | `refactor/remove-legacy-api/remove-api-endpoints` |
 | Ad-hoc | chore | deps-upgrade | Upgrade dependencies | `chore/deps-upgrade/latest-dependencies` |
+
+**Note for non-tracker sources:** When there's no remote tracker, `{task-number}` is the developer-provided identifier and `{slug}` is independently derived from the title. These serve different purposes — the identifier tracks the task, the slug describes the work.
 
 Present the proposed branch name:
 
@@ -211,7 +236,7 @@ Summarize what was done and point to the next step:
 
 > *"Quick recap: [2-3 sentence summary of the task from the gathered context]."*
 >
-> *"Context saved to `/specs/context/{identifier}.md`. Ready to plan? Use `/plan-feature` to start the planning conversation, or dive straight in if you already have a clear picture."*
+> *"Context saved to `/specs/context/{identifier}.md`. Ready to plan? Use `/plan-feature` to start the planning conversation, or dive straight in — run `/tdd` if you have tasks ready, or start coding directly if the task is small enough to not need a plan."*
 
 ## Branch Type Reference
 
@@ -234,6 +259,6 @@ Use these conventional types for branch naming:
 - Use `--force` on any push
 - Assume the task source — detect first, confirm, then fetch
 - Fall back to ad-hoc when a CLI tool is missing — fail clearly instead
-- Create a branch if the developer seems unsure about the task — help them clarify first
+- Create a branch before confirming the task type and title with the developer — always get explicit confirmation first
 - Trigger automatically — this skill is opt-in, invoked when the developer explicitly starts a new task
 - Auto-generate task identifiers — ask the developer when there's no tracker

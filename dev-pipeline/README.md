@@ -6,7 +6,7 @@ A structured development pipeline for Claude Code — from project planning thro
 
 ```
 /plan-project → phased project plan    (optional, for multi-feature work)
-  /start-task → sync main, create branch, gather context
+  /start-task → sync main, create branch, gather context  (opt-in, per task)
     /plan-feature → feature-level plan
       /generate-tasks → TDD-ready task specs
         /tdd → implementation
@@ -17,7 +17,7 @@ A structured development pipeline for Claude Code — from project planning thro
 
 ### /start-task
 
-Start a new task by creating a synced feature branch. Pulls latest main, gathers task context from Jira (via Atlassian CLI), GitHub (via gh), or local specs, then creates and pushes a branch with the pattern `{type}/{task-number}/{slug}`. Opt-in only — invoke when you're ready to start work on a specific task.
+Start a new task by creating a synced feature branch. Pulls latest main, gathers task context from Jira (via `acli`), GitHub (via gh), or local specs, then creates and pushes a branch with the pattern `{type}/{task-number}/{slug}`. Opt-in only — invoke when you're ready to start work on a specific task.
 
 ### /plan-project
 
@@ -55,4 +55,5 @@ Standalone commit assistant. Inspects staged and unstaged changes, asks what to 
 - Feature plans: `/specs/plans/PLAN-[slug].md`
 - Task specs: Embedded in `PLAN-*.md` documents
 - Review reports: `CODE-REVIEW-*.md` at repo root
+- Context files: `/specs/context/{identifier}.md`
 - Branch naming: `{type}/{task-number}/{slug}`
