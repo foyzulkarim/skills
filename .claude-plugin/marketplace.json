@@ -9,8 +9,8 @@
   "plugins": [
     {
       "name": "dev-pipeline",
-      "description": "A structured development pipeline: project planning, feature planning, task generation, TDD implementation, and code review",
-      "version": "1.1.0",
+      "description": "A structured development pipeline: task bootstrapping, project planning, feature planning, task generation, TDD implementation, and code review",
+      "version": "1.2.0",
       "author": {
         "name": "foyzulkarim"
       },
