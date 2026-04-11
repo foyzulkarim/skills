@@ -40,6 +40,34 @@ the full review lifecycle for a given pull request.
    - Relevant git history per file
    - Repository name and PR URL
 
+### Phase 1.5: Rule Loading
+
+Load project-level rules that match the changed files so subagents can review
+against layer-specific guidelines.
+
+1. Glob for rule files in `.claude/rules/*.md`.
+2. For each rule file, read the YAML frontmatter and extract the `paths:` list.
+3. For each changed file in the PR, check if it matches any rule's path patterns.
+   Use glob-style matching (e.g., `**/routes/**/*.ts` matches `src/routes/user.ts`).
+4. Read the full content (below the frontmatter) of every matched rule file.
+5. Deduplicate — if multiple changed files match the same rule, include it once.
+6. Build a **rules section** grouping matched rules by file name:
+
+```
+### Applicable Project Rules
+
+#### api.md (matched by: src/routes/user.ts, src/controllers/auth.ts)
+<full rule content>
+
+#### database.md (matched by: src/models/user.ts)
+<full rule content>
+```
+
+If no `.claude/rules/` directory exists or no rules match, set the rules section
+to: `### Applicable Project Rules\n\nNo project rules matched the changed files.`
+
+This rules section will be passed to every subagent in Phase 3.
+
 ### Phase 2: Subagent Selection
 
 Analyse the changed files and determine which reviewer subagents to invoke.
@@ -82,12 +110,18 @@ Structure the prompt to each subagent as:
 ### Git History (per file)
 <relevant history>
 
+### Applicable Project Rules
+<rules section from Phase 1.5 — only rules matching the changed files>
+
 ### Diff
 <full diff>
 
 ---
 
-Review this PR according to your skill. Write your findings to review/<domain>-findings.md
+Review this PR according to your skill. The "Applicable Project Rules" section
+contains layer-specific guidelines (API, service, database, etc.) that matched the
+changed files. Use these rules as additional review criteria — flag violations
+alongside your domain-specific checks. Write your findings to review/<domain>-findings.md
 ```
 
 ### Phase 4: Consolidation

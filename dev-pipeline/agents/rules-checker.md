@@ -20,10 +20,13 @@ purpose, and git history.
 ## Your Responsibilities
 
 1. Load the `rules-check` skill for the project's conventions and standards.
-2. Check the diff against documented project rules: file structure, naming
+2. Review the **Applicable Project Rules** section in the context package. If
+   layer-specific rules are present (API, service, database, test rules), treat
+   them as first-class conventions — violations are findings, not suggestions.
+3. Check the diff against documented project rules: file structure, naming
    conventions, commit message format, documentation requirements, import ordering,
    configuration patterns, and any project-specific standards.
-3. Write your findings to `review/rules-findings.md`.
+4. Write your findings to `review/rules-findings.md`.
 
 ## Output Format
 

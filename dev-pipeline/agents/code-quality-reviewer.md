@@ -19,11 +19,15 @@ containing the PR diff, description, purpose, and git history.
 ## Your Responsibilities
 
 1. Load the `code-quality-review` skill for your checklist and methodology.
-2. Analyse the diff for quality issues: naming, complexity, structure, patterns,
+2. Review the **Applicable Project Rules** section in the context package. If rules
+   are present (e.g., API layer rules, service layer rules, database layer rules),
+   use them as additional review criteria — flag code that violates layer
+   responsibilities, prohibited dependencies, or structural guidelines.
+3. Analyse the diff for quality issues: naming, complexity, structure, patterns,
    error handling, testability, and adherence to SOLID principles.
-3. Cross-reference with git history to understand whether flagged patterns are
+4. Cross-reference with git history to understand whether flagged patterns are
    new introductions or pre-existing.
-4. Write your findings to `review/code-quality-findings.md`.
+5. Write your findings to `review/code-quality-findings.md`.
 
 ## Output Format
 

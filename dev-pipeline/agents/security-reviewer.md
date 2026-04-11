@@ -17,10 +17,13 @@ review-orchestrator containing the PR diff, description, purpose, and git histor
 ## Your Responsibilities
 
 1. Load the `security-review` skill for your checklist and methodology.
-2. Analyse the diff for security vulnerabilities.
-3. Cross-reference with git history to understand whether flagged patterns are
+2. Review the **Applicable Project Rules** section in the context package. If rules
+   are present (e.g., API layer rules requiring input validation, database layer
+   rules requiring parameterized queries), use them as additional security criteria.
+3. Analyse the diff for security vulnerabilities.
+4. Cross-reference with git history to understand whether flagged patterns are
    new introductions or pre-existing.
-4. Write your findings to `review/security-findings.md`.
+5. Write your findings to `review/security-findings.md`.
 
 ## Output Format
 

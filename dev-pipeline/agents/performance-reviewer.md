@@ -17,10 +17,13 @@ review-orchestrator containing the PR diff, description, purpose, and git histor
 ## Your Responsibilities
 
 1. Load the `performance-review` skill for your checklist and methodology.
-2. Analyse the diff for performance regressions and optimisation opportunities.
-3. Cross-reference with git history to understand whether flagged patterns are
+2. Review the **Applicable Project Rules** section in the context package. If rules
+   are present (e.g., database layer rules about N+1 queries, indexing, or eager
+   loading), use them as additional performance criteria.
+3. Analyse the diff for performance regressions and optimisation opportunities.
+4. Cross-reference with git history to understand whether flagged patterns are
    new introductions or pre-existing.
-4. Write your findings to `review/performance-findings.md`.
+5. Write your findings to `review/performance-findings.md`.
 
 ## Output Format
 
