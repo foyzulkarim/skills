@@ -10,7 +10,7 @@
     {
       "name": "dev-pipeline",
       "description": "A structured development pipeline: task bootstrapping, project planning, feature planning, task generation, TDD implementation, and code review",
-      "version": "1.3.0",
+      "version": "1.4.0",
       "author": {
         "name": "foyzulkarim"
       },
