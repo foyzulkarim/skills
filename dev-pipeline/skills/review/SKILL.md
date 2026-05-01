@@ -1,6 +1,6 @@
 ---
 name: review
-description: "Review and verify code before merge — Phase 5 of the 5-phase pipeline. Triage-first with up to 16 checks. Use this skill when the user wants to review and verify implemented code before considering a task complete or opening a PR. This skill triages what checks are relevant, then runs only the selected checks as parallel agents and produces a combined report. It supports two modes: pipeline review (verifying task implementation against an architecture document) and general review (PR, branch, or staged changes). It does NOT write or fix code — it flags findings for the developer to address."
+description: "Review and verify code before merge — Phase 5 of the 5-phase pipeline. Triage-first with up to 16 checks (not all apply to every review). Use this skill when the user wants to review and verify implemented code before considering a task complete or opening a PR. This skill triages what checks are relevant based on tech stack and review mode, then runs only the selected checks as parallel agents and produces a combined report. It supports two modes: pipeline review (verifying task implementation against an architecture document) and general review (PR, branch, or staged changes). It does NOT write or fix code — it flags findings for the developer to address."
 model: inherit
 color: lightsalmon
 ---
