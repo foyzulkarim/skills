@@ -4,7 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-A Claude Code plugin marketplace (`foyzulkarim/skills`) containing the `dev-pipeline` plugin — a collection of six AI skills defining a structured development workflow. There is no build system, test runner, or compiled code. The entire value is in the SKILL.md files.
+A Claude Code plugin marketplace (`foyzulkarim/skills`) containing the `dev-pipeline` plugin — a collection of AI skills implementing a structured **5-phase development pipeline**:
+
+1. **Requirement Engineering** — capture WHAT and WHY (problem space)
+2. **System Architecture** — design HOW (solution space)
+3. **Task Generation** — break architecture into TDD-ready tasks
+4. **TDD Implementation** — RED-GREEN-REFACTOR per task
+5. **Review & Merge** — verify before merge
+
+There is no build system, test runner, or compiled code. The entire value is in the SKILL.md files.
 
 ## Plugin structure
 
@@ -19,18 +27,41 @@ When adding a new skill:
 1. Create `dev-pipeline/skills/<skill-name>/SKILL.md`
 2. The `skills` field in `plugin.json` points to `./skills/` — the directory is auto-scanned, no per-skill registration needed
 
-## The six skills and their pipeline order
+## The pipeline
 
 ```
-/plan-project  →  /plan-feature  →  /generate-tasks  →  /tdd  →  /review  →  /commit
+Phase 1              Phase 2              Phase 3            Phase 4      Phase 5
+/plan-requirements → /plan-architecture → /generate-tasks → /tdd       → /review → /commit
+   (you)              (you + Claude)       (Claude)          (Claude)     (you+C)   (support)
+   REQ-*.md           ARCH-*.md            tasks in ARCH     code+tests   PR
 ```
 
-- **plan-project** — Strategic planning, outputs `/specs/plans/PROJECT-<slug>.md`
-- **plan-feature** — Feature requirements via Socratic conversation, outputs `/specs/plans/PLAN-<slug>.md`
-- **generate-tasks** — Embeds TDD-ready task specs into the existing `PLAN-*.md` file (does not create a new file)
-- **tdd** — RED-GREEN-REFACTOR loop; two modes: collaborative (pauses each step) and auto
-- **review** — Triage-first review with up to 14 checks; two modes: pipeline (verifies task completion) and general (PR/branch/staged)
-- **commit** — Standalone; stages files, infers conventional commit type, extracts task number from branch name
+### Phase skills
+
+- **plan-requirements** (Phase 1) — Socratic interview to capture WHAT and WHY. Outputs `/specs/requirements/REQ-<slug>.md`. Owner: developer.
+- **plan-architecture** (Phase 2) — Collaborative system design. Reads REQ when present, runs from a brief otherwise. Outputs `/specs/architecture/ARCH-<slug>.md` (with an empty Tasks section).
+- **generate-tasks** (Phase 3) — Reads ARCH (and the linked REQ) and embeds TDD-ready task specs into `ARCH-*.md`'s Tasks section. Does not create a new file.
+- **tdd** (Phase 4) — RED-GREEN-REFACTOR loop driven from `ARCH-*.md`. Two modes: collaborative (pauses each step) and auto.
+- **review** (Phase 5) — Triage-first review with up to 16 checks. Two modes: pipeline (verifies task implementation against ARCH/REQ) and general (PR/branch/staged).
+
+### Supporting skills (non-phase)
+
+- **commit** — Standalone; stages files, infers conventional commit type, extracts task number from branch name.
+- **start-task** — Pre-pipeline bootstrap; pulls latest main, gathers task context, creates a feature branch.
+- **create-worktrees** — Spins up parallel worktrees for parallel agent work.
+- **code-quality-review / performance-review / rules-check / security-review** — Sub-checklists invoked by `review` as parallel agents.
+
+### Pipeline entry points (three scenarios)
+
+- **Greenfield** — Phase 1 → 2 → 3 → 4 → 5
+- **New feature** in an existing system — Phase 2 → 3 → 4 → 5 (skip requirements; brief is enough)
+- **Bugfix** — Phase 1 (as RCA) → 3 → 4 → 5 (skip architecture)
+
+### Artifact paths
+
+- `/specs/requirements/REQ-<slug>.md` — produced by plan-requirements
+- `/specs/architecture/ARCH-<slug>.md` — produced by plan-architecture; tasks embedded in-place by generate-tasks
+- `/specs/context/<identifier>.md` — produced by start-task
 
 ## SKILL.md format
 
