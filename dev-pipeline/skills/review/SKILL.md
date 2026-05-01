@@ -1,6 +1,6 @@
 ---
 name: review
-description: "Review and verify code before merge — triage-first with up to 16 checks. Use this skill when the user wants to review and verify implemented code before considering a task complete or opening a PR. This skill triages what checks are relevant, then runs only the selected checks as parallel agents and produces a combined report. It supports two modes: pipeline review (verifying task implementation against a plan) and general review (PR, branch, or staged changes). It does NOT write or fix code — it flags findings for the developer to address."
+description: "Review and verify code before merge — Phase 5 of the 5-phase pipeline. Triage-first with up to 16 checks (not all apply to every review). Use this skill when the user wants to review and verify implemented code before considering a task complete or opening a PR. This skill triages what checks are relevant based on tech stack and review mode, then runs only the selected checks as parallel agents and produces a combined report. It supports two modes: pipeline review (verifying task implementation against an architecture document) and general review (PR, branch, or staged changes). It does NOT write or fix code — it flags findings for the developer to address."
 model: inherit
 color: lightsalmon
 ---
@@ -16,20 +16,18 @@ You do NOT write or fix code. You flag findings. The developer takes it from the
 ## Where You Sit in the Pipeline
 
 ```
-Project Plan (PROJECT-*.md) ←── optional
-     │
-plan-feature
-     │
-Feature Plan (PLAN-*.md) with embedded tasks
-     │
-tdd
-     │
-Working code + passing tests
-     │
-[YOU ARE HERE]
-     │
-     ▼
-Review Report ──► Developer addresses findings ──► PR / Done
+plan-requirements (Phase 1, optional) ──► REQ-*.md
+                                              │
+plan-architecture (Phase 2) ──► ARCH-*.md ◄──┘
+                                  │
+generate-tasks (Phase 3) ──► Tasks embedded in ARCH-*.md
+                                  │
+tdd (Phase 4) ──► Working code + passing tests
+                                  │
+                       [YOU ARE HERE — Phase 5 of 5]
+                                  │
+                                  ▼
+              Review Report ──► Developer addresses findings ──► PR / Done
 ```
 
 **Your input comes from:** The tdd skill produced working code (pipeline mode), OR the developer wants a general code review on a PR/branch/staged changes.
@@ -40,10 +38,10 @@ Review Report ──► Developer addresses findings ──► PR / Done
 ### Pipeline Mode
 
 ```
-Review implementation against specs/plans/PLAN-auth-login-flow.md
+Review implementation against specs/architecture/ARCH-auth-login-flow.md
 ```
 
-The developer has completed a TDD implementation. You read the plan document (which contains both the feature plan and embedded task specs), verify completeness against the spec, and run code quality checks on the implementation. **Task Completion Verification is always included** in this mode.
+The developer has completed a TDD implementation. You read the architecture document (which contains both the architecture and embedded task specs) and the linked `REQ-*.md` (if any), verify completeness against the spec, and run code quality checks on the implementation. **Task Completion Verification is always included** in this mode.
 
 ### General Mode
 
@@ -111,7 +109,7 @@ Report the detected stack to the developer as part of the triage proposal.
 
 Before talking to the developer, silently:
 
-1. **Pipeline mode:** Read the plan document (plan + embedded task spec). Note what kind of work it is.
+1. **Pipeline mode:** Read the architecture document (architecture + embedded task spec) and the linked REQ document (if any). Note what kind of work it is.
 2. **General mode:** Gather the diff. Identify changed files, languages, and scope. For PR mode, also read:
    - The PR title and description (`gh pr view {number} --json title,body`) — this contains the developer's stated intent.
    - Commit messages (`git log {base}..{head} --oneline`) — these explain the progression of changes.
@@ -125,7 +123,7 @@ Based on what you've read, propose which checks to run and which to skip. Be spe
 
 Example triage conversation:
 
-> "I've read the plan and scanned the changeset. Detected stack: TypeScript, Express, Prisma.
+> "I've read the architecture (and linked REQ) and scanned the changeset. Detected stack: TypeScript, Express, Prisma.
 >
 > **Run:**
 > - ✅ Task Completion — 6 acceptance criteria to verify
@@ -149,7 +147,7 @@ Once the developer confirms, launch **all selected checks in parallel** as agent
 - **Tech stack summary:** Detected languages, frameworks, and tools.
 - **Severity scale and false positive mitigation rules.**
 - **CLAUDE.md content** (if it exists) for project conventions.
-- **Pipeline mode only:** The plan/task spec content.
+- **Pipeline mode only:** The ARCH (with embedded task spec) and the linked REQ content.
 - **General PR mode only:** PR description and commit message summary for intent context.
 
 ## Available Checks
@@ -158,15 +156,17 @@ Once the developer confirms, launch **all selected checks in parallel** as agent
 
 **Available in:** Pipeline mode only.
 
-**Purpose:** Traces every requirement from the plan through the task spec to the implementation. The core "did we deliver what we promised?" check.
+**Purpose:** Traces every requirement from the REQ → through the ARCH design and Change Footprint → through the task spec → to the implementation. The core "did we deliver what we promised, and did we land where we said we would?" check.
 
 **Focus areas:**
+- Every REQ-ID listed in the task's "Satisfies REQs" field is verified by at least one passing test
 - Every test scenario in the task spec has a corresponding test that exists and passes
-- Every file in "New files" and "Modified files" matches expectations
-- No file in "Must NOT modify" was touched
-- No unexpected files were created beyond what the task spec lists
+- **Change Footprint adherence:** every file in the task's Files Expected matches the corresponding entry in ARCH's Change Footprint, and every Change Footprint row owned by the task is present in the diff
+- No file in "Must NOT modify" was touched (these are silent-regression hotspots — verify the regression-guard tests cover them)
+- No unexpected files were created beyond what the task spec lists. If new files appear, that's scope drift — flag it
+- **Areas of Impact coverage:** for any M/H risk Area touched, confirm the High-Risk Callouts in Implementation Notes were addressed and the corresponding regression-guard or stress tests pass
 - Scope boundaries from the task spec were respected
-- Key decisions from the plan's Decisions Log were followed
+- Key decisions from ARCH's Architecture Decisions Log were followed
 - Things that can't be verified from code are flagged as manual checks
 
 **When to skip:** Only if the developer explicitly says they just want code quality without spec verification.
@@ -174,16 +174,28 @@ Once the developer confirms, launch **all selected checks in parallel** as agent
 **Report section:**
 ```
 ## Task Completion
-**Criteria:** [X/Y verified]
-| # | Criterion | Status | Evidence |
-| 1 | [from task spec] | ✅ Verified | [test file:test name] |
-| 2 | [from task spec] | ⚠️ Manual check | [what to verify] |
-| 3 | [from task spec] | ❌ Not met | [what's missing] |
+**REQs:** [X/Y verified]
+| REQ | Status | Evidence |
+| R1 | ✅ Verified | [test file:test name] |
+| R2 | ⚠️ Manual check | [what to verify] |
 
-**File Verification:**
-| Expected | Status | Notes |
+**Test Scenarios:** [X/Y passing]
+| # | Scenario | Status | Evidence |
+| 1 | [from task spec] | ✅ Verified | [test file:test name] |
+
+**Change Footprint Adherence:**
+| ARCH Footprint Row | In Diff? | Notes |
+| New: src/auth/AuthService.ts | ✅ | matches |
+| Modified: src/users/UserRepo.ts | ✅ | matches |
+| Touched-not-changed: src/api/routes.ts | ✅ untouched | regression-guard test passes |
+| (unexpected) src/api/middleware.ts | ❌ | NOT in Footprint — scope drift |
+
+**Areas of Impact (M/H risk):**
+| Area | Risk | Callout addressed? | Regression-guard tests? |
+| UserService callers | M | ✅ | ✅ pass |
+
 **Scope:** [✅ Respected | ❌ Violated — explanation]
-**Plan Decisions:** [✅ Followed | ❌ Deviated — explanation]
+**ARCH Decisions:** [✅ Followed | ❌ Deviated — explanation]
 ```
 
 ---
@@ -654,7 +666,7 @@ Create the report. For general mode, save to the repository root. For pipeline m
 
 | Field | Value |
 |-------|-------|
-| **Review Mode** | {Pipeline: PLAN-slug / PR #123 / Branch / Staged / Diff} |
+| **Review Mode** | {Pipeline: ARCH-slug / PR #123 / Branch / Staged / Diff} |
 | **Target** | {plan path / PR URL / branch name / staged / diff file} |
 | **Date** | {YYYY-MM-DD HH:MM} |
 | **Tech Stack** | {detected languages, frameworks, tools} |
@@ -759,8 +771,8 @@ When the developer says they've addressed findings and wants a re-review:
 - Fix issues you find — flag them in the report
 - Run checks the developer agreed to skip — respect the triage decision
 - Verify things you can't actually check — flag them as manual checks instead of guessing
-- Ignore the plan's decisions — if implementation contradicts a plan decision, flag it even if the code "works"
-- Add new requirements — only verify what the plan, task spec, or code quality standards define
+- Ignore ARCH's decisions or REQ's requirements — if implementation contradicts either, flag it even if the code "works"
+- Add new requirements — only verify what the REQ, ARCH, task spec, or code quality standards define
 - Skip the triage conversation — always propose scope before running checks, unless the developer pre-specifies exactly what they want
 - Assume all checks are needed — be selective and save tokens
 
@@ -768,7 +780,15 @@ When the developer says they've addressed findings and wants a re-review:
 
 - The triage conversation should be brief — 1-2 exchanges, not a deep discussion. You're proposing a checklist, not planning a feature.
 - **Every agent** must read CLAUDE.md (if it exists) before starting analysis — not just Code Quality checks. Security agents need to know about auth middleware conventions. Test agents need to know test structure conventions. React agents need to know component patterns. Ground all findings in the project's actual conventions, not generic best practices.
-- For pipeline mode, the plan source chain matters: plan document → task spec → implementation. Trace decisions back to their origin.
+- For pipeline mode, the source chain matters: REQ → ARCH → task spec → implementation. Trace decisions back to their origin.
+
+## Phase 5 Gate
+
+Before approving the PR, the developer must be able to answer **yes** to this question:
+
+> **Would I mass-merge this without reading it? If yes, I haven't reviewed properly.**
+
+The discipline is: never approve what you haven't understood.
 - Today's date should be used in review reports.
 - If the developer asks for a re-review after fixes, focus on areas that had findings — don't repeat passed checks.
 - All selected checks should be launched as parallel agents (single message with multiple Agent tool calls) for efficiency.

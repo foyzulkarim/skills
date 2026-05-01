@@ -1,6 +1,6 @@
 # foyzulkarim/skills — Claude Code Plugin Marketplace
 
-A plugin marketplace for [Claude Code](https://claude.ai/claude-code) with a structured development pipeline.
+A plugin marketplace for [Claude Code](https://claude.ai/claude-code) with a structured 5-phase development pipeline.
 
 ## Add this marketplace
 
@@ -10,26 +10,33 @@ A plugin marketplace for [Claude Code](https://claude.ai/claude-code) with a str
 
 ## dev-pipeline
 
-A complete development workflow from project planning to code review:
+A complete development workflow built on a 5-phase agentic framework:
 
 ```
-/plan-project → phased project plan    (optional, for multi-feature work)
-  /start-task → sync main, create branch, gather context  (opt-in, per task)
-    /plan-feature → feature-level plan
-      /generate-tasks → TDD-ready task specs
-        /tdd → implementation
-          /review → verification
+Phase 1              Phase 2              Phase 3            Phase 4      Phase 5
+/plan-requirements → /plan-architecture → /generate-tasks → /tdd       → /review → /commit
+   (you)              (you + Claude)       (Claude)          (Claude)     (you+C)   (support)
+   REQ-*.md           ARCH-*.md            tasks in ARCH     code+tests   PR
+
+/start-task → sync main, create branch, gather context  (opt-in, pre-Phase-1)
+/commit → conventional commit  (use at any stage)
 ```
 
-| Skill | Description |
-|-------|-------------|
-| [/plan-project](./dev-pipeline/skills/plan-project) | Strategic project planning — explores problem space, maps domain, decomposes into phases |
-| [/start-task](./dev-pipeline/skills/start-task) | Start a task — syncs main, gathers context from Jira (via `acli`), GitHub (via `gh`), or local specs, creates and pushes a branch |
-| [/plan-feature](./dev-pipeline/skills/plan-feature) | Feature-level planning — uncovers requirements, edge cases, failure modes, constraints |
-| [/generate-tasks](./dev-pipeline/skills/generate-tasks) | Transform plans into TDD-ready task specs embedded in plan documents |
-| [/tdd](./dev-pipeline/skills/tdd) | Collaborative or autonomous TDD — RED-GREEN-REFACTOR, one test at a time |
-| [/review](./dev-pipeline/skills/review) | Triage-first code review — up to 14 checks, pipeline or general mode |
-| [/commit](./dev-pipeline/skills/commit) | Standalone commit assistant — stages files, drafts conventional commit message, executes after confirmation |
+| Skill | Phase | Description |
+|-------|-------|-------------|
+| [/plan-requirements](./dev-pipeline/skills/plan-requirements) | 1 | Capture WHAT and WHY — Socratic interview producing `REQ-*.md`. Owner: developer. |
+| [/plan-architecture](./dev-pipeline/skills/plan-architecture) | 2 | Design HOW — collaborative system design producing `ARCH-*.md`. |
+| [/generate-tasks](./dev-pipeline/skills/generate-tasks) | 3 | Embed TDD-ready task specs into `ARCH-*.md`. |
+| [/tdd](./dev-pipeline/skills/tdd) | 4 | RED-GREEN-REFACTOR, one test at a time. Collaborative or autonomous. |
+| [/review](./dev-pipeline/skills/review) | 5 | Triage-first code review — up to 16 checks, pipeline or general mode. |
+| [/start-task](./dev-pipeline/skills/start-task) | pre-1 | Sync main, gather task context, create and push a feature branch. |
+| [/commit](./dev-pipeline/skills/commit) | any | Standalone conventional commit assistant. |
+
+### Pipeline entry points
+
+- **Greenfield** → Phase 1 → 2 → 3 → 4 → 5
+- **New feature in an existing system** → Phase 2 → 3 → 4 → 5 (skip requirements; brief is enough)
+- **Bugfix** → Phase 1 (as RCA) → 3 → 4 → 5 (skip architecture)
 
 ### Install
 
@@ -42,21 +49,20 @@ A complete development workflow from project planning to code review:
 ```
 dev-pipeline/
 ├── .claude-plugin/
-│   ├── plugin.json        ← plugin identity
-│   └── marketplace.json   ← marketplace entry
+│   └── plugin.json
 ├── skills/
-│   ├── plan-project/
-│   │   └── SKILL.md
-│   ├── start-task/
-│   │   └── SKILL.md
-│   ├── plan-feature/
-│   │   └── SKILL.md
+│   ├── plan-requirements/
+│   ├── plan-architecture/
 │   ├── generate-tasks/
-│   │   └── SKILL.md
 │   ├── tdd/
-│   │   └── SKILL.md
-│   └── review/
-│       └── SKILL.md
+│   ├── review/
+│   ├── commit/
+│   ├── start-task/
+│   ├── create-worktrees/
+│   ├── code-quality-review/
+│   ├── performance-review/
+│   ├── rules-check/
+│   └── security-review/
 └── README.md
 ```
 
@@ -64,5 +70,5 @@ dev-pipeline/
 
 1. Fork this repo
 2. Add or modify skills under `dev-pipeline/skills/<skill-name>/`
-3. Register the new skill in `dev-pipeline/.claude-plugin/plugin.json` (add an entry to the `skills` array)
+3. The `skills` field in `plugin.json` points to `./skills/` — the directory is auto-scanned, no per-skill registration needed
 4. Open a pull request

@@ -12,17 +12,16 @@ You are a task onboarding assistant. Your job is to prepare a clean workspace fo
 ## Where You Sit in the Pipeline
 
 ```
-Project Plan (PROJECT-*.md) <── optional upstream context
-       |
-[YOU ARE HERE]
+[YOU ARE HERE — pre-Phase-1 bootstrap]
        |
        v
-start-task ──> plan-feature ──> generate-tasks ──> tdd ──> review
+start-task ──> plan-requirements ──> plan-architecture ──> generate-tasks ──> tdd ──> review
+                  (Phase 1)              (Phase 2)            (Phase 3)       (4)    (5)
        |
   commit (use at any stage)
 ```
 
-You are the **bootstrap step** of the daily feature workflow. Before any planning happens, you ensure the developer has a clean, up-to-date branch with full task context loaded and persisted.
+You are the **bootstrap step** of the daily feature workflow. You sit *before* the 5-phase pipeline. Before any planning happens, you ensure the developer has a clean, up-to-date branch with full task context loaded and persisted.
 
 ## Conversation Flow
 
@@ -236,7 +235,7 @@ Summarize what was done and point to the next step:
 
 > *"Quick recap: [2-3 sentence summary of the task from the gathered context]."*
 >
-> *"Context saved to `/specs/context/{identifier}.md`. Ready to plan? Use `/plan-feature` to start the planning conversation, or dive straight in — run `/tdd` if you have tasks ready, or start coding directly if the task is small enough to not need a plan."*
+> *"Context saved to `/specs/context/{identifier}.md`. Ready to plan? Use `/plan-requirements` if you need to nail down the WHAT and WHY first (greenfield or unclear bug), or `/plan-architecture` to jump straight into design (new feature in an existing system). Run `/tdd` if you already have tasks ready, or start coding directly if the task is small enough not to need a plan."*
 
 ## Branch Type Reference
 
