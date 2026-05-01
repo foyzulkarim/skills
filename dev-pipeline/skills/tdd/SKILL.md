@@ -33,25 +33,23 @@ You run through the entire TDD cycle without pausing for confirmation. You still
 ## Where You Sit in the Pipeline
 
 ```
-Project Plan (PROJECT-*.md) ←── optional
-     │
-plan-feature
-     │
-Feature Plan (PLAN-*.md)
-     │
-generate-tasks ──► Tasks embedded in PLAN-*.md
-     │
-[YOU ARE HERE] ──► Read plan + task from one document
-     │
-     ▼
-Working code + passing tests
-     │
-     ▼
-review
+plan-requirements (Phase 1, optional) ──► REQ-*.md
+                                              │
+plan-architecture (Phase 2) ──► ARCH-*.md ◄──┘
+                                  │
+generate-tasks (Phase 3) ──► Tasks embedded in ARCH-*.md
+                                  │
+                       [YOU ARE HERE — Phase 4 of 5]
+                                  │
+                                  ▼
+                  Working code + passing tests
+                                  │
+                                  ▼
+                          review (Phase 5)
 ```
 
-**Your input comes from:** A `PLAN-*.md` file that contains both the feature plan and task specs (added by the generate-tasks skill). You read one document and have full context.
-**Your output feeds into:** The review skill, which checks the implementation against the plan and task spec. You don't call it — the developer does when they're ready.
+**Your input comes from:** An `ARCH-*.md` file that contains the architecture and embedded task specs (added by the generate-tasks skill). The linked `REQ-*.md` (if any) provides additional acceptance-criteria context. You read one document and have full context.
+**Your output feeds into:** The review skill, which checks the implementation against the architecture and task spec. You don't call it — the developer does when they're ready.
 
 ## Your Role
 
@@ -75,21 +73,28 @@ Your value is in:
 
 ## Your Input
 
-A `PLAN-*.md` file from `/specs/plans/`. The developer will specify which task to implement (e.g., "task T1 from PLAN-auth-login-flow.md").
+An `ARCH-*.md` file from `/specs/architecture/`. The developer will specify which task to implement (e.g., "task T1 from ARCH-auth-login-flow.md").
 
-The plan document contains two parts:
+The architecture document contains two parts:
 
-**1. The Feature Plan (upper half)** — requirements, decisions, edge cases, constraints, architecture notes. This is your background context. Do not modify this section.
+**1. The Architecture (upper half)** — high-level structure, tech choices, data models, API contracts, module boundaries, patterns, **Change Footprint**, **Areas of Impact**, decisions log, and forward+backward stress-test scenarios. This is your background context. Do not modify this section.
+
+The **Change Footprint** is your hard scope contract: it lists exactly which files are new, modified, deleted, and "touched but not changed." The task spec's Files Expected is anchored on this — respect it. The **Areas of Impact** tells you which parts of the system carry M/H regression risk; if your task touches those, the task's High-Risk Callouts call out what to watch for.
+
+If the architecture document references a `REQ-*.md` in its `Requirements source` field, **also read that REQ** for the acceptance criteria your task is verifying.
 
 **2. The Tasks section (lower half)** — one or more `## Task T[n]` sections appended by the generate-tasks skill. Each task contains:
-- A **Test Plan** with test file paths, describe blocks, and test scenarios
-- **Implementation Notes** with layer info, pattern references, key decisions, and libraries
+- A **Footprint slice** field — the subset of ARCH's Change Footprint this task owns
+- A **High-risk areas touched** field — Areas of Impact entries (M/H risk) the task touches
+- A **Test Plan** with test file paths, describe blocks, and test scenarios (with REQ-ID traceability) — including regression-guard tests for "Touched but not changed" files
+- **Implementation Notes** with module info, pattern references, key decisions, libraries, and high-risk callouts
 - **Scope Boundaries** defining what is and isn't in play
-- **Files Expected** listing new, modified, and must-not-touch files
+- **Files Expected** listing new, modified, and must-not-touch files (anchored on Change Footprint)
 - A **TDD Sequence** (if present) suggesting an order of operations
 - A **Status** field (`not started`, `in progress`, `done`, `blocked`)
+- A **Satisfies REQs** field listing which requirements this task verifies
 
-The task spec is your roadmap. The plan above it is your context. Follow the task spec unless you see a reason to discuss a different approach with the developer. If something in the task spec is unclear, check the plan's requirements and decisions sections first — the answer is often there.
+The task spec is your roadmap. The architecture above it (and the linked REQ) is your context. Follow the task spec unless you see a reason to discuss a different approach with the developer. If something in the task spec is unclear, check the architecture's decisions and the REQ's requirements first — the answer is often there.
 
 ## The TDD Cycle
 
@@ -124,10 +129,10 @@ Then pick up the next test and repeat.
 
 When you first receive a task to implement:
 
-1. **Read the full plan document** — the plan sections for context, and the specific task section for your roadmap.
+1. **Read the full architecture document** — the architecture sections for context, and the specific task section for your roadmap. If a REQ is linked, read it too.
 2. **Read CLAUDE.md** (if it exists) and **scan the relevant source code and test files** mentioned in the task spec to understand current state, patterns, and conventions.
 3. **Detect the project's testing setup** — framework, assertion style, mocking approach, file naming conventions, configuration.
-4. **Update the task's status** to `in progress` in the plan document.
+4. **Update the task's status** to `in progress` in the architecture document.
 5. **Collaborative mode:** Summarize your understanding to the developer: what you're building, the test order you plan to follow, and anything you want to clarify. Wait for the developer to confirm or adjust before writing the first test.
    **Autonomous mode:** If everything in the task spec is clear, proceed directly to the first test. If there is genuine ambiguity, ask before starting.
 
@@ -135,7 +140,7 @@ When you first receive a task to implement:
 
 If the developer says they're continuing a previous TDD session:
 
-1. **Read the plan document** to understand the full scope and find the task.
+1. **Read the architecture document** to understand the full scope and find the task.
 2. **Scan existing test files** to see which tests already exist and are passing.
 3. **Identify where you left off** — which test scenarios from the spec are not yet implemented.
 4. **Summarize** what's done and what's remaining.
@@ -157,8 +162,9 @@ Follow the project's existing test conventions. These general principles apply r
 
 - **Minimum to pass.** Write only enough code to make the current failing test pass.
 - **Follow the project's patterns.** Use the pattern references from the task spec's Implementation Notes and match existing code style.
-- **Respect file boundaries.** Only create or modify files listed in the task spec's Files Expected section. If you think a file not listed needs changing, discuss with the developer first.
-- **Respect the Must NOT Modify list.** Never touch files the task spec says not to touch.
+- **Respect the Change Footprint.** The task spec's Files Expected is a direct projection of the ARCH Change Footprint. Only create or modify files listed there. If you think a file not listed needs changing, that's a signal the architecture or the task scope is wrong — stop and discuss with the developer rather than expanding scope silently.
+- **Respect the Must NOT Modify list.** "Touched but not changed" files are listed there for a reason: regression-guard tests verify they still behave correctly, but you do not edit them. Never touch files the task spec says not to touch.
+- **Honor High-Risk Callouts.** If the task spec flags an Area of Impact with M/H risk, give that area extra attention — read the touched code carefully, run the regression-guard tests early in the cycle, and pause if anything looks off.
 
 ## After All Tests Pass
 
@@ -166,9 +172,17 @@ Once every test scenario from the task spec has been through the RED → GREEN �
 
 1. **Run the full test suite** to confirm nothing is broken beyond the scope of this task.
 2. **Review the task spec's scope boundaries** — confirm you haven't drifted.
-3. **Update the task's status** to `done` in the plan document.
+3. **Update the task's status** to `done` in the architecture document.
 4. **Summarize what was done:** files created, files modified, all tests passing.
-5. Let the developer know the task is ready for review: "All tests are passing. When you're ready, run the Review against `specs/plans/PLAN-[slug].md`"
+5. Let the developer know the task is ready for review: "All tests are passing. When you're ready, run the Review against `specs/architecture/ARCH-[slug].md`"
+
+## Phase 4 Gate
+
+Before handing off to review, the developer must be able to answer **yes** to this question:
+
+> **Do all tests pass and does the code match the architecture decisions from Phase 2?**
+
+If the answer is no, Phase 4 isn't done.
 
 ## You Must NOT
 
@@ -177,7 +191,7 @@ Once every test scenario from the task spec has been through the RED → GREEN �
 - **Collaborative mode only:** Write production code before the developer has seen and confirmed the red. Skip the developer's confirmation at any red or green checkpoint.
 - **Autonomous mode only:** Ignore unexpected failures — stop and fix or ask. Guess when the task spec is ambiguous — stop and ask.
 - Modify files in the task spec's "Must NOT modify" list (both modes)
-- Modify the plan sections of the document — only update the task's Status field (both modes)
+- Modify the architecture sections of the document — only update the task's Status field (both modes)
 - Add requirements not in the task spec (both modes — in collaborative mode raise them as suggestions; in autonomous mode skip them entirely)
 - Call the Review — that's the developer's call when they're ready (both modes)
 
