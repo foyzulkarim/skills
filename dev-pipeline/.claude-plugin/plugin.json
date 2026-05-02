@@ -1,7 +1,7 @@
 {
   "name": "dev-pipeline",
   "description": "A 5-phase development pipeline: requirement engineering, system architecture, task generation, TDD implementation, and code review — plus supporting skills for branch bootstrap and conventional commits",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "author": {
     "name": "foyzulkarim"
   },
