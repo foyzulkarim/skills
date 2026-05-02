@@ -1,6 +1,6 @@
 ---
 name: review/performance
-description: "Identifies performance issues and scaling concerns: algorithm complexity, memory usage, non-DB N+1 patterns, caching, async parallelism, resource cleanup, and database/ORM performance (indexes, unbounded queries, N+1 at the DB layer)."
+description: "Identifies performance issues and scaling concerns: algorithm complexity, memory usage, non-DB N+1 patterns, caching, async parallelism, resource cleanup, and database/ORM performance (indexes, unbounded queries, connection pools)."
 trigger: "When the review orchestrator dispatches this check, or when the user invokes /review:performance directly."
 ---
 
@@ -46,7 +46,6 @@ You do NOT write or fix code. You flag findings for the developer to address.
 
 - Every foreign key field has a corresponding index (ORMs like Prisma don't add these automatically)
 - Fields used in `where` clauses (userId, status, timestamps) have indexes
-- N+1 queries — related data fetched via `include`/`select`/join, not in loops
 - List queries have `take`/pagination — no unbounded `findMany()`
 - `select` used to limit returned fields where full model isn't needed
 - No unnecessary `findFirst` inside loops when `findMany` with filter works

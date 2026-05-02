@@ -49,7 +49,7 @@ Phase 1              Phase 2              Phase 3            Phase 4      Phase 
 - **commit** — Standalone; stages files, infers conventional commit type, extracts task number from branch name.
 - **start-task** — Pre-pipeline bootstrap; pulls latest main, gathers task context, creates a feature branch.
 - **create-worktrees** — Spins up parallel worktrees for parallel agent work.
-- **code-quality-review / performance-review / rules-check / security-review** — Sub-checklists invoked by `review` as parallel agents.
+- **Sub-checks for review** — 16 domain-specific checks live at `review/sub-skills/{check-name}/`; invoke directly via `/review:{check-name}` or via the `review` orchestrator.
 
 ### Pipeline entry points (three scenarios)
 
