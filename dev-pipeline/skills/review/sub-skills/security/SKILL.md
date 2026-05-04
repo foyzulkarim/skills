@@ -1,7 +1,7 @@
 ---
 name: review/security
 description: "Identifies security vulnerabilities and hardening gaps: input validation, injection risks, authentication/authorization, secrets exposure, CORS, rate limiting, JWT handling, file uploads, dependency CVEs, and OWASP Top 10."
-trigger: "When the review orchestrator dispatches this check, or when the user invokes /review:security directly."
+trigger: "When the review orchestrator dispatches this check."
 ---
 
 # Security Check

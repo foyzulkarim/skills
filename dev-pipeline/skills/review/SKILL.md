@@ -1,6 +1,6 @@
 ---
 name: review
-description: "Phase 5 review orchestrator — triage-first with up to 16 checks. Reads the changeset, proposes a scoped review plan, dispatches sub-skills by name, and compiles a combined report. Supports two modes: pipeline (verifies implementation against ARCH/REQ) and general (PR, branch, staged changes). Does NOT write or fix code."
+description: "Phase 5 review orchestrator — triage-first with up to 16 checks. Reads the changeset, proposes a scoped review plan, dispatches checks as parallel Agent tool calls (each reading a sub-skill SKILL.md for criteria), and compiles a combined report. Supports two modes: pipeline (verifies implementation against ARCH/REQ) and general (PR, branch, staged changes). Does NOT write or fix code."
 model: inherit
 color: lightsalmon
 ---
@@ -142,13 +142,23 @@ Once the developer confirms, dispatch all selected checks. Each sub-skill receiv
 - **Pipeline mode only:** The ARCH (with embedded task spec) and the linked REQ content.
 - **General PR mode only:** PR description and commit message summary for intent context.
 
-Dispatch instruction format:
+Dispatch each selected check as a **parallel Agent tool call**. Each agent reads the sub-skill's SKILL.md file to get its review criteria, then applies it to the relevant files.
+
+For each check, spawn a general-purpose agent with this prompt structure:
+
 ```
-Run these checks in parallel: review/sub-skills/code-quality, review/sub-skills/security,
-review/sub-skills/database-patterns
+Read the review check definition at dev-pipeline/skills/review/sub-skills/{check-name}/SKILL.md.
+Then apply those criteria to the following files:
+{filtered file list}
+
+Tech stack: {summary}
+Severity scale: {the 5-level scale from this skill}
+CLAUDE.md conventions: {content if exists}
+{Pipeline mode: ARCH content and linked REQ content}
+{General PR mode: PR description and commit message summary}
 ```
 
-The skill runner decides execution strategy. Do NOT hardcode Agent tool calls.
+Spawn all selected checks as parallel Agent calls in a single message.
 
 ### Step 4: Collect and Compile
 
@@ -160,26 +170,26 @@ After all checks complete:
 
 ## Available Checks
 
-Dispatch these by path: `review/sub-skills/{check-name}`
+Each check is defined in a SKILL.md file at `dev-pipeline/skills/review/sub-skills/{check-name}/SKILL.md`. The orchestrator reads these files and applies the criteria via Agent calls — they are NOT independently invocable skills.
 
 | # | Check | Path | Description | When to skip |
 |---|-------|------|-------------|--------------|
-| 1 | task-completion | `review/sub-skills/task-completion` | REQ satisfaction, test scenarios, Change Footprint, ARCH decisions | Pipeline mode only; skip if developer wants code-only review |
-| 2 | code-quality | `review/sub-skills/code-quality` | Naming, complexity, TS usage, conventions, layer boundaries, imports | Pure documentation or config-only changes |
-| 3 | test-coverage | `review/sub-skills/test-coverage` | Edge cases, test isolation, regression coverage, assertion quality | When developer closely observed all tests during TDD |
-| 4 | performance | `review/sub-skills/performance` | Algorithm complexity, non-DB N+1, caching, memory, async parallelism | Simple CRUD, config changes, docs, tests-only |
-| 5 | security | `review/sub-skills/security` | Auth/authz, injection, secrets, CORS, rate limiting, OWASP Top 10 | Internal utilities with no user-facing surface |
-| 6 | error-handling | `review/sub-skills/error-handling` | Try-catch, logging, graceful degradation, resource cleanup | Docs, config-only, simple data model changes |
-| 7 | documentation | `review/sub-skills/documentation` | README, API docs, JSDoc, migration guides, CLAUDE.md | Internal impl details, test files, pure refactoring |
-| 8 | config-dependencies | `review/sub-skills/config-dependencies` | Env vars, new deps, CVE scanning, lock files | No config or dependency changes in diff |
-| 9 | typescript-strictness | `review/sub-skills/typescript-strictness` | any, type assertions, non-null assertions, ts-ignore, generics | No TypeScript files changed |
-| 10 | runtime-behavior | `review/sub-skills/runtime-behavior` | Memory leaks, event loop blocking, prototype pollution, megamorphism | No JS/TS files, docs/config-only |
-| 11 | async-patterns | `review/sub-skills/async-patterns` | Unhandled rejections, Promise.all opportunities, race conditions | No async code in diff |
-| 12 | react-patterns | `review/sub-skills/react-patterns` | Hooks rules, stale closures, hydration, server/client boundaries | No React/Next.js files changed |
-| 13 | express-patterns | `review/sub-skills/express-patterns` | Middleware ordering, async handlers, body validation, CORS | No Express route/middleware changes |
-| 14 | database-patterns | `review/sub-skills/database-patterns` | N+1 (DB), transactions, indexes, connection pools, injection | No database operations in diff |
-| 15 | migration | `review/sub-skills/migration` | API contracts, destructive migrations, breaking changes, env vars | Internal-only changes, purely additive changes |
-| 16 | accessibility | `review/sub-skills/accessibility` | WCAG 2.1, ARIA, keyboard nav, semantic HTML, color contrast | No frontend/UI files changed, backend-only |
+| 1 | task-completion | `dev-pipeline/skills/review/sub-skills/task-completion/SKILL.md` | REQ satisfaction, test scenarios, Change Footprint, ARCH decisions | Pipeline mode only; skip if developer wants code-only review |
+| 2 | code-quality | `dev-pipeline/skills/review/sub-skills/code-quality/SKILL.md` | Naming, complexity, TS usage, conventions, layer boundaries, imports | Pure documentation or config-only changes |
+| 3 | test-coverage | `dev-pipeline/skills/review/sub-skills/test-coverage/SKILL.md` | Edge cases, test isolation, regression coverage, assertion quality | When developer closely observed all tests during TDD |
+| 4 | performance | `dev-pipeline/skills/review/sub-skills/performance/SKILL.md` | Algorithm complexity, non-DB N+1, caching, memory, async parallelism | Simple CRUD, config changes, docs, tests-only |
+| 5 | security | `dev-pipeline/skills/review/sub-skills/security/SKILL.md` | Auth/authz, injection, secrets, CORS, rate limiting, OWASP Top 10 | Internal utilities with no user-facing surface |
+| 6 | error-handling | `dev-pipeline/skills/review/sub-skills/error-handling/SKILL.md` | Try-catch, logging, graceful degradation, resource cleanup | Docs, config-only, simple data model changes |
+| 7 | documentation | `dev-pipeline/skills/review/sub-skills/documentation/SKILL.md` | README, API docs, JSDoc, migration guides, CLAUDE.md | Internal impl details, test files, pure refactoring |
+| 8 | config-dependencies | `dev-pipeline/skills/review/sub-skills/config-dependencies/SKILL.md` | Env vars, new deps, CVE scanning, lock files | No config or dependency changes in diff |
+| 9 | typescript-strictness | `dev-pipeline/skills/review/sub-skills/typescript-strictness/SKILL.md` | any, type assertions, non-null assertions, ts-ignore, generics | No TypeScript files changed |
+| 10 | runtime-behavior | `dev-pipeline/skills/review/sub-skills/runtime-behavior/SKILL.md` | Memory leaks, event loop blocking, prototype pollution, megamorphism | No JS/TS files, docs/config-only |
+| 11 | async-patterns | `dev-pipeline/skills/review/sub-skills/async-patterns/SKILL.md` | Unhandled rejections, Promise.all opportunities, race conditions | No async code in diff |
+| 12 | react-patterns | `dev-pipeline/skills/review/sub-skills/react-patterns/SKILL.md` | Hooks rules, stale closures, hydration, server/client boundaries | No React/Next.js files changed |
+| 13 | express-patterns | `dev-pipeline/skills/review/sub-skills/express-patterns/SKILL.md` | Middleware ordering, async handlers, body validation, CORS | No Express route/middleware changes |
+| 14 | database-patterns | `dev-pipeline/skills/review/sub-skills/database-patterns/SKILL.md` | N+1 (DB), transactions, indexes, connection pools, injection | No database operations in diff |
+| 15 | migration | `dev-pipeline/skills/review/sub-skills/migration/SKILL.md` | API contracts, destructive migrations, breaking changes, env vars | Internal-only changes, purely additive changes |
+| 16 | accessibility | `dev-pipeline/skills/review/sub-skills/accessibility/SKILL.md` | WCAG 2.1, ARIA, keyboard nav, semantic HTML, color contrast | No frontend/UI files changed, backend-only |
 
 ## Orchestrator Checklist
 
@@ -321,7 +331,7 @@ When the developer says they've addressed findings:
 - Ignore ARCH's decisions or REQ's requirements — if implementation contradicts either, flag it
 - Add new requirements — only verify what the REQ, ARCH, task spec, or quality standards define
 - Skip the triage conversation — always propose scope before running checks
-- Hardcode Agent tool calls to dispatch sub-skills — describe intent, let the skill runner decide
+- Hardcode review criteria in Agent prompts — each agent must read the sub-skill's SKILL.md file for its criteria
 - Assume all 16 checks are needed — be selective
 
 ## Important Reminders

@@ -1,7 +1,7 @@
 ---
 name: review/config-dependencies
 description: "Reviews configuration and dependency changes for risks: env var documentation, new/updated dependencies (size, maintenance, license, CVEs), lock file consistency, and CI/CD pipeline impacts."
-trigger: "When the review orchestrator dispatches this check, or when the user invokes /review:config-dependencies directly."
+trigger: "When the review orchestrator dispatches this check."
 ---
 
 # Configuration & Dependencies Check

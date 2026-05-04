@@ -1,7 +1,7 @@
 ---
 name: review/express-patterns
 description: "Express.js-specific analysis: middleware ordering, async route handlers, multiple response calls, body/param validation, CORS misconfiguration, session/cookie issues, and rate limiting gaps. Uses 2-level tracing."
-trigger: "When the review orchestrator dispatches this check, or when the user invokes /review:express-patterns directly."
+trigger: "When the review orchestrator dispatches this check."
 ---
 
 # Express Patterns Check

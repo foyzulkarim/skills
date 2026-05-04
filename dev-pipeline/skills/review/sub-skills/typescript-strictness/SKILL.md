@@ -1,7 +1,7 @@
 ---
 name: review/typescript-strictness
 description: "Deep TypeScript type safety analysis: any usage, type assertions, non-null assertions, ts-ignore, loose generics, missing return types, and patterns that would fail under strict mode. Uses 2-level tracing."
-trigger: "When the review orchestrator dispatches this check, or when the user invokes /review:typescript-strictness directly."
+trigger: "When the review orchestrator dispatches this check."
 ---
 
 # TypeScript Strictness Check

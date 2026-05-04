@@ -1,7 +1,7 @@
 ---
 name: review/task-completion
 description: "Verifies that the implementation satisfies every requirement traced from REQ → ARCH → task spec → code. Checks Change Footprint adherence, test scenario coverage, scope boundaries, and ARCH decision compliance. Pipeline mode only."
-trigger: "When the review orchestrator dispatches this check in pipeline mode, or when the user invokes /review:task-completion directly."
+trigger: "When the review orchestrator dispatches this check."
 ---
 
 # Task Completion Check
