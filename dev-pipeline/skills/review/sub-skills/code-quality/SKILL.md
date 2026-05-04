@@ -1,6 +1,7 @@
 ---
 name: review/code-quality
 description: "Reviews code quality, naming conventions, structure, TypeScript usage, layer boundaries, import conventions, API conventions, and project-specific rules. Checks that code follows project conventions, is well-structured, and avoids common quality issues."
+trigger: "When the review orchestrator dispatches this check."
 ---
 
 # Code Quality & Conventions Check

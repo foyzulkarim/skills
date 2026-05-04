@@ -1,6 +1,7 @@
 ---
 name: review/error-handling
 description: "Checks error handling patterns, logging quality, and operational readiness: try-catch appropriateness, error propagation, graceful degradation, retry logic, stack trace preservation, and sensitive data in logs."
+trigger: "When the review orchestrator dispatches this check."
 ---
 
 # Error Handling & Observability Check

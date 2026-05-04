@@ -1,6 +1,7 @@
 ---
 name: review/runtime-behavior
 description: "Identifies JavaScript/Node.js runtime patterns that cause issues at scale: hidden class instability, event loop blocking, memory leaks, prototype pollution, reference vs value mutations, and detached DOM references. Uses 2-level tracing."
+trigger: "When the review orchestrator dispatches this check."
 ---
 
 # Runtime Behavior Check

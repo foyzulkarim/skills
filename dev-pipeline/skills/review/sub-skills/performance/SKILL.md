@@ -1,6 +1,7 @@
 ---
 name: review/performance
 description: "Identifies performance issues and scaling concerns: algorithm complexity, memory usage, non-DB N+1 patterns, caching, async parallelism, resource cleanup, and database/ORM performance (indexes, unbounded queries, connection pools)."
+trigger: "When the review orchestrator dispatches this check."
 ---
 
 # Performance Check
