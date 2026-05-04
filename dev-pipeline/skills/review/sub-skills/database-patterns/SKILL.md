@@ -1,7 +1,6 @@
 ---
 name: review/database-patterns
 description: "Database query and ORM analysis: N+1 queries, transaction correctness, connection pool management, query injection, performance (SELECT *, unbounded queries, missing indexes). Owns all DB-layer N+1 analysis. Uses 2-level tracing."
-trigger: "When the review orchestrator dispatches this check, or when the user invokes /review:database-patterns directly."
 ---
 
 # Database Patterns Check

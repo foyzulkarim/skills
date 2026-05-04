@@ -1,7 +1,6 @@
 ---
 name: review/async-patterns
 description: "Identifies async/await and Promise-related issues: unhandled rejections, sequential vs parallel opportunities, race conditions, resource cleanup, error propagation, and Promise constructor anti-patterns. Uses 2-level tracing."
-trigger: "When the review orchestrator dispatches this check, or when the user invokes /review:async-patterns directly."
 ---
 
 # Async Patterns Check

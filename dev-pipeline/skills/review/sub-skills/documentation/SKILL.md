@@ -1,7 +1,6 @@
 ---
 name: review/documentation
 description: "Checks that code changes are accompanied by appropriate documentation: README updates, API docs, JSDoc/TSDoc, config documentation, migration guides, CLAUDE.md updates, and internal accuracy of changed docs."
-trigger: "When the review orchestrator dispatches this check, or when the user invokes /review:documentation directly."
 ---
 
 # Documentation Check

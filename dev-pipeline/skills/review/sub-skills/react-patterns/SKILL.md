@@ -1,7 +1,6 @@
 ---
 name: review/react-patterns
 description: "React and Next.js-specific analysis: hooks rules violations, stale closures, unstable references, hydration mismatches, server/client boundaries, derived state, context overuse, and Next.js routing violations. Uses 2-level tracing."
-trigger: "When the review orchestrator dispatches this check, or when the user invokes /review:react-patterns directly."
 ---
 
 # React / Next.js Patterns Check

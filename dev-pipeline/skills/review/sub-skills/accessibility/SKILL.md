@@ -1,7 +1,6 @@
 ---
 name: review/accessibility
 description: "Identifies accessibility (a11y) issues in frontend code: missing ARIA attributes, keyboard navigation gaps, non-semantic HTML, form accessibility, focus management, image alt text, color contrast, and heading hierarchy. References WCAG 2.1."
-trigger: "When the review orchestrator dispatches this check, or when the user invokes /review:accessibility directly."
 ---
 
 # Accessibility Check

@@ -1,7 +1,6 @@
 ---
 name: review/test-coverage
 description: "Checks for test coverage gaps and test quality issues: edge cases, error scenarios, test isolation, naming, mocking, and flaky patterns."
-trigger: "When the review orchestrator dispatches this check, or when the user invokes /review:test-coverage directly."
 ---
 
 # Test Coverage & Quality Check

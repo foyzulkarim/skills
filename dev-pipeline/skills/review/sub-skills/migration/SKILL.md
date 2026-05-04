@@ -1,7 +1,6 @@
 ---
 name: review/migration
 description: "Identifies backward compatibility risks, breaking changes, and migration safety issues: API contract changes, destructive DB migrations, breaking changes to shared libraries, feature flags, URL changes, and event schema changes."
-trigger: "When the review orchestrator dispatches this check, or when the user invokes /review:migration directly."
 ---
 
 # Migration & Breaking Changes Check
