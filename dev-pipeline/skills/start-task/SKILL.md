@@ -61,6 +61,18 @@ Ask for the identifier explicitly — don't auto-generate it. The developer know
 
 Once the source is confirmed, fetch the task details.
 
+**For GitHub issues**, delegate to the script instead of fetching manually:
+
+```bash
+./scripts/gh-start-task.sh <NUMBER> [TYPE] [SLUG]
+```
+
+The script fetches the issue, derives the branch name, syncs git, creates/pushes the branch, and writes the context file — all without LLM calls. Confirm the command before running:
+
+> *"I'll fetch #87 via gh and bootstrap the branch — ready?"*
+
+If the script fails, fall back to manual handling.
+
 **Before fetching from a remote source, check that the CLI tool is available:**
 
 ```bash
@@ -85,16 +97,6 @@ If the command fails, check the exit code and report an actionable error:
 - Network error → suggest checking the network connection
 - Not found → suggest verifying the ticket key
 
-**GitHub** — fetch with `gh`:
-```bash
-gh issue view <NUMBER> --json title,body,labels
-```
-If this fails with a "not found" error, try the fallback:
-```bash
-gh pr view <NUMBER> --json title,body,labels
-```
-The number might reference a pull request rather than an issue. If both fail, report an actionable error (auth, network, or not found).
-
 **Local file** — read the file directly and extract the task title and scope.
 
 **After fetching from a remote tracker**, ask about additional local context:
@@ -112,54 +114,17 @@ From whatever source(s), you should now have:
 - **Task details** (description, acceptance criteria, notes)
 - **Source(s)** (Jira, GitHub, local file, ad-hoc)
 
-### Phase 3: Branch Check & Sync
+### Phase 3-4: Branch Sync, Create & Push
 
-Before creating anything, check where the developer is right now.
+**Handled by the script** — `gh-start-task.sh` performs branch sync, creates the branch, and pushes it. The skill skips these phases when using the script.
 
-```bash
-git branch --show-current
-```
+When doing **Jira or ad-hoc** (no script), follow the original steps:
 
-**If the current branch already contains the task number/key:**
-
-> *"You're already on `feat/TASK-42/add-auth`. Want to continue here, or create a fresh branch?"*
-
-If they choose to stay, skip to Phase 5 (Context File). The branch and remote are already set up.
-
-**If the current branch has a different task number/key:**
-
-> *"You're on `feat/TASK-99/other-work` but we're starting TASK-42. Should I switch to main and create a new branch, or handle this differently?"*
-
-Do not silently switch — the developer may have uncommitted work on that branch.
-
-**If no match (on main/master or unrelated branch):**
-
-Sync with the default branch:
-
-```bash
-git fetch origin
-```
-
-Detect the default branch — try `git checkout main` first. If it fails, fall back to:
-```bash
-git remote show origin | grep 'HEAD branch'
-```
-
-If neither method detects the default branch, ask the developer: *"I couldn't detect the default branch. Which branch should I sync from?"*
-
-Then:
-```bash
-git checkout <default-branch>
-git pull origin <default-branch>
-```
-
-**Dirty working tree** — always check `git status` before any branch operation (switching or creating). If there are uncommitted changes:
+**Dirty working tree** — always check `git status` before any branch operation:
 
 > *"You have uncommitted changes on `$(git branch --show-current)`. Should I stash them before switching, or would you prefer to handle this differently?"*
 
 Do not discard or stash changes without explicit confirmation.
-
-### Phase 4: Create & Push
 
 Construct the branch name:
 
@@ -211,7 +176,9 @@ git push -u origin {branch-name}
 
 ### Phase 5: Context File
 
-Write a context file so that future sessions and downstream skills can pick up where you left off.
+**Handled by the script for GitHub issues** — `gh-start-task.sh` writes `specs/context/{issue-number}.md` automatically.
+
+For **Jira, local files, or ad-hoc**, write the context file manually:
 
 Create `/specs/context/{identifier}.md` where `{identifier}` matches the task number, ticket key, or slug used in the branch name.
 
