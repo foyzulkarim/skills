@@ -88,7 +88,7 @@ echo ""
 
 # ── Git operations ────────────────────────────────────────────────────────────
 # Check git status for uncommitted changes
-if ! git diff --quiet 2>/dev/null || ! git diff --cached --quiet 2>/dev/null; then
+if ! git diff --quiet 2>/dev/null && ! git diff --cached --quiet 2>/dev/null; then
   echo "Error: You have uncommitted changes. Commit or stash them before running this script." >&2
   exit 1
 fi
@@ -100,8 +100,8 @@ git fetch origin "${DEFAULT_BRANCH}" --quiet 2>/dev/null || true
 # Check if branch already exists
 if git revparse --verify "$BRANCH_NAME" &>/dev/null; then
   echo "Branch '$BRANCH_NAME' already exists locally."
-  read -p "Switch to it? [y/n] " -r回应
-  if [[ "$回应" =~ ^[Yy]$ ]]; then
+  read -p "Switch to it? [y/n] " -r reply
+  if [[ "$reply" =~ ^[Yy]$ ]]; then
     git checkout "$BRANCH_NAME"
   else
     echo "Aborted." >&2
