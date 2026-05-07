@@ -64,7 +64,7 @@ Once the source is confirmed, fetch the task details.
 **For GitHub issues**, delegate to the script instead of fetching manually:
 
 ```bash
-./scripts/gh-start-task.sh <NUMBER> [TYPE] [SLUG]
+../scripts/gh-start-task.sh <NUMBER> [TYPE] [SLUG]
 ```
 
 The script fetches the issue, derives the branch name, syncs git, creates/pushes the branch, and writes the context file — all without LLM calls. Confirm the command before running:
