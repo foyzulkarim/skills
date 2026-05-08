@@ -88,7 +88,7 @@ echo ""
 
 # ── Git operations ────────────────────────────────────────────────────────────
 # Check git status for uncommitted changes
-if ! git diff --quiet 2>/dev/null && ! git diff --cached --quiet 2>/dev/null; then
+if ! git diff --quiet 2>/dev/null || ! git diff --cached --quiet 2>/dev/null; then
   echo "Error: You have uncommitted changes. Commit or stash them before running this script." >&2
   exit 1
 fi
@@ -96,9 +96,17 @@ fi
 # Sync with default branch
 echo "Syncing with ${DEFAULT_BRANCH}..."
 git fetch origin "${DEFAULT_BRANCH}" --quiet 2>/dev/null || true
+git checkout "${DEFAULT_BRANCH}" --quiet 2>/dev/null || {
+  echo "Error: Failed to checkout '${DEFAULT_BRANCH}'." >&2
+  exit 1
+}
+git pull origin "${DEFAULT_BRANCH}" --quiet 2>/dev/null || {
+  echo "Error: Failed to pull '${DEFAULT_BRANCH}'." >&2
+  exit 1
+}
 
 # Check if branch already exists
-if git revparse --verify "$BRANCH_NAME" &>/dev/null; then
+if git rev-parse --verify "$BRANCH_NAME" &>/dev/null; then
   echo "Branch '$BRANCH_NAME' already exists locally."
   read -p "Switch to it? [y/n] " -r reply
   if [[ "$reply" =~ ^[Yy]$ ]]; then
