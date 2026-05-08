@@ -64,8 +64,10 @@ Once the source is confirmed, fetch the task details.
 **For GitHub issues**, delegate to the script instead of fetching manually:
 
 ```bash
-../scripts/gh-start-task.sh <NUMBER> [TYPE] [SLUG]
+bash {base_directory}/gh-start-task.sh <NUMBER> [TYPE] [SLUG]
 ```
+
+Where `{base_directory}` is the base directory shown at the top of this skill (e.g. `/Users/foyzul/.claude/plugins/cache/foyzulkarim-skills/dev-pipeline/2.2.1/skills/start-task`). The script lives adjacent to this SKILL.md file.
 
 The script fetches the issue, derives the branch name, syncs git, creates/pushes the branch, and writes the context file — all without LLM calls. Confirm the command before running:
 
