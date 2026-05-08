@@ -4,8 +4,11 @@ set -euo pipefail
 ROOT="${1:-.}"
 errors=0
 
+# Validate ROOT is an existing directory
+[[ -d "$ROOT" ]] || { echo "ERROR: '$ROOT' is not a directory"; exit 2; }
+
 # Block any files under specs/ (branch-only artifacts: context files, specs)
-if find "$ROOT/specs" -type f 2>/dev/null | grep -q .; then
+if [[ -d "$ROOT/specs" ]] && find "$ROOT/specs" -type f 2>/dev/null | grep -q .; then
   echo "ERROR: files found under specs/ — remove before merging to master"
   errors=$((errors + 1))
 fi
@@ -15,6 +18,6 @@ while IFS= read -r -d '' file; do
   relpath="${file#"$ROOT"/}"
   echo "ERROR: $relpath is a branch-only review artifact — remove before merging to master"
   errors=$((errors + 1))
-done < <(find "$ROOT" -name "CODE-REVIEW-*.md" -not -path "$ROOT/.git/*" -print0)
+done < <(find "$ROOT" -name '.git' -prune -o -name "CODE-REVIEW-*.md" -print0)
 
 [ "$errors" -eq 0 ]

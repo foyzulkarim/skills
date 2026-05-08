@@ -24,7 +24,7 @@ assert_exit() {
 }
 
 make_root() { mktemp -d; }
-cleanup() { rm -rf "$1"; }
+cleanup() { rm -rf "${1:?cleanup called with empty path}"; }
 
 # --- Test 1: specs/ with a file causes failure ---
 

@@ -61,13 +61,13 @@ Ask for the identifier explicitly — don't auto-generate it. The developer know
 
 Once the source is confirmed, fetch the task details.
 
-**For GitHub issues**, delegate to the script instead of fetching manually:
+**For GitHub issues**, delegate to the script instead of fetching manually. Read the `Base directory for this skill:` header injected at the top of this invocation — that value is what you substitute for `{base_directory}` below (`{base_directory}` is a template placeholder, not a shell variable):
 
 ```bash
 bash {base_directory}/gh-start-task.sh <NUMBER> [TYPE] [SLUG]
 ```
 
-Where `{base_directory}` is the base directory shown at the top of this skill (e.g. `/Users/foyzul/.claude/plugins/cache/foyzulkarim-skills/dev-pipeline/2.2.1/skills/start-task`). The script lives adjacent to this SKILL.md file.
+Where `{base_directory}` is the base directory shown at the top of this skill (e.g. `/home/<user>/.claude/plugins/cache/foyzulkarim-skills/dev-pipeline/X.Y.Z/skills/start-task`). The script lives adjacent to this SKILL.md file.
 
 The script fetches the issue, derives the branch name, syncs git, creates/pushes the branch, and writes the context file — all without LLM calls. Confirm the command before running:
 
@@ -118,7 +118,7 @@ From whatever source(s), you should now have:
 
 ### Phase 3-4: Branch Sync, Create & Push
 
-**Handled by the script** — `gh-start-task.sh` performs branch sync, creates the branch, and pushes it. The skill skips these phases when using the script.
+**Handled by the script** — `{base_directory}/gh-start-task.sh` performs branch sync, creates the branch, and pushes it. The skill skips these phases when using the script.
 
 When doing **Jira or ad-hoc** (no script), follow the original steps:
 
@@ -178,7 +178,7 @@ git push -u origin {branch-name}
 
 ### Phase 5: Context File
 
-**Handled by the script for GitHub issues** — `gh-start-task.sh` writes `specs/context/{issue-number}.md` automatically.
+**Handled by the script for GitHub issues** — `{base_directory}/gh-start-task.sh` writes `specs/context/{issue-number}.md` automatically.
 
 For **Jira, local files, or ad-hoc**, write the context file manually:
 
