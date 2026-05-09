@@ -53,12 +53,12 @@ Skip this skill when:
 
 ## Context Gathering
 
-Context gathering is a **one-time, upfront bash sequence** (2 calls, not 12). Run both scripts before the conversation begins. Then make targeted `Read` calls only on files surfaced by the keyword search. Do not read files that appear in the tree but not in the search results — if they were relevant to your feature, your keywords would have found them.
+Context gathering is a **one-time, upfront bash sequence** (2 calls, not 12). Run both scripts before the conversation begins. The scripts live adjacent to this SKILL.md — read the `Base directory for this skill:` header injected at the top of this invocation and substitute it for `{base_directory}` in the commands below. Then make targeted `Read` calls only on files surfaced by the keyword search. Do not read files that appear in the tree but not in the search results — if they were relevant to your feature, your keywords would have found them.
 
 **Step 1 — File tree (run first):**
 
 ```bash
-./dev-pipeline/scripts/file-tree.sh [<directory>]
+bash {base_directory}/file-tree.sh [<directory>]
 ```
 
 Extract: tech stack, top-level layout, directory conventions, where things live. If output is truncated, re-run with `EXPAND_DIRS="dir1 dir2"` targeting the feature area. Do not read files from the tree alone — filenames are not enough to judge relevance.
@@ -66,7 +66,7 @@ Extract: tech stack, top-level layout, directory conventions, where things live.
 **Step 2 — Keyword search (run second, with informed keywords):**
 
 ```bash
-./dev-pipeline/scripts/search-codebase.sh -m 3 <kw1> <kw2> ...
+bash {base_directory}/search-codebase.sh -m 3 <kw1> <kw2> ...
 ```
 
 Extract: which files match, which directories they cluster in, any unexpected cross-cutting hits. The `-m 3` cap keeps output bounded. If a file looks relevant from its 3-line preview, use a targeted `Read` to see more — not speculatively, only when the preview signals a pattern you need.
@@ -196,7 +196,7 @@ This is the sprint-planning task-estimation step. Open the codebase and identify
 **Before walking the code**, run a targeted keyword search to get the affected-area map in one call:
 
 ```bash
-./dev-pipeline/scripts/search-codebase.sh -m 3 <module-name> <related-keywords>
+bash {base_directory}/search-codebase.sh -m 3 <module-name> <related-keywords>
 ```
 
 Extract the file list from the output. Use targeted `Read` only on files whose 3-line preview indicates they contain a pattern you need to understand. Do not read files that appeared in the tree but not in the search results.
