@@ -325,6 +325,7 @@ If either answer is no, the requirements aren't done.
 ## Important Reminders
 
 - Use today's date in artifacts.
+- If the user references specific existing files, modules, or a document path in their brief, read that document or run `./dev-pipeline/scripts/file-tree.sh` to orient yourself — but do not run general keyword searches before the interview. Requirements come from the user's intent, not from surveying the codebase.
 - Read CLAUDE.md and any referenced source files to ground the conversation in reality, but do not let the existing code drive requirements — the user's intent does.
 - If a PRD or RCA exists, reference its path in the artifact's `Source` field.
 - Your output is a requirements document, not architecture and not tasks. Stay in your lane.
