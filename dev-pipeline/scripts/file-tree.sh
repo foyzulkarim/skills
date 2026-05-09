@@ -36,64 +36,42 @@ fi
 TARGET_DIR="${1:-.}"
 ENTRY_LIMIT="${ENTRY_LIMIT:-400}"
 ENTRY_COUNT=0
+byte_count=0
 
 # ── Tech Stack Detection ──────────────────────────────────────────────────────
 detect_tech_stack() {
   local dir="$1"
   local stacks=""
 
-  if [[ -f "$dir/package.json" ]]; then
-    stacks="${stacks}Node.js (package.json)"
-  fi
-  if [[ -f "$dir/go.mod" ]]; then
-    [[ -n "$stacks" ]] && stacks="$stacks, "
-    stacks="${stacks}Go (go.mod)"
-  fi
-  if [[ -f "$dir/requirements.txt" ]]; then
-    [[ -n "$stacks" ]] && stacks="$stacks, "
-    stacks="${stacks}Python (requirements.txt)"
-  fi
-  if [[ -f "$dir/Cargo.toml" ]]; then
-    [[ -n "$stacks" ]] && stacks="$stacks, "
-    stacks="${stacks}Rust (Cargo.toml)"
-  fi
-  if [[ -f "$dir/pom.xml" ]]; then
-    [[ -n "$stacks" ]] && stacks="$stacks, "
-    stacks="${stacks}Java (pom.xml)"
-  fi
-  if [[ -f "$dir/build.gradle" ]] || [[ -f "$dir/build.gradle.kts" ]]; then
-    [[ -n "$stacks" ]] && stacks="$stacks, "
-    stacks="${stacks}Gradle (build.gradle)"
-  fi
-  if [[ -f "$dir/.env" ]] || [[ -f "$dir/.env.example" ]]; then
-    [[ -n "$stacks" ]] && stacks="$stacks, "
-    stacks="${stacks}Environment config (.env)"
-  fi
-  if [[ -f "$dir/tsconfig.json" ]]; then
-    [[ -n "$stacks" ]] && stacks="$stacks, "
-    stacks="${stacks}TypeScript (tsconfig.json)"
-  fi
+  append_stack() { stacks="${stacks:+$stacks, }$1"; }
 
-  if [[ -z "$stacks" ]]; then
-    echo "_No detected_"
-  else
-    echo "$stacks"
-  fi
+  [[ -f "$dir/package.json" ]]                                        && append_stack "Node.js (package.json)"
+  [[ -f "$dir/go.mod" ]]                                              && append_stack "Go (go.mod)"
+  [[ -f "$dir/requirements.txt" ]]                                    && append_stack "Python (requirements.txt)"
+  [[ -f "$dir/Cargo.toml" ]]                                          && append_stack "Rust (Cargo.toml)"
+  [[ -f "$dir/pom.xml" ]]                                             && append_stack "Java (pom.xml)"
+  [[ -f "$dir/build.gradle" || -f "$dir/build.gradle.kts" ]]         && append_stack "Gradle (build.gradle)"
+  [[ -f "$dir/.env" || -f "$dir/.env.example" ]]                      && append_stack "Environment config (.env)"
+  [[ -f "$dir/tsconfig.json" ]]                                       && append_stack "TypeScript (tsconfig.json)"
+
+  echo "${stacks:-_No detected_}"
 }
 
-# ── Emit one entry, increment counter, check cap ──────────────────────────────
+# ── Emit one entry, increment counter, check cap ─────────────────────────────
+# Hoisted at startup so emit_entry never re-scans the filesystem.
+TOP_DIRS=$(find "$TARGET_DIR" -maxdepth 1 -mindepth 1 -type d \
+  -not -path "*/\.*" -not -path "*/node_modules" -not -path "*/.git" \
+  2>/dev/null | sort | xargs -n1 basename 2>/dev/null | tr '\n' ' ' || true)
+
 emit_entry() {
   local line="$1"
   echo "$line"
   ENTRY_COUNT=$((ENTRY_COUNT + 1))
+  byte_count=$((byte_count + ${#line} + 1))
   if [[ "$ENTRY_COUNT" -ge "$ENTRY_LIMIT" ]]; then
     echo ""
     echo "# Output truncated at $ENTRY_LIMIT entries."
-    local top_dirs
-    top_dirs=$(find "$TARGET_DIR" -maxdepth 1 -mindepth 1 -type d \
-      -not -path "*/\.*" -not -path "*/node_modules" -not -path "*/.git" \
-      2>/dev/null | sort | xargs -n1 basename 2>/dev/null | tr '\n' ' ')
-    echo "# Top-level dirs: ${top_dirs:-none}"
+    echo "# Top-level dirs: ${TOP_DIRS:-none}"
     echo "# Re-run with EXPAND_DIRS=\"dir1 dir2\" or MAX_DEPTH=2 to focus."
     echo "# $ENTRY_COUNT entries"
     return 1
@@ -101,41 +79,27 @@ emit_entry() {
   return 0
 }
 
-# ── Main Output ──────────────────────────────────────────────────────────────
-TECH_STACK=$(detect_tech_stack "$TARGET_DIR")
-
+# ── Main Output ───────────────────────────────────────────────────────────────
 echo "## File Tree: $TARGET_DIR"
 echo ""
 echo "### Tech Stack"
-echo "$TECH_STACK"
+detect_tech_stack "$TARGET_DIR"
 echo ""
 
 echo "### Directory Structure"
 echo "\`\`\`"
 
-tree_output=""
-
 if [[ -d "$TARGET_DIR" ]]; then
-  # Top-level entries
   while IFS= read -r entry; do
-    name=$(basename "$entry")
-    [[ "$name" == "." || "$name" == ".." ]] && continue
-    if [[ -d "$entry" ]]; then
-      line="├── $name/"
-    else
-      line="├── $name"
-    fi
-    tree_output="${tree_output}${line}"$'\n'
+    name="${entry##*/}"
+    if [[ -d "$entry" ]]; then line="├── $name/"; else line="├── $name"; fi
     emit_entry "$line" || { echo "\`\`\`"; echo ""; exit 0; }
   done < <(find "$TARGET_DIR" -maxdepth 1 -mindepth 1 2>/dev/null | sort)
 
   echo ""
-  tree_output="${tree_output}"$'\n'
 
-  # Determine which subdirs to expand
   if [[ -n "${EXPAND_DIRS:-}" ]]; then
     read -ra SUBDIRS <<< "$EXPAND_DIRS"
-    # Make paths relative to TARGET_DIR if not already absolute
     resolved_subdirs=()
     for d in "${SUBDIRS[@]}"; do
       if [[ -d "$TARGET_DIR/$d" ]]; then
@@ -159,19 +123,12 @@ if [[ -d "$TARGET_DIR" ]]; then
 
   for subdir in "${resolved_subdirs[@]}"; do
     [[ -d "$subdir" ]] || continue
-    subname=$(basename "$subdir")
-    header="${subname}/"
-    echo "$header"
-    tree_output="${tree_output}${header}"$'\n'
+    subname="${subdir##*/}"
+    echo "${subname}/"
 
     while IFS= read -r item; do
-      name=$(basename "$item")
-      if [[ -d "$item" ]]; then
-        line="│   ├── $name/"
-      else
-        line="│   ├── $name"
-      fi
-      tree_output="${tree_output}${line}"$'\n'
+      name="${item##*/}"
+      if [[ -d "$item" ]]; then line="│   ├── $name/"; else line="│   ├── $name"; fi
       emit_entry "$line" || { echo "\`\`\`"; echo ""; exit 0; }
     done < <(find "$subdir" -maxdepth "$max_depth" -mindepth 1 \
       -not -path "*/node_modules/*" -not -path "*/.git/*" \
@@ -179,7 +136,6 @@ if [[ -d "$TARGET_DIR" ]]; then
       2>/dev/null | sort)
 
     echo ""
-    tree_output="${tree_output}"$'\n'
   done
 else
   echo "_Directory not found: $TARGET_DIR_"
@@ -188,32 +144,18 @@ fi
 echo "\`\`\`"
 echo ""
 
-# Key files summary
 echo "### Key Files"
 echo ""
 echo "| Path | Purpose |"
 echo "|------|---------|"
-if [[ -f "$TARGET_DIR/CLAUDE.md" ]]; then
-  echo "| CLAUDE.md | Project guidance for Claude |"
-fi
-if [[ -f "$TARGET_DIR/package.json" ]]; then
-  echo "| package.json | Node.js dependencies |"
-fi
-if [[ -f "$TARGET_DIR/README.md" ]]; then
-  echo "| README.md | Project documentation |"
-fi
-if [[ -d "$TARGET_DIR/.claude-plugin" ]]; then
-  echo "| .claude-plugin/ | Plugin configuration |"
-fi
-if [[ -d "$TARGET_DIR/specs" ]]; then
-  echo "| specs/ | Requirements and architecture docs |"
-fi
-if [[ -d "$TARGET_DIR/.claude" ]]; then
-  echo "| .claude/ | Claude settings and memory |"
-fi
+[[ -f "$TARGET_DIR/CLAUDE.md" ]]        && echo "| CLAUDE.md | Project guidance for Claude |"
+[[ -f "$TARGET_DIR/package.json" ]]     && echo "| package.json | Node.js dependencies |"
+[[ -f "$TARGET_DIR/README.md" ]]        && echo "| README.md | Project documentation |"
+[[ -d "$TARGET_DIR/.claude-plugin" ]]   && echo "| .claude-plugin/ | Plugin configuration |"
+[[ -d "$TARGET_DIR/specs" ]]            && echo "| specs/ | Requirements and architecture docs |"
+[[ -d "$TARGET_DIR/.claude" ]]          && echo "| .claude/ | Claude settings and memory |"
 
 echo ""
 
 # ── Size hint footer ──────────────────────────────────────────────────────────
-byte_count=$(printf '%s' "$tree_output" | wc -c | tr -d ' ')
 echo "# $ENTRY_COUNT entries, ~${byte_count} bytes"

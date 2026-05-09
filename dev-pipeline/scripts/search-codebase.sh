@@ -56,32 +56,40 @@ KEYWORDS=("$@")
 # ── Temp files for accumulating results ─────────────────────────────────────
 tmp_name_matcher=$(mktemp)
 tmp_content_matcher=$(mktemp)
-tmp_files_sorted=$(mktemp)
 
 cleanup() {
-  rm -f "$tmp_name_matcher" "$tmp_content_matcher" "$tmp_files_sorted"
+  rm -f "$tmp_name_matcher" "$tmp_content_matcher"
 }
 trap cleanup EXIT
+
+# ── Helpers ──────────────────────────────────────────────────────────────────
+# Returns comma-separated list of keywords that appear in the subject string.
+kw_attribs() {
+  local subject="$1"; shift
+  local matched=()
+  for kw in "$@"; do
+    [[ "$subject" == *"$kw"* ]] && matched+=("$kw")
+  done
+  local IFS=', '
+  echo "${matched[*]:-}"
+}
 
 # ── Search Function ──────────────────────────────────────────────────────────
 search_keyword() {
   local kw="$1"
   local search_dir="${SEARCH_DIR:-.}"
 
-  # Search filenames — append to temp file
   find "$search_dir" -name "*${kw}*" -type f 2>/dev/null | head -"$MAX_RESULTS" >> "$tmp_name_matcher"
 
-  # Search contents — cap per file, emit truncation indicator for capped files
   if [[ "$MAX_MATCHES" == "0" ]]; then
     grep -rn --line-buffered "$kw" "$search_dir" 2>/dev/null | head -"$MAX_RESULTS" >> "$tmp_content_matcher"
   else
     grep -rn -m "$MAX_MATCHES" "$kw" "$search_dir" 2>/dev/null >> "$tmp_content_matcher"
-    # Count-only pass to detect files where matches were capped
+    # Count-only pass to detect files where matches were capped; avoids re-reading content
     local file_counts
     file_counts=$(grep -rc "$kw" "$search_dir" 2>/dev/null || true)
     while IFS=: read -r file count; do
       [[ -z "$file" || -z "$count" ]] && continue
-      # Skip non-numeric counts (e.g. "binary file matches")
       [[ "$count" =~ ^[0-9]+$ ]] || continue
       if [[ "$count" -gt "$MAX_MATCHES" ]]; then
         echo "  ... ($((count - MAX_MATCHES)) more matches — use --max-matches 0 or Read $file for full content)" >> "$tmp_content_matcher"
@@ -101,27 +109,13 @@ echo ""
 echo "### Files Found (by name)"
 echo ""
 
-# Deduplicate filename matches and build output
 name_count=0
 name_output=""
 while IFS= read -r file; do
   [[ -z "$file" ]] && continue
-  # Avoid duplicates in output
-  if ! echo "$name_output" | grep -q "^| .* | $file |"; then
-    # Build keyword attribution for this file by checking which keywords matched it
-    kw_attribs=""
-    for kw in "${KEYWORDS[@]}"; do
-      if [[ "$file" == *"$kw"* ]]; then
-        if [[ -z "$kw_attribs" ]]; then
-          kw_attribs="$kw"
-        else
-          kw_attribs="$kw_attribs, $kw"
-        fi
-      fi
-    done
-    name_output="${name_output}| $kw_attribs | $file |"$'\n'
-    name_count=$((name_count + 1))
-  fi
+  attribs=$(kw_attribs "$file" "${KEYWORDS[@]}")
+  name_output="${name_output}| $attribs | $file |"$'\n'
+  name_count=$((name_count + 1))
 done < <(sort -u "$tmp_name_matcher" 2>/dev/null)
 
 if [[ $name_count -eq 0 ]]; then
@@ -142,35 +136,19 @@ content_count=0
 content_output=""
 while IFS= read -r line; do
   [[ -z "$line" ]] && continue
-  # Pass truncation indicator lines through unchanged
   if [[ "$line" == "  ..."* ]]; then
     content_output="${content_output}${line}"$'\n'
     continue
   fi
-  # Parse grep output: "file:line:content"
   file="${line%%:*}"
   rest="${line#*:}"
   linenum="${rest%%:*}"
   content="${rest#*:}"
 
-  # Avoid duplicate lines in output
-  if ! echo "$content_output" | grep -qF "$file | $linenum |"; then
-    # Build keyword attribution for this match
-    kw_attribs=""
-    for kw in "${KEYWORDS[@]}"; do
-      if echo "$line" | grep -q "$kw"; then
-        if [[ -z "$kw_attribs" ]]; then
-          kw_attribs="$kw"
-        else
-          kw_attribs="$kw_attribs, $kw"
-        fi
-      fi
-    done
-    # Escape pipes in content for markdown table
-    content_escaped="${content//|/\\|}"
-    content_output="${content_output}| $kw_attribs | $file | $linenum | \`$content_escaped\` |"$'\n'
-    content_count=$((content_count + 1))
-  fi
+  attribs=$(kw_attribs "$line" "${KEYWORDS[@]}")
+  content_escaped="${content//|/\\|}"
+  content_output="${content_output}| $attribs | $file | $linenum | \`$content_escaped\` |"$'\n'
+  content_count=$((content_count + 1))
 done < <(sort -u "$tmp_content_matcher" 2>/dev/null)
 
 if [[ $content_count -eq 0 ]]; then
