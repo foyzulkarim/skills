@@ -33,7 +33,7 @@ if [[ "${1:-}" == "--help" ]]; then
   exit 0
 fi
 
-TARGET_DIR="${1:-.}"
+TARGET_DIR="$(cd "${1:-.}" && pwd)"
 ENTRY_LIMIT="${ENTRY_LIMIT:-400}"
 ENTRY_COUNT=0
 byte_count=0

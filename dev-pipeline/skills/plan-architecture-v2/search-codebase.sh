@@ -53,6 +53,8 @@ fi
 
 KEYWORDS=("$@")
 
+SEARCH_DIR="$(cd "${SEARCH_DIR:-.}" && pwd)"
+
 # ── Temp files for accumulating results ─────────────────────────────────────
 tmp_name_matcher=$(mktemp)
 tmp_content_matcher=$(mktemp)
@@ -77,7 +79,7 @@ kw_attribs() {
 # ── Search Function ──────────────────────────────────────────────────────────
 search_keyword() {
   local kw="$1"
-  local search_dir="${SEARCH_DIR:-.}"
+  local search_dir="$SEARCH_DIR"
 
   find "$search_dir" -name "*${kw}*" -type f 2>/dev/null | head -"$MAX_RESULTS" >> "$tmp_name_matcher"
 
