@@ -46,32 +46,6 @@ Skip this skill when:
 - The new feature is small and well-understood — go straight to plan-architecture.
 - You already have a written, complete PRD that maps cleanly to acceptance criteria — go straight to plan-architecture and reference the PRD.
 
-## Context Gathering
-
-Before starting Phase A ("Understanding Intent"), gather context in two steps:
-
-**Step 1 — File tree** (run first, gives the lay of the land):
-
-```bash
-./dev-pipeline/scripts/file-tree.sh [<directory>]
-```
-
-This returns the directory structure and detected tech stack. Read it to understand where relevant files live before diving into specific searches.
-
-**Step 2 — Keyword search** (run second, now with informed keywords):
-
-```bash
-./dev-pipeline/scripts/search-codebase.sh <keyword> [<keyword> ...]
-```
-
-Where keywords are extracted from the brief or ticket the user provides. For example:
-- If the brief mentions "review agents" → search for: `review agent tools Glob Grep`
-- If the brief mentions "skill files" → search for: `SKILL skills dev-pipeline`
-
-The script returns file discovery and content matches in one shot, replacing iterative Glob/Grep tool calls. Read the output before starting the Socratic interview — it gives you the lay of the land so you ask informed questions.
-
-This is particularly valuable in **Mode B** (from existing document) where the brief may reference existing code patterns you need to understand before probing for gaps.
-
 ## Two Entry Modes
 
 ### Mode A — Conversational (no document)

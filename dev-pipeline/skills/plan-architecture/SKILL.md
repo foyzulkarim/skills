@@ -51,33 +51,6 @@ Skip this skill when:
 - The change is a bugfix that doesn't touch the design (no new modules, no contract changes). Go straight to generate-tasks.
 - The work is too small to warrant a design doc (less than ~half a day). Go straight to generate-tasks.
 
-## Context Gathering
-
-Before starting Phase A ("Context Grounding"), gather context in two steps:
-
-**Step 1 — File tree** (run first, gives the lay of the land):
-
-```bash
-./dev-pipeline/scripts/file-tree.sh [<directory>]
-```
-
-This returns the directory structure and detected tech stack. Read it to understand where things live before surveying specific areas.
-
-**Step 2 — Keyword search** (run second, now with informed keywords):
-
-```bash
-./dev-pipeline/scripts/search-codebase.sh <keyword> [<keyword> ...]
-```
-
-Where keywords are extracted from the brief or the REQ (if available). For example:
-- If the brief mentions "review agents" → search for: `review agent tools Glob Grep`
-- If the brief mentions "skill files" → search for: `SKILL skills dev-pipeline`
-- If the REQ references specific modules → search for those module names
-
-The script returns file discovery and content matches in one shot, replacing iterative Glob/Grep tool calls during Phase A. Read the output before starting the conversation — it gives you the change footprint, key files, and patterns in the codebase without multiple discovery turns.
-
-This is particularly valuable in **brownfield** scenarios where the skill needs to survey existing code before walking the change footprint with the developer.
-
 ## Two Input Modes
 
 ### Mode A — From a Requirements Document
@@ -179,14 +152,6 @@ This is the meat. Drill into the parts of the design that downstream skills will
 ### Phase D2: Change Footprint Walk (2–4 exchanges)
 
 This is the sprint-planning task-estimation step. Open the codebase and identify, concretely, where the design lands. **For brownfield work this is the most valuable phase of the skill** — do not skip it.
-
-**Before walking the code**, use the search script to get a map of the affected area:
-
-```bash
-./dev-pipeline/scripts/search-codebase.sh <module-name> <related-keywords>
-```
-
-This gives you the full file graph in one call — which files reference which modules, where imports land, what tests touch what — without iterative discovery.
 
 **Walk the code with the developer:**
 
