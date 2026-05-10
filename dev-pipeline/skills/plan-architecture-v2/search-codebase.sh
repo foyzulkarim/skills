@@ -81,15 +81,15 @@ search_keyword() {
   local kw="$1"
   local search_dir="$SEARCH_DIR"
 
-  find "$search_dir" -name "*${kw}*" -type f 2>/dev/null | head -"$MAX_RESULTS" >> "$tmp_name_matcher"
+  find "$search_dir" \( -path "*/node_modules" -o -path "*/.git" -o -path "*/__pycache__" -o -path "*/vendor" -o -path "*/dist" -o -path "*/build" -o -path "*/target" \) -prune -o \( -name "*${kw}*" -type f \) -print 2>/dev/null | head -"$MAX_RESULTS" >> "$tmp_name_matcher"
 
   if [[ "$MAX_MATCHES" == "0" ]]; then
-    grep -rn --line-buffered "$kw" "$search_dir" 2>/dev/null | head -"$MAX_RESULTS" >> "$tmp_content_matcher"
+    grep -rn --line-buffered "$kw" --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=__pycache__ --exclude-dir=vendor --exclude-dir=dist --exclude-dir=build --exclude-dir=target "$search_dir" 2>/dev/null | head -"$MAX_RESULTS" >> "$tmp_content_matcher"
   else
-    grep -rn -m "$MAX_MATCHES" "$kw" "$search_dir" 2>/dev/null >> "$tmp_content_matcher"
+    grep -rn -m "$MAX_MATCHES" "$kw" --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=__pycache__ --exclude-dir=vendor --exclude-dir=dist --exclude-dir=build --exclude-dir=target "$search_dir" 2>/dev/null >> "$tmp_content_matcher"
     # Count-only pass to detect files where matches were capped; avoids re-reading content
     local file_counts
-    file_counts=$(grep -rc "$kw" "$search_dir" 2>/dev/null || true)
+    file_counts=$(grep -rc "$kw" --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=__pycache__ --exclude-dir=vendor --exclude-dir=dist --exclude-dir=build --exclude-dir=target "$search_dir" 2>/dev/null || true)
     while IFS=: read -r file count; do
       [[ -z "$file" || -z "$count" ]] && continue
       [[ "$count" =~ ^[0-9]+$ ]] || continue
