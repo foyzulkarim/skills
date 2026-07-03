@@ -13,13 +13,43 @@ A plugin marketplace for [Claude Code](https://claude.ai/claude-code) with a str
 A complete development workflow built on a 5-phase agentic framework:
 
 ```
-Phase 1              Phase 2              Phase 3            Phase 4      Phase 5
-/plan-requirements → /plan-architecture → /generate-tasks → /tdd       → /review → /commit
-   (you)              (you + Claude)       (Claude)          (Claude)     (you+C)   (support)
-   REQ-*.md           ARCH-*.md            tasks in ARCH     code+tests   PR
+  ┌────────────────────────────────────────────────────────────┐
+  │  Pre: /start-task → issue → branch + context  (opt-in)     │
+  └──────────────────────────┬─────────────────────────────────┘
+                             │
+                             ▼
+  ┌────────────────────────────────────────────────────────────┐
+  │  Phase 1     /plan-requirements                            │
+  │  Output: REQ-*.md                                          │
+  └──────────────────────────┬─────────────────────────────────┘
+                             │
+                             ▼
+  ┌────────────────────────────────────────────────────────────┐
+  │  Phase 2     /plan-architecture                            │
+  │  Output: ARCH-*.md                                         │
+  └──────────────────────────┬─────────────────────────────────┘
+                             │
+                             ▼
+  ┌────────────────────────────────────────────────────────────┐
+  │  Phase 3     /generate-tasks                               │
+  │  Output: tasks in ARCH                                     │
+  └──────────────────────────┬─────────────────────────────────┘
+                             │
+                             ▼
+  ┌────────────────────────────────────────────────────────────┐
+  │  Phase 4     /tdd                                          │
+  │  Output: code + tests                                      │
+  └──────────────────────────┬─────────────────────────────────┘
+                             │
+                             ▼
+  ┌────────────────────────────────────────────────────────────┐
+  │  Phase 5     /review                                       │
+  │  Output: PR                                                │
+  └────────────────────────────────────────────────────────────┘
 
-/start-task → issue/ticket → synced branch + context file  (opt-in, pre-Phase-1)
-/commit → conventional commit  (use at any stage)
+  ┌────────────────────────────────────────────────────────────┐
+  │  /commit → use at any stage                                │
+  └────────────────────────────────────────────────────────────┘
 ```
 
 | Skill | Phase | Description |

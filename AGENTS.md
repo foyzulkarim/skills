@@ -12,10 +12,43 @@ This repository is a **Claude Code plugin marketplace** containing the `dev-pipe
 ### The 5-Phase Pipeline
 
 ```
-Phase 1              Phase 2              Phase 3            Phase 4      Phase 5
-/plan-requirements → /plan-architecture → /generate-tasks → /tdd       → /review → /commit
-   (user)            (user + Claude)       (Claude)          (Claude)     (user+C)   (support)
-   REQ-*.md           ARCH-*.md            tasks in ARCH     code+tests   PR
+  ┌────────────────────────────────────────────────────────────┐
+  │  Pre: /start-task → issue → branch + context  (opt-in)    │
+  └──────────────────────────┬─────────────────────────────────┘
+                             │
+                             ▼
+  ┌────────────────────────────────────────────────────────────┐
+  │  Phase 1     /plan-requirements                            │
+  │  Output: REQ-*.md                                          │
+  └──────────────────────────┬─────────────────────────────────┘
+                             │
+                             ▼
+  ┌────────────────────────────────────────────────────────────┐
+  │  Phase 2     /plan-architecture                            │
+  │  Output: ARCH-*.md                                         │
+  └──────────────────────────┬─────────────────────────────────┘
+                             │
+                             ▼
+  ┌────────────────────────────────────────────────────────────┐
+  │  Phase 3     /generate-tasks                               │
+  │  Output: tasks in ARCH                                     │
+  └──────────────────────────┬─────────────────────────────────┘
+                             │
+                             ▼
+  ┌────────────────────────────────────────────────────────────┐
+  │  Phase 4     /tdd                                          │
+  │  Output: code + tests                                      │
+  └──────────────────────────┬─────────────────────────────────┘
+                             │
+                             ▼
+  ┌────────────────────────────────────────────────────────────┐
+  │  Phase 5     /review                                       │
+  │  Output: PR                                                │
+  └────────────────────────────────────────────────────────────┘
+
+  ┌────────────────────────────────────────────────────────────┐
+  │  /commit → conventional commit (use at any stage)          │
+  └────────────────────────────────────────────────────────────┘
 ```
 
 - **plan-requirements** — Socratic interview producing `/specs/requirements/REQ-<slug>.md`
