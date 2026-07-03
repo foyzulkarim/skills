@@ -30,6 +30,9 @@ is_noise() {
 # Cap stdin to N lines using awk (reads all input — no SIGPIPE under pipefail).
 cap() { awk -v n="$1" 'NR<=n'; }
 
+# Numeric line count without wc's leading whitespace.
+line_count() { wc -l | tr -d ' '; }
+
 if [ -z "$(git status --porcelain)" ]; then
   echo "NOTHING_TO_COMMIT"
   exit 0
@@ -56,7 +59,7 @@ git status --short
 
 echo
 echo "=== SENSITIVE (auto-excluded by commit.sh) ==="
-git status --porcelain | sed 's/^...//' | grep -iE '(^|/)\.env|secret|credential|token|key|password' || echo "none"
+git status --porcelain | sed 's/^...//' | grep -iE '(^|/)\.env|secret|credential|token|api-key|private-key|secret-key|gpg-key|ssh-key|access-key|password' || echo "none"
 
 UNTRACKED="$(git ls-files --others --exclude-standard)"
 
@@ -68,7 +71,7 @@ if [ -n "$UNTRACKED" ]; then
   while IFS= read -r f; do
     [ -z "$f" ] && continue
     [ -f "$f" ] || continue
-    printf ' %s | %s lines\n' "$f" "$(wc -l < "$f" 2>/dev/null | tr -d ' ')"
+    printf ' %s | %s lines\n' "$f" "$(wc -l < "$f" 2>/dev/null | line_count)"
   done <<< "$UNTRACKED"
 fi
 
@@ -77,13 +80,14 @@ echo "=== RECENT_COMMITS (style, last 3) ==="
 git log --oneline -3 || true
 
 # --- Decide full vs trimmed, in bash ---
-TRACKED_LINES=$(git diff HEAD | wc -l | tr -d ' ')
+# NOTE: this counts diff blob lines (context + headers + markers), not actual insertions+deletions.
+TRACKED_LINES=$(git diff HEAD | line_count)
 UNTRACKED_LINES=0
 if [ -n "$UNTRACKED" ]; then
   while IFS= read -r f; do
     [ -z "$f" ] && continue
     [ -f "$f" ] || continue
-    n=$(wc -l < "$f" 2>/dev/null | tr -d ' ')
+    n=$(wc -l < "$f" 2>/dev/null | line_count)
     UNTRACKED_LINES=$((UNTRACKED_LINES + ${n:-0}))
   done <<< "$UNTRACKED"
 fi
@@ -106,7 +110,7 @@ else
     [ -z "$f" ] && continue
     is_noise "$f" && { echo "----- $f -----"; echo "[noise — see --stat]"; continue; }
     d=$(git --no-pager diff --no-color HEAD -- "$f" || true)
-    nf=$(printf '%s\n' "$d" | wc -l | tr -d ' ')
+    nf=$(printf '%s\n' "$d" | line_count)
     echo "----- $f -----"
     printf '%s\n' "$d" | cap "$PER_FILE_CAP"
     [ "${nf:-0}" -gt "$PER_FILE_CAP" ] && echo "... [truncated: ${nf} diff lines, showing first ${PER_FILE_CAP}]"
@@ -118,7 +122,7 @@ else
       [ -z "$f" ] && continue
       [ -f "$f" ] || continue
       is_noise "$f" && { echo "----- $f -----"; echo "[noise — see --stat]"; continue; }
-      n=$(wc -l < "$f" 2>/dev/null | tr -d ' ')
+      n=$(wc -l < "$f" 2>/dev/null | line_count)
       echo "----- $f -----"
       cap "$PER_FILE_CAP" < "$f"
       [ "${n:-0}" -gt "$PER_FILE_CAP" ] && echo "... [truncated: ${n} lines, showing first ${PER_FILE_CAP}]"

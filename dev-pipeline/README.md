@@ -9,7 +9,7 @@ Phase 1              Phase 2              Phase 3            Phase 4      Phase 
 /plan-requirements → /plan-architecture → /generate-tasks → /tdd       → /review → /commit
    (you)              (you + Claude)       (Claude)          (Claude)     (you+C)   (support)
 
-/start-task → sync main, create branch, gather context  (opt-in, pre-Phase-1)
+/start-task → issue/ticket → synced branch + context file  (opt-in, pre-Phase-1)
 /commit → conventional commit  (use at any stage)
 ```
 
@@ -37,11 +37,15 @@ Comprehensive code review with a triage-first approach. Proposes relevant checks
 
 ### /start-task (pre-pipeline)
 
-Start a new task by creating a synced feature branch. Pulls latest main, gathers task context from Jira (via `acli`), GitHub (via `gh`), or local specs, then creates and pushes a branch with the pattern `{type}/{task-number}/{slug}`. Opt-in only.
+One-shot branch bootstrap, zero confirmation by default. Detects the task source from the args — GitHub issue (`#100`, `issue 100`, or bare `100`), Jira key (via `acli`), local spec file, or ad-hoc brief — fetches the task, derives `{type}/{task-number}/{slug}`, syncs the default branch, creates and pushes the branch, and writes `specs/context/<id>.md`. The GitHub path runs entirely through a bundled script. Opt-in only.
+
+### /session-stats (supporting)
+
+Terminal dashboard of the current Claude Code session, rendered by a bundled bash script from the session's transcript JSONL (`~/.claude/projects/<project>/<session-id>.jsonl`): message counts, token usage, cache read/write, dollar cost, context %, lines changed, a cost-per-turn sparkline, and a tool-call histogram. One bash call, no LLM analysis. Pass a session id to inspect a different session.
 
 ### /commit (supporting)
 
-Standalone commit assistant. Inspects staged and unstaged changes, asks what to include, infers the conventional commit type from the diff, extracts a task number from the branch name, and drafts a complete commit message for confirmation before executing. Can be used at any stage of the pipeline.
+One-shot conventional commit — bundled scripts (`gather.sh`/`commit.sh`) own all git inspection and mutation; the diff is adaptively curated in bash so the LLM drafts the message in a single pass. Zero-confirmation by default; `ask` argument enables draft confirmation and selective staging. Can be used at any stage of the pipeline.
 
 ## Pipeline entry points
 

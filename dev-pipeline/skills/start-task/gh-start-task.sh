@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# gh-start-task — bootstrap a GitHub issue as a feature branch with context file
+# gh-start-task — zero-confirmation bootstrap: GitHub issue → feature branch + context file
 # Usage:
 #   gh-start-task <issue-number>
 #   gh-start-task <issue-number> <branch-type>
@@ -47,23 +47,25 @@ echo "  Labels: ${LABELS:-none}"
 echo "  State: $STATE"
 
 # ── Derive type from labels if not provided ───────────────────────────────────
-if [[ "$TYPE" == "feat" ]] && echo "$LABELS" | grep -qiE 'bug|fix|hotfix'; then
-  TYPE="fix"
-fi
-if echo "$LABELS" | grep -qiE 'enhancement|feature'; then
-  TYPE="feat"
-elif echo "$LABELS" | grep -qiE 'bug|fix|hotfix'; then
-  TYPE="fix"
-elif echo "$LABELS" | grep -qiE 'refactor'; then
-  TYPE="refactor"
-elif echo "$LABELS" | grep -qiE 'docs|documentation'; then
-  TYPE="docs"
-elif echo "$LABELS" | grep -qiE 'test|tests'; then
-  TYPE="test"
-elif echo "$LABELS" | grep -qiE 'ci|github-actions'; then
-  TYPE="ci"
-elif echo "$LABELS" | grep -qiE 'chore|deps|dependencies'; then
-  TYPE="chore"
+if [[ -z "${2:-}" ]]; then
+  if [[ "$TYPE" == "feat" ]] && echo "$LABELS" | grep -qiE 'bug|fix|hotfix'; then
+    TYPE="fix"
+  fi
+  if echo "$LABELS" | grep -qiE 'enhancement|feature'; then
+    TYPE="feat"
+  elif echo "$LABELS" | grep -qiE 'bug|fix|hotfix'; then
+    TYPE="fix"
+  elif echo "$LABELS" | grep -qiE 'refactor'; then
+    TYPE="refactor"
+  elif echo "$LABELS" | grep -qiE 'docs|documentation'; then
+    TYPE="docs"
+  elif echo "$LABELS" | grep -qiE 'test|tests'; then
+    TYPE="test"
+  elif echo "$LABELS" | grep -qiE 'ci|github-actions'; then
+    TYPE="ci"
+  elif echo "$LABELS" | grep -qiE 'chore|deps|dependencies'; then
+    TYPE="chore"
+  fi
 fi
 
 # ── Derive slug from title ─────────────────────────────────────────────────────
@@ -83,7 +85,7 @@ SLUG=$(echo "$SLUG" | sed 's/[^a-z0-9-]/-/g' | sed 's/-\+/-/g' | sed 's/^-//; s/
 BRANCH_NAME="${TYPE}/${ISSUE_NUM}/${SLUG}"
 
 echo ""
-echo "Proposed branch: $BRANCH_NAME"
+echo "Branch: $BRANCH_NAME"
 echo ""
 
 # ── Git operations ────────────────────────────────────────────────────────────
@@ -105,16 +107,13 @@ git pull origin "${DEFAULT_BRANCH}" --quiet 2>/dev/null || {
   exit 1
 }
 
-# Check if branch already exists
+# Check if branch already exists — switch automatically, no prompt
 if git rev-parse --verify "$BRANCH_NAME" &>/dev/null; then
-  echo "Branch '$BRANCH_NAME' already exists locally."
-  read -p "Switch to it? [y/n] " -r reply
-  if [[ "$reply" =~ ^[Yy]$ ]]; then
-    git checkout "$BRANCH_NAME"
-  else
-    echo "Aborted." >&2
+  echo "Branch '$BRANCH_NAME' already exists locally — switching to it."
+  git checkout "$BRANCH_NAME" || {
+    echo "Error: Failed to switch to existing branch '$BRANCH_NAME'." >&2
     exit 1
-  fi
+  }
 else
   git checkout -b "$BRANCH_NAME" 2>/dev/null || {
     echo "Error: Failed to create branch '$BRANCH_NAME'." >&2
@@ -166,8 +165,3 @@ echo "Context saved to: $CONTEXT_FILE"
 # ── Summary ───────────────────────────────────────────────────────────────────
 echo ""
 echo "Done! Branch '$BRANCH_NAME' is ready."
-echo ""
-echo "Next steps:"
-echo "  /plan-requirements   — capture WHAT and WHY (for greenfield/unclear bugs)"
-echo "  /plan-architecture  — design the solution (for known features)"
-echo "  /tdd                 — start coding with test-driven development"

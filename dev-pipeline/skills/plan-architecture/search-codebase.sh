@@ -65,6 +65,9 @@ cleanup() {
 trap cleanup EXIT
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
+# Numeric line count without wc's leading whitespace.
+line_count() { wc -l | tr -d ' '; }
+
 # Returns comma-separated list of keywords that appear in the subject string.
 kw_attribs() {
   local subject="$1"; shift
@@ -149,6 +152,7 @@ while IFS= read -r line; do
 
   attribs=$(kw_attribs "$line" "${KEYWORDS[@]}")
   content_escaped="${content//|/\\|}"
+  content_escaped="${content_escaped//\`/\\\`}"
   content_output="${content_output}| $attribs | $file | $linenum | \`$content_escaped\` |"$'\n'
   content_count=$((content_count + 1))
 done < <(sort -u "$tmp_content_matcher" 2>/dev/null)
@@ -164,8 +168,8 @@ fi
 echo ""
 
 # ── Summary + size hint ───────────────────────────────────────────────────────
-total_files=$(cat "$tmp_name_matcher" "$tmp_content_matcher" 2>/dev/null | cut -d: -f1 | sort -u | wc -l | tr -d ' ')
-total_matches=$(wc -l < "$tmp_content_matcher" 2>/dev/null | tr -d ' ' || echo 0)
+total_files=$(cat "$tmp_name_matcher" "$tmp_content_matcher" 2>/dev/null | cut -d: -f1 | sort -u | line_count)
+total_matches=$(wc -l < "$tmp_content_matcher" 2>/dev/null | line_count || echo 0)
 keyword_list=$(IFS=', '; echo "${KEYWORDS[*]}")
 total_bytes=$(cat "$tmp_name_matcher" "$tmp_content_matcher" 2>/dev/null | wc -c | tr -d ' ')
 

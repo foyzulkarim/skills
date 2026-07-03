@@ -46,9 +46,10 @@ Phase 1              Phase 2              Phase 3            Phase 4      Phase 
 
 ### Supporting skills (non-phase)
 
-- **commit** — Standalone; stages files, infers conventional commit type, extracts task number from branch name.
-- **start-task** — Pre-pipeline bootstrap; pulls latest main, gathers task context, creates a feature branch.
-- **create-worktrees** — Spins up parallel worktrees for parallel agent work.
+- **commit** — Standalone one-shot conventional commit. Bundled scripts (`gather.sh`/`commit.sh`) own all git inspection and mutation; the diff is adaptively curated in bash so the LLM drafts the message in a single pass. Zero-confirmation by default; `ask` argument enables draft confirmation and selective staging.
+- **session-stats** — Terminal dashboard of the current session. A bundled script (`dashboard.sh`) locates the transcript JSONL via `CLAUDE_CODE_SESSION_ID`, aggregates tokens/cost/tools with `jq`, and prints cards; the LLM only relays the output verbatim.
+- **setup-cost-tracking** — One-time system-level setup for per-session cost capture. Wires logger scripts into the Claude Code statusline and Stop hooks, preserving any existing user configuration. Idempotent; safe to re-run.
+- **start-task** — Pre-pipeline bootstrap, zero-confirmation by default. Detects the task source from the args (GitHub issue number, Jira key, local spec path, or ad-hoc), fetches the task, derives `{type}/{number}/{slug}`, then a bundled script (`gh-start-task.sh`, GitHub path) or manual git steps sync main, create and push the branch, and write `specs/context/<id>.md`.
 - **Sub-checks for review** — 16 domain-specific checks live at `review/sub-skills/{check-name}/`; dispatched by the `review` orchestrator via parallel Agent tool calls that read each sub-skill's SKILL.md for criteria. Not independently invocable.
 
 ### Pipeline entry points (three scenarios)

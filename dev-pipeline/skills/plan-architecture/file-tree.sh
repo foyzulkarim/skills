@@ -89,57 +89,53 @@ echo ""
 echo "### Directory Structure"
 echo "\`\`\`"
 
-if [[ -d "$TARGET_DIR" ]]; then
-  while IFS= read -r entry; do
-    name="${entry##*/}"
-    if [[ -d "$entry" ]]; then line="├── $name/"; else line="├── $name"; fi
-    emit_entry "$line" || { echo "\`\`\`"; echo ""; exit 0; }
-  done < <(find "$TARGET_DIR" -maxdepth 1 -mindepth 1 2>/dev/null | sort)
+while IFS= read -r entry; do
+  name="${entry##*/}"
+  if [[ -d "$entry" ]]; then line="├── $name/"; else line="├── $name"; fi
+  emit_entry "$line" || { echo "\`\`\`"; echo ""; exit 0; }
+done < <(find "$TARGET_DIR" -maxdepth 1 -mindepth 1 2>/dev/null | sort)
 
-  echo ""
+echo ""
 
-  if [[ -n "${EXPAND_DIRS:-}" ]]; then
-    read -ra SUBDIRS <<< "$EXPAND_DIRS"
-    resolved_subdirs=()
-    for d in "${SUBDIRS[@]}"; do
-      if [[ -d "$TARGET_DIR/$d" ]]; then
-        resolved_subdirs+=("$TARGET_DIR/$d")
-      elif [[ -d "$d" ]]; then
-        resolved_subdirs+=("$d")
-      fi
-    done
-  else
-    resolved_subdirs=()
-    while IFS= read -r d; do
+if [[ -n "${EXPAND_DIRS:-}" ]]; then
+  read -ra SUBDIRS <<< "$EXPAND_DIRS"
+  resolved_subdirs=()
+  for d in "${SUBDIRS[@]}"; do
+    if [[ -d "$TARGET_DIR/$d" ]]; then
+      resolved_subdirs+=("$TARGET_DIR/$d")
+    elif [[ -d "$d" ]]; then
       resolved_subdirs+=("$d")
-    done < <(find "$TARGET_DIR" -maxdepth 1 -mindepth 1 -type d \
-      -not -path "*/node_modules" -not -path "*/.git" \
-      -not -path "*/__pycache__" -not -path "*/target" \
-      -not -path "*/dist" -not -path "*/build" -not -path "*/vendor" \
-      -not -path "*/\.*" 2>/dev/null | sort)
-  fi
-
-  max_depth="${MAX_DEPTH:-4}"
-
-  for subdir in "${resolved_subdirs[@]}"; do
-    [[ -d "$subdir" ]] || continue
-    subname="${subdir##*/}"
-    echo "${subname}/"
-
-    while IFS= read -r item; do
-      name="${item##*/}"
-      if [[ -d "$item" ]]; then line="│   ├── $name/"; else line="│   ├── $name"; fi
-      emit_entry "$line" || { echo "\`\`\`"; echo ""; exit 0; }
-    done < <(find "$subdir" -maxdepth "$max_depth" -mindepth 1 \
-      -not -path "*/node_modules/*" -not -path "*/.git/*" \
-      -not -path "*/__pycache__/*" -not -path "*/\.*" \
-      2>/dev/null | sort)
-
-    echo ""
+    fi
   done
 else
-  echo "_Directory not found: $TARGET_DIR_"
+  resolved_subdirs=()
+  while IFS= read -r d; do
+    resolved_subdirs+=("$d")
+  done < <(find "$TARGET_DIR" -maxdepth 1 -mindepth 1 -type d \
+    -not -path "*/node_modules" -not -path "*/.git" \
+    -not -path "*/__pycache__" -not -path "*/target" \
+    -not -path "*/dist" -not -path "*/build" -not -path "*/vendor" \
+    -not -path "*/\.*" 2>/dev/null | sort)
 fi
+
+max_depth="${MAX_DEPTH:-4}"
+
+for subdir in "${resolved_subdirs[@]}"; do
+  [[ -d "$subdir" ]] || continue
+  subname="${subdir##*/}"
+  echo "${subname}/"
+
+  while IFS= read -r item; do
+    name="${item##*/}"
+    if [[ -d "$item" ]]; then line="│   ├── $name/"; else line="│   ├── $name"; fi
+    emit_entry "$line" || { echo "\`\`\`"; echo ""; exit 0; }
+  done < <(find "$subdir" -maxdepth "$max_depth" -mindepth 1 \
+    -not -path "*/node_modules/*" -not -path "*/.git/*" \
+    -not -path "*/__pycache__/*" -not -path "*/\.*" \
+    2>/dev/null | sort)
+
+  echo ""
+done
 
 echo "\`\`\`"
 echo ""

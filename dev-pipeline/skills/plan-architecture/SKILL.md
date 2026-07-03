@@ -51,6 +51,46 @@ Skip this skill when:
 - The change is a bugfix that doesn't touch the design (no new modules, no contract changes). Go straight to generate-tasks.
 - The work is too small to warrant a design doc (less than ~half a day). Go straight to generate-tasks.
 
+## Context Gathering
+
+Context gathering is a **one-time, upfront bash sequence** (2 calls, not 12). Run both scripts before the conversation begins. The scripts live adjacent to this SKILL.md — read the `Base directory for this skill:` header injected at the top of this invocation and substitute it for `{base_directory}` in the commands below. Then make targeted `Read` calls only on files surfaced by the keyword search. Do not read files that appear in the tree but not in the search results — if they were relevant to your feature, your keywords would have found them.
+
+**Step 1 — File tree (run first):**
+
+```bash
+bash {base_directory}/file-tree.sh [<directory>]
+```
+
+Extract: tech stack, top-level layout, directory conventions, where things live. If output is truncated, re-run with `EXPAND_DIRS="dir1 dir2"` targeting the feature area. Do not read files from the tree alone — filenames are not enough to judge relevance.
+
+**Step 2 — Keyword search (run second, with informed keywords):**
+
+```bash
+bash {base_directory}/search-codebase.sh -m 3 <kw1> <kw2> ...
+```
+
+Extract: which files match, which directories they cluster in, any unexpected cross-cutting hits. The `-m 3` cap keeps output bounded. If a file looks relevant from its 3-line preview, use a targeted `Read` to see more — not speculatively, only when the preview signals a pattern you need.
+
+**Keyword selection:** Use noun phrases — module names, entity names, file-name fragments, domain words (e.g. `auth`, `UserService`, `SKILL`, `migration`, `Proposal`). Avoid verbs (`add`, `fix`), adjectives (`new`), and generic terms (`file`, `module`, `utils`). Aim for 3–6 keywords derived from the brief or REQ.
+
+**Keyword calibration:**
+- If Step 2 returns **>100 content matches**: keywords are too broad. Remove the most generic term and re-run.
+- If Step 2 returns **<5 files**: keywords are too narrow. Add a broader synonym or the parent module name and re-run.
+- After **two attempts** with different keyword sets, if expected files are still missing, use a single targeted `Glob` on the suspected directory as a last resort. Do not iterate further.
+
+**Step 3 — Targeted Read (exception only, not default):**
+
+`Read` a specific file **only** when:
+1. It appeared in Step 2's results AND its 3-line preview signals a pattern you need to understand for the design, OR
+2. You need the exact definition of a specific symbol (type, interface, function) found in the search results.
+
+This is the exception. Do not `Read` speculatively. Do not read files from the tree that didn't appear in search results.
+
+**What to do instead of speculative reads:**
+- "I wonder how auth works" → re-run `search-codebase.sh` with `auth` as a keyword
+- "Find callers of `parseConfig`" → a single targeted `Grep` is fine and cheaper than re-running the discovery script
+- "What's in `src/utils/`" → run the keyword search with `utils` + feature name, not a `Glob` + sequential reads
+
 ## Two Input Modes
 
 ### Mode A — From a Requirements Document
@@ -152,6 +192,14 @@ This is the meat. Drill into the parts of the design that downstream skills will
 ### Phase D2: Change Footprint Walk (2–4 exchanges)
 
 This is the sprint-planning task-estimation step. Open the codebase and identify, concretely, where the design lands. **For brownfield work this is the most valuable phase of the skill** — do not skip it.
+
+**Before walking the code**, run a targeted keyword search to get the affected-area map in one call:
+
+```bash
+bash {base_directory}/search-codebase.sh -m 3 <module-name> <related-keywords>
+```
+
+Extract the file list from the output. Use targeted `Read` only on files whose 3-line preview indicates they contain a pattern you need to understand. Do not read files that appeared in the tree but not in the search results.
 
 **Walk the code with the developer:**
 

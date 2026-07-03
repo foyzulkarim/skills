@@ -1,137 +1,85 @@
 ---
 name: commit
-description: "Stage, draft, and execute a conventional commit. Use this command when you want to commit changes at any point in your workflow — after writing a REQ or ARCH document, mid-TDD, after fixing review findings, or any ad-hoc change. Inspects git state, helps you decide what to stage, drafts a conventional commit message with type, optional task scope, and description, then executes after your confirmation."
+description: "Conventional commit, one shot by default. One bash script adaptively curates the git context (full diff for small changes; noise-dropped, per-file-capped diff for large ones), the message is drafted in a single LLM pass, and a second script stages and commits. Pass 'ask' to confirm the draft and choose files before committing. An optional message hint informs the title (e.g. '/commit fix null check' or '/commit ask')."
 model: inherit
 color: lightcoral
 ---
 
-# Commit Command
+# Commit
 
-You are a commit assistant. Your job is to help the developer stage the right files and craft a well-formed conventional commit message, then execute the commit after confirmation.
+Commit the current changes with a conventional message. Two bundled scripts own
+every git inspection and mutation — run no other git commands.
 
-You are **standalone** — not tied to any pipeline position. You can be invoked at any stage: after writing a REQ or ARCH document, mid-TDD, after fixing review findings, or any ad-hoc change.
+**Arguments:** the optional word `ask` (confirm mode) and/or a message hint for
+the title (e.g. `/commit ask fix null check in auth`). Without `ask`, resolve
+all ambiguity yourself and pause for nothing.
 
-**Arguments:** An optional message hint (e.g., `/commit fix null check in auth`). If provided, use it to inform the title draft. If absent, derive the title from the diff.
+## Steps
 
----
+### 1. Gather
 
-## Phase 1: Staging
-
-Run `git status` and `git diff --stat` (both staged and unstaged). Present a clear summary:
-
-```
-Staged (3 files):
-  M  dev-pipeline/skills/plan-requirements/SKILL.md
-  M  dev-pipeline/skills/plan-architecture/SKILL.md
-  M  README.md
-
-Unstaged (2 files):
-  M  dev-pipeline/.claude-plugin/plugin.json
-  ??  CODE-REVIEW-PR-2.md
+```bash
+{base_directory}/gather.sh
 ```
 
-If there is nothing staged and nothing unstaged, tell the developer there is nothing to commit and stop.
+Prints branch, extracted task number (`NONE` if none), status, sensitive files
+(auto-excluded later), full diffstat, recent commits, and an adaptively sized
+diff. Read it once — never re-run git to "see more"; the script already chose
+what matters.
 
-Before asking, scan for potentially sensitive files in the list (`.env`, files with `secret`, `credential`, `token`, `key`, or `password` in the name). If any are present, call them out explicitly:
-> *"⚠️ I noticed `config/.env` in the unstaged files — I'll leave that out unless you explicitly ask to include it."*
+If it prints `NOTHING_TO_COMMIT`, say so and stop.
 
-Then ask:
-> *"What would you like to commit? (e.g. 'everything', 'just staged', 'all except CODE-REVIEW-PR-2.md')"*
+### 2. Draft
 
-Stage the requested files using specific `git add <file>` calls for each file. Never use `git add -A` or `git add .` unless the developer explicitly says "everything" AND no sensitive files were identified.
+Compute every field silently from the blob:
 
-Once staging is resolved, move to Phase 2.
+- **Type** — `feat` (new functionality), `fix` (corrects behavior), `refactor`
+  (restructure, no behavior change), `docs` (only `.md`), `test` (only tests),
+  `chore` (config/deps/tooling), `style` (formatting), `ci` (CI config).
+  Mixed signals → pick the dominant one.
+- **Task number** — `TASK_NUMBER` from the blob. If `NONE`, omit the `(scope)`
+  and the `Refs:` trailer entirely. Never invent one, never leave one blank.
+- **Title** — imperative mood, total header ≤72 chars. Base on the hint if given.
+- **Description** — 1–3 specific sentences: what changed and why.
 
----
+Write it to a temp file:
 
-## Phase 2: Draft & Confirm
-
-Silently compute all fields from the staged diff (`git diff --cached`):
-
-### Type Inference
-
-Infer the commit type from the staged diff content:
-
-| Signal in diff | Type |
-|----------------|------|
-| New feature code, new endpoints, new functionality | `feat` |
-| Correcting wrong behavior | `fix` |
-| Moving, renaming, restructuring — no behavior change | `refactor` |
-| Only `.md` files changed | `docs` |
-| Only test files changed | `test` |
-| Config, dependencies, tooling — no production code | `chore` |
-| Formatting, whitespace, style only | `style` |
-| CI/CD config changes | `ci` |
-
-If the diff mixes signals, pick the dominant one and state your reasoning:
-> *"This looks like a `refactor` — mostly renames and restructuring with no new behavior. Agree, or different type?"*
-
-If genuinely ambiguous (roughly equal signals), list the top 2 candidates and ask the developer to pick.
-
-### Task Number Extraction
-
-Parse the current branch name (`git branch --show-current`) for a task or issue number.
-
-Match patterns in this order:
-1. `[A-Z]+-\d+` anywhere in the branch name (e.g. `feature/TASK-42-login` → `TASK-42`, `fix/PROJ-7` → `PROJ-7`)
-2. A standalone digit sequence separated by `-` or `/` (e.g. `feat/42-add-auth` → `42`)
-
-If no number is found in the branch name, ask once:
-> *"Any task number to reference? (enter to skip)"*
-
-If the developer skips or no number is found: omit the `({task-number})` scope from the header and omit the `Refs:` trailer entirely — never leave them blank.
-
-### Title
-
-One-line imperative summary of what changed. Total header length (type + scope + title) must be ≤72 characters. Use imperative mood: "add", "fix", "update", "remove" — not "added", "fixing", "updates".
-
-If a message hint was passed as a command argument, use it as the basis for the title, adjusting for imperative mood and length.
-
-### Description
-
-1–3 sentences in plain English explaining what changed and why. Derive from the diff content. Be specific — mention file names, features, or behaviors being changed.
-
-### Presenting the Draft
-
-Present the full message in a code block:
-
-```
-{type}({task-number}): {short title}
+```bash
+cat > /tmp/commit-msg.txt <<'EOF'
+{type}({task-number}): {title}
 
 {description}
 
 Refs: {task-number}
+EOF
 ```
 
-Or without task number:
+### 3. Commit
 
+**Default (no `ask`):** run immediately, with no narration between tool calls.
+
+**With `ask`:** show the draft message and the status list, then ask
+*"Commit this? (yes / edit / only <files> / cancel)"*. Apply any edit or file
+selection, then run.
+
+```bash
+{base_directory}/commit.sh /tmp/commit-msg.txt [file ...]
 ```
-{type}: {short title}
 
-{description}
-```
+No file args → stages everything. File args (ask mode) → stages only those.
+Either way the script drops sensitive files and commits with hooks running.
 
-Then ask:
-> *"Commit this? (yes / edit / cancel)"*
+- Hook failure → report the script output and stop. No workarounds.
+- `NOTHING_STAGED` → everything was excluded as sensitive; report and stop.
 
-- **yes** → execute the commit using a heredoc to preserve formatting:
-  ```bash
-  git commit -m "$(cat <<'EOF'
-  {full message here}
-  EOF
-  )"
-  ```
-- **edit** → ask what to change (the developer can say "change the title to X" or provide the full new message). Redisplay the updated draft and ask for confirmation again before executing.
-- **cancel** → abort. Tell the developer what is currently staged and leave git state unchanged.
+## Report
 
----
+≤3 lines: the commit header, anything excluded as sensitive, confirmation that
+it's committed. Do not re-print the message body.
 
 ## You Must NOT
 
-- Use `--no-verify` or skip git hooks for any reason — if a hook fails, stop and report it
-- Use `git add -A` or `git add .` unless the developer explicitly asked for everything AND no sensitive files are present
-- Push to remote — this command commits only
-- Run tests before committing — that is not your job
-- Invent task numbers — only use what is found in the branch name or provided by the developer
-- Commit if there is nothing staged after Phase 1
-- Leave `({task-number})` or `Refs:` blank — either include them with a real value or omit them entirely
+- Run `git add` or `git commit` yourself — the scripts own all mutation.
+- Use `--no-verify` or bypass hooks in any way.
+- Push to remote or run tests — not this skill's job.
+- Ask questions in default mode — `ask` is the only interactive path.
