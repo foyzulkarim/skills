@@ -76,6 +76,18 @@ A complete development workflow built on a 5-phase agentic framework:
 /install-plugin foyzulkarim/skills dev-pipeline
 ```
 
+## hermes-tweet
+
+Native Hermes Agent plugin for X/Twitter research, reads, and approval-gated actions through Xquik.
+
+### Install
+
+```
+/install-plugin foyzulkarim/skills hermes-tweet
+```
+
+Set `XQUIK_API_KEY` before using `tweet_read`. Keep `HERMES_TWEET_ENABLE_ACTIONS=false` unless you intentionally enable account-changing operations.
+
 ## Plugin structure
 
 ```
@@ -93,6 +105,12 @@ dev-pipeline/
 │   ├── session-stats/
 │   ├── setup-cost-tracking/
 │   └── start-task/
+└── README.md
+hermes-tweet/
+├── .claude-plugin/
+│   └── plugin.json
+├── hermes_tweet/
+├── skills/
 └── README.md
 ```
 

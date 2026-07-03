@@ -16,6 +16,16 @@
       },
       "source": "./dev-pipeline",
       "category": "development"
+    },
+    {
+      "name": "hermes-tweet",
+      "description": "Native Hermes Agent plugin for X/Twitter research, reads, and approval-gated actions through Xquik.",
+      "version": "0.1.6",
+      "author": {
+        "name": "Xquik"
+      },
+      "source": "./hermes-tweet",
+      "category": "social-media"
     }
   ]
 }
