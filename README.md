@@ -119,6 +119,8 @@ Each copy gets a `.synced-from` marker so the script only touches directories it
 | `scripts/sync-skills.sh import <skill> …` | Import a **non-tracked** skill from `~/.claude/skills/` into the repo (names required) |
 | `scripts/sync-skills.sh nuke` | Remove **only** the `.synced-from`-managed copies from `~/.claude/skills/` |
 | `scripts/sync-skills.sh nuke --force <skill>` | Force-remove a skill from target even if it has no marker (DANGER) |
+| `scripts/sync-skills.sh --target <dir> push ...` | Sync to `<dir>` instead of `~/.claude/skills/` (e.g. another agent's skills directory); must precede the command |
+| `scripts/sync-skills.sh push --force <skill>` | Overwrite even an unmanaged (unmarked) directory at the target |
 
 **Typical workflow:**
 ```bash

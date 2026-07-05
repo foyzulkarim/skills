@@ -170,7 +170,7 @@ Version lives in two places — keep them in sync:
 
 ## Contributing
 
-Fork → edit skills under `dev-pipeline/skills/<name>/` → open PR.
+Fork → edit skills under `dev-pipeline/skills/<name>/` → open PR. See `docs/skill-refactor-guide.md` for the token-efficiency refactor playbook used for prior skill slimming work.
 
 ### Commit convention
 
@@ -221,6 +221,8 @@ The `scripts/sync-skills.sh` helper copies repo skills into `~/.claude/skills/` 
 | `scripts/sync-skills.sh import <skill> …` | Import a non-tracked skill from `~/.claude/skills/` into the repo |
 | `scripts/sync-skills.sh nuke` | Remove all `.synced-from`-managed copies from `~/.claude/skills/` |
 | `scripts/sync-skills.sh nuke --force <skill>` | Force-remove a skill even without marker (danger) |
+| `scripts/sync-skills.sh --target <dir> push ...` | Sync to `<dir>` instead of `~/.claude/skills` (e.g. another agent's skills directory); must precede the command |
+| `scripts/sync-skills.sh push --force <skill>` | Overwrite even an unmanaged (unmarked) directory at the target |
 
 ### Running skill scripts directly
 

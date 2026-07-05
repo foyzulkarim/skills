@@ -158,6 +158,10 @@ Produce the artifact only when **all** of these are true:
 
 If any are false, keep going.
 
+## Phase 2 Gate
+
+Before handing off to generate-tasks, the developer must answer **yes** to: *could another senior developer implement this from the document alone, and can I point at the codebase and name every place this lands?*
+
 ## Reminders
 
 - Use today's date in the artifact.

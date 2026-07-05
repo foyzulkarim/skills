@@ -24,6 +24,15 @@ REPO_SKILLS_DIR="$(cd "$(dirname "$0")/../dev-pipeline/skills" && pwd)"
 TARGET_DIR="${HOME}/.claude/skills"
 MARKER=".synced-from"
 
+validate_name() {
+  local name="$1"
+  case "$name" in
+    */* | . | ..)
+      echo "error: invalid skill name '$name'" >&2
+      exit 1 ;;
+  esac
+}
+
 usage() {
   cat <<EOF >&2
 usage: $(basename "$0") [--target <dir>] <command> [skill...]
@@ -60,6 +69,7 @@ nuke() {
   if $force; then
     [ ${#names[@]} -eq 0 ] && { echo "error: --force requires at least one skill name" >&2; exit 1; }
     for name in "${names[@]}"; do
+      validate_name "$name"
       local dir="$TARGET_DIR/$name"
       if [ ! -d "$dir" ]; then
         echo "error: skill '$name' not found in $TARGET_DIR" >&2
@@ -88,6 +98,7 @@ nuke() {
 push_one() {
   local name="$1"
   local force="${2:-false}"
+  validate_name "$name"
   local src="$REPO_SKILLS_DIR/$name"
   local dst="$TARGET_DIR/$name"
 
@@ -120,6 +131,7 @@ push_one() {
 
 pull_one() {
   local name="$1"
+  validate_name "$name"
   local src="$REPO_SKILLS_DIR/$name"
   local dst="$TARGET_DIR/$name"
 
@@ -154,6 +166,7 @@ pull_one() {
 
 import_one() {
   local name="$1"
+  validate_name "$name"
   local src="$REPO_SKILLS_DIR/$name"
   local dst="$TARGET_DIR/$name"
 
