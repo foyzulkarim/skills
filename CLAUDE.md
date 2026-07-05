@@ -46,7 +46,8 @@ dev-pipeline/
     │   └── search-codebase.sh
     ├── plan-requirements/SKILL.md
     ├── review/SKILL.md
-    │   └── sub-skills/                  ← 16 review checks, dispatched by /review
+    │   ├── sub-skills/                  ← 16 review check files + _protocol.md, dispatched by /review
+    │   └── report-template.md
     ├── session-stats/SKILL.md
     │   └── dashboard.sh
     ├── setup-cost-tracking/SKILL.md
@@ -112,7 +113,7 @@ When adding a new skill:
 - **plan-architecture** (Phase 2) — Collaborative system design. Reads REQ when present, runs from a brief otherwise. Bundled scripts (`file-tree.sh`, `search-codebase.sh`) detect project structure and tech stack. Outputs `/specs/architecture/ARCH-<slug>.md` (with an empty Tasks section).
 - **generate-tasks** (Phase 3) — Reads ARCH (and the linked REQ) and embeds verification-ready task specs into `ARCH-*.md`'s Tasks section, each with a verification mode (tdd, test-after, ui, or checklist) and a matching verification plan. Does not create a new file.
 - **implement** (Phase 4) — Implements tasks from `ARCH-*.md`, routing each to its verification mode (bundled `modes/*.md`, loaded per task): tdd (RED-GREEN-REFACTOR), test-after (increment then cover), ui (evidence-backed human checklist), checklist (command outcomes). Collaborative by default; `auto` runs one task or the whole plan behind a single approval gate, with one task-scoped commit per task.
-- **review** (Phase 5) — Triage-first review with up to 16 domain-specific checks. Two modes: pipeline (verifies task implementation against ARCH/REQ) and general (PR/branch/staged). The 16 sub-skills are dispatched via parallel Agent tool calls; each receives a filtered diff, tech stack summary, severity scale, `CLAUDE.md` content, and (in pipeline mode) ARCH + REQ content. Sub-skills output findings in a standardized table format with a coverage checklist. They are **not independently invocable**.
+- **review** (Phase 5) — Triage-first review with up to 16 domain-specific checks. Two modes: pipeline (verifies task implementation against ARCH/REQ, including each task's verification-mode evidence) and general (PR/branch/staged). Checks are plain reference files (`sub-skills/<check>.md`, **not independently invocable skills**) dispatched via parallel Agent tool calls; each agent reads the shared `sub-skills/_protocol.md` (role, false-positive rules, tracing protocol, output format) plus its check file, and receives a filtered diff, tech stack summary, `CLAUDE.md` content, and (pipeline mode) ARCH + REQ content.
 
 ### Supporting skills (non-phase)
 

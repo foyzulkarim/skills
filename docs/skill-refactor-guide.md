@@ -92,17 +92,11 @@ inlining is cheaper than an extra Read.
   artifact contract: keep one full example, cut repeats.
 - **implement (replaces tdd)** — already restructured: router SKILL.md +
   bundled modes/*.md loaded per task. Keep that shape; don't re-inline modes.
-- **review (351 lines) + 16 sub-skills (~5–7KB each)** — biggest remaining win:
-  1. First check how review dispatches sub-skills (Agent tool prompt? file
-     read?). Sub-skills are not user commands and not model-triggered, but
-     by default their 16 descriptions load into every session. Set
-     `user-invocable: false` on them if dispatch still needs skill metadata,
-     or convert them to plain reference .md files (not SKILL.md) if the
-     dispatcher just reads file paths. Verify dispatch still works after.
-  2. The sub-skills share large boilerplate blocks (findings table format,
-     severity scale, coverage checklist). Move shared boilerplate into the
-     dispatcher's prompt (review/SKILL.md builds it once) or a single shared
-     reference file; each sub-skill keeps only its domain-specific checks.
+- **review** — done: checks converted to plain `sub-skills/<check>.md`
+  reference files; shared scaffolding (role, false-positive rules, tracing,
+  output format) hoisted into `sub-skills/_protocol.md`; report format
+  extracted to `report-template.md`. Keep that shape — new checks add only
+  domain content (Scope, severity calibration, Focus Areas, extras).
 - **commit (85), start-task (107), session-stats (42), setup-cost-tracking
   (120)** — already lean. Only shrink descriptions to one-liners and apply
   cut-list items if obvious. Do not over-trim: script-backed skills mostly

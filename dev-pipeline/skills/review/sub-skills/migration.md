@@ -1,23 +1,11 @@
----
-name: review/migration
-description: "Identifies backward compatibility risks, breaking changes, and migration safety issues: API contract changes, destructive DB migrations, breaking changes to shared libraries, feature flags, URL changes, and event schema changes."
-trigger: "When the review orchestrator dispatches this check."
----
-
 # Migration & Breaking Changes Check
 
-You are a domain-specific code reviewer. Your job is to identify backward compatibility risks, breaking changes, and migration safety issues in the provided diff.
+_Read `_protocol.md` first._
 
-You do NOT write or fix code. You flag findings for the developer to address.
+**Scope:** API route files, migration files, shared library files, event schema files, env config files.
+**Report section title:** `Migration & Breaking Changes`
 
-## Inputs You Receive
-
-- **Filtered diff:** API route files, migration files, shared library files, event schema files, env config files
-- **Tech stack summary:** Detected frameworks, ORM, message broker, API style (REST/GraphQL)
-- **Severity scale:** see below
-- **CLAUDE.md content** (if present) for project breaking change and versioning conventions
-
-## Severity Scale
+## Severity Calibration
 
 | Severity | Criteria |
 |----------|----------|
@@ -29,7 +17,7 @@ You do NOT write or fix code. You flag findings for the developer to address.
 
 For each finding, assess: **who is affected, how many consumers, and is there a migration path?**
 
-## Your Focus Areas
+## Focus Areas
 
 ### API Contract Changes
 
@@ -82,52 +70,13 @@ For each finding, assess: **who is affected, how many consumers, and is there a 
 - Removed functionality documented with a deprecation notice in a previous release?
 - Migration guide available for users of the removed feature?
 
-## False Positive Mitigation
+## Check-Specific Rules
 
-Before reporting any finding:
-1. Check for intent signals (version bump, CHANGELOG entry, deprecation notice already present)
-2. Assess confidence: High / Medium / Low — do not report Low-confidence findings as standalone items
-3. Purely additive changes (new optional fields, new endpoints) are NOT breaking changes
+- Purely additive changes (new optional fields, new endpoints) are NOT breaking changes.
+- Version bumps, CHANGELOG entries, and existing deprecation notices are intent signals.
+- Checklist protocol addition: for each finding, identify affected consumers and the migration path.
 
-## Agent Reviewer Checklist Protocol
+## Comment Guidance
 
-1. List files in scope (API routes, migrations, shared libs, event schemas, env config)
-2. Build a per-file todo — identify removed/changed fields, schema changes, env var changes
-3. For each finding: identify affected consumers and migration path
-4. Include the completed checklist in your output as a "Coverage" section
-
-## Output Format
-
-### Findings Table
-
-| # | Severity | File | Line | Issue | Recommendation |
-|---|----------|------|------|-------|----------------|
-| 1 | 🔴 Critical | `prisma/migrations/20240101_drop_user_tokens.sql` | 5 | DROP COLUMN without data migration | Add data migration step before column removal |
-
-### Zero-Findings Output
-
-When you find no issues, output exactly:
-
-```
-## Migration & Breaking Changes
-**Result:** ✅ No findings.
-**Files reviewed:** {list}
-```
-
-### Coverage Checklist
-
-```
-### Coverage Checklist
-- [x] `src/routes/users.ts` — response shape ✅, status codes ✅, removed fields ✅
-- [x] `prisma/migrations/` — destructive ops ⚠️ → Finding #1, rollback strategy ✅
-- [x] `.env.example` — new vars ✅, removed vars ✅
-```
-
-### Review Comments
-
-For each finding, draft a review comment:
-- Specify who is affected: "Existing clients calling `GET /users` will receive a response missing the `email` field"
-- Propose a migration path
-- For breaking DB migrations: "If this migration is applied and rolled back, the data in the column is lost"
-- Open with: "I noticed...", "This change might affect..."
-- End softly: "What do you think?", "Thoughts?"
+- Specify who is affected ("Existing clients calling `GET /users` will receive a response missing the `email` field") and propose a migration path.
+- For breaking DB migrations: "If this migration is applied and rolled back, the data in the column is lost."

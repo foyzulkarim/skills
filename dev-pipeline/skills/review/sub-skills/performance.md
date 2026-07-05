@@ -1,23 +1,11 @@
----
-name: review/performance
-description: "Identifies performance issues and scaling concerns: algorithm complexity, memory usage, non-DB N+1 patterns, caching, async parallelism, resource cleanup, and database/ORM performance (indexes, unbounded queries, connection pools)."
-trigger: "When the review orchestrator dispatches this check."
----
-
 # Performance Check
 
-You are a domain-specific code reviewer. Your job is to identify performance issues and scaling concerns in the provided diff.
+_Read `_protocol.md` first._
 
-You do NOT write or fix code. You flag findings for the developer to address.
+**Scope:** service layer, query code, data processing, request handlers.
+**Report section title:** `Performance`
 
-## Inputs You Receive
-
-- **Filtered diff:** Only files relevant to your domain (service layer, query code, data processing, request handlers)
-- **Tech stack summary:** Detected languages, frameworks, tools
-- **Severity scale:** see below
-- **CLAUDE.md content** (if present) for project conventions
-
-## Severity Scale
+## Severity Calibration
 
 | Severity | Criteria |
 |----------|----------|
@@ -27,7 +15,7 @@ You do NOT write or fix code. You flag findings for the developer to address.
 | 💭 Low | Minor optimization opportunity, cosmetic efficiency improvement |
 | ⚠️ Manual | Cannot verify from code — developer must check manually (e.g., production query plan) |
 
-## Your Focus Areas
+## Focus Areas
 
 ### Algorithm & Complexity
 
@@ -85,52 +73,12 @@ You do NOT write or fix code. You flag findings for the developer to address.
 - Unnecessary re-renders (React), re-computations, or DOM thrashing
 - Bundle size impact of new dependencies
 
-## False Positive Mitigation
+## Check-Specific Rules
 
-Before reporting any finding:
-1. Check for intent signals (comments explaining why a pattern was chosen, e.g., sequential for ordering guarantees)
-2. Assess confidence: High / Medium / Low — do not report Low-confidence findings as standalone items
-3. Check project conventions in CLAUDE.md — some patterns may be intentional trade-offs
+- False-positive addition: sequential patterns may be intentional (ordering guarantees) — check comments before flagging.
+- For each finding, estimate impact: how would this behave with 10x, 100x, 1000x data?
+- Findings table adds an **Impact** column (e.g., "N queries per request, N = list size") between Issue and Recommendation.
 
-For each finding, estimate impact: how would this behave with 10x, 100x, 1000x data?
+## Comment Guidance
 
-## Agent Reviewer Checklist Protocol
-
-1. List the files in scope (from the filtered diff)
-2. Build a per-file todo — identify hot paths, loops, query calls, async operations
-3. Work through each performance concern systematically
-4. Include the completed checklist in your output as a "Coverage" section
-
-## Output Format
-
-### Findings Table
-
-| # | Severity | File | Line | Issue | Impact | Recommendation |
-|---|----------|------|------|-------|--------|----------------|
-| 1 | 🟠 High | `src/users/user.service.ts` | 67 | [description] | [e.g., "N queries per request, N = list size"] | [specific fix] |
-
-### Zero-Findings Output
-
-When you find no issues, output exactly:
-
-```
-## Performance
-**Result:** ✅ No findings.
-**Files reviewed:** {list}
-```
-
-### Coverage Checklist
-
-```
-### Coverage Checklist
-- [x] `src/users/user.service.ts` — loops ✅, async patterns ✅, N+1 ✅ → Finding #1
-- [x] `src/routes/users.ts` — middleware order ✅, sync ops ✅
-```
-
-### Review Comments
-
-For each finding, draft a review comment:
-- Quantify the impact: "With N records, this means N queries per request"
-- Include a concrete fix suggestion
-- Open with curiosity: "I noticed...", "Would it make sense to..."
-- End softly: "What do you think?", "Thoughts?"
+- Quantify the impact: "With N records, this means N queries per request."

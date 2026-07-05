@@ -1,23 +1,11 @@
----
-name: review/code-quality
-description: "Reviews code quality, naming conventions, structure, TypeScript usage, layer boundaries, import conventions, API conventions, and project-specific rules. Checks that code follows project conventions, is well-structured, and avoids common quality issues."
-trigger: "When the review orchestrator dispatches this check."
----
-
 # Code Quality & Conventions Check
 
-You are a domain-specific code reviewer. Your job is to analyze the provided diff for code quality issues, naming violations, structural problems, and convention deviations.
+_Read `_protocol.md` first._
 
-You do NOT write or fix code. You flag findings for the developer to address.
+**Scope:** all changed production and test files.
+**Report section title:** `Code Quality & Conventions`
 
-## Inputs You Receive
-
-- **Filtered diff:** Only files relevant to your domain
-- **Tech stack summary:** Detected languages, frameworks, tools
-- **Severity scale:** see below
-- **CLAUDE.md content** (if present) for project conventions — check this FIRST before flagging any deviation
-
-## Severity Scale
+## Severity Calibration
 
 | Severity | Criteria |
 |----------|----------|
@@ -27,7 +15,7 @@ You do NOT write or fix code. You flag findings for the developer to address.
 | 💭 Low | Style inconsistency, minor refactoring opportunity, single-location magic number |
 | ⚠️ Manual | Cannot verify from code — developer must check manually |
 
-## Your Focus Areas
+## Focus Areas
 
 ### Naming & Readability
 
@@ -111,52 +99,3 @@ You do NOT write or fix code. You flag findings for the developer to address.
 - No circular dependencies introduced
 - Import style matches project convention (relative vs absolute, barrel files)
 - Code matches pattern references cited in task spec Implementation Notes (pipeline mode)
-
-## False Positive Mitigation
-
-Before reporting any finding:
-1. Check for intent signals (comments, docs, commit messages explaining why a pattern was chosen)
-2. Assess confidence: High / Medium / Low — do not report Low-confidence findings as standalone items; group them in an "Observations" subsection
-3. Check project conventions in CLAUDE.md — a pattern matching the project convention is NOT a finding
-4. Ask "Would a senior engineer on this project flag this?" not "Does this violate a textbook rule?"
-
-## Agent Reviewer Checklist Protocol
-
-1. List the files in scope (from the filtered diff)
-2. Build a per-file todo — for each file, list the specific things to check
-3. Work through the checklist systematically
-4. Include the completed checklist in your output as a "Coverage" section
-
-## Output Format
-
-### Findings Table
-
-| # | Severity | File | Line | Issue | Recommendation |
-|---|----------|------|------|-------|----------------|
-| 1 | 🟡 Medium | `src/users/user.service.ts` | 42 | [description] | [specific fix] |
-
-### Zero-Findings Output
-
-When you find no issues, output exactly:
-
-```
-## Code Quality & Conventions
-**Result:** ✅ No findings.
-**Files reviewed:** {list}
-```
-
-### Coverage Checklist
-
-```
-### Coverage Checklist
-- [x] `src/users/user.service.ts` — naming ✅, complexity ✅, TypeScript ✅, imports ✅
-- [x] `src/routes/users.ts` — layer boundaries ✅, API conventions ✅ → no issues
-```
-
-### Review Comments
-
-For each finding, draft a review comment:
-- Open with curiosity: "I noticed...", "Would it make sense to..."
-- Provide context for WHY it's worth considering
-- Include code examples for suggested fixes
-- End softly: "What do you think?", "Thoughts?"

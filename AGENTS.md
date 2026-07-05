@@ -89,7 +89,8 @@ dev-pipeline/
     │   └── search-codebase.sh
     ├── plan-requirements/SKILL.md
     ├── review/SKILL.md
-    │   └── sub-skills/                  ← 16 review checks, dispatched by /review
+    │   ├── sub-skills/                  ← 16 review check files + _protocol.md, dispatched by /review
+    │   └── report-template.md
     │       ├── accessibility/SKILL.md
     │       ├── async-patterns/SKILL.md
     │       ├── code-quality/SKILL.md
@@ -215,15 +216,14 @@ These files are expected on feature branches but must not merge to `master`.
 
 ### Review Sub-Skills
 
-The 16 review checks under `dev-pipeline/skills/review/sub-skills/` are **not independently invocable**. They are dispatched by the `review` orchestrator via parallel Agent tool calls. Each sub-skill receives:
+The 16 review checks under `dev-pipeline/skills/review/sub-skills/` are plain reference files (`<check>.md`), **not independently invocable skills**. The `review` orchestrator dispatches them via parallel Agent tool calls; each agent reads the shared `_protocol.md` (reviewer role, false-positive rules, 2-level tracing protocol, output format) plus its check file, and receives:
 
 - A filtered diff (only files relevant to its domain)
 - Tech stack summary
-- Severity scale
 - `CLAUDE.md` content (if present)
 - Pipeline mode only: ARCH + REQ content
 
-Sub-skills must output findings in a standardized table format and include a coverage checklist.
+The protocol defines the standardized findings table and coverage checklist; check files add domain criteria, severity calibration, and any extra columns.
 
 ## Security Considerations
 

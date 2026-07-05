@@ -89,7 +89,7 @@ dev-pipeline/
 │   ├── implement/
 │   │   └── modes/             # tdd, test-after, ui, checklist
 │   ├── review/
-│   │   └── sub-skills/        # 16 review checks, dispatched by /review
+│   │   └── sub-skills/        # 16 review check files + shared _protocol.md, dispatched by /review
 │   ├── commit/
 │   ├── session-stats/
 │   ├── setup-cost-tracking/
