@@ -4,12 +4,16 @@ set -euo pipefail
 # sync-skills.sh — bidirectional sync between repo skills and ~/.claude/skills.
 #
 #   scripts/sync-skills.sh push              push ALL skills to target
-#   scripts/sync-skills.sh push commit tdd   push only named skills
+#   scripts/sync-skills.sh push commit implement   push only named skills
 #   scripts/sync-skills.sh pull              pull ALL synced skills back
-#   scripts/sync-skills.sh pull tdd          pull only named skill back
-#   scripts/sync-skills.sh import tdd        import non-tracked skill from target (names required)
+#   scripts/sync-skills.sh pull implement          pull only named skill back
+#   scripts/sync-skills.sh import implement        import non-tracked skill from target (names required)
 #   scripts/sync-skills.sh nuke              remove all synced skills from target
-#   scripts/sync-skills.sh nuke --force tdd  force-remove a skill from target (bypass marker check)
+#   scripts/sync-skills.sh nuke --force implement  force-remove a skill from target (bypass marker check)
+#
+#   --target <dir> overrides the default target (~/.claude/skills), e.g. to
+#   sync skills into another agent's skills directory. Must precede the command:
+#     scripts/sync-skills.sh --target ~/.codex/skills push commit
 #
 # Each copy gets a .synced-from marker holding its source path. Push refreshes
 # dirs that carry a marker and refuses to touch dirs that don't (they're real
@@ -20,19 +24,30 @@ REPO_SKILLS_DIR="$(cd "$(dirname "$0")/../dev-pipeline/skills" && pwd)"
 TARGET_DIR="${HOME}/.claude/skills"
 MARKER=".synced-from"
 
-mkdir -p "$TARGET_DIR"
+validate_name() {
+  local name="$1"
+  case "$name" in
+    */* | . | ..)
+      echo "error: invalid skill name '$name'" >&2
+      exit 1 ;;
+  esac
+}
 
 usage() {
   cat <<EOF >&2
-usage: $(basename "$0") <command> [skill...]
+usage: $(basename "$0") [--target <dir>] <command> [skill...]
+
+  --target <dir>         sync to <dir> instead of ~/.claude/skills (e.g. another agent's skills dir)
+                         must come before the command
 
 commands:
-  push                   copy repo skills → ~/.claude/skills (creates/refreshes .synced-from marker)
-  push commit tdd        push only named skills
+  push                   copy repo skills → target dir (creates/refreshes .synced-from marker)
+  push commit implement        push only named skills
+  push --force commit          overwrite even unmanaged (unmarked) dirs at target
   pull                   pull ALL synced skills back into repo (strips marker)
-  pull tdd               pull only named synced skill back
-  import <skill...>      import non-tracked skills from ~/.claude/skills into repo (names required)
-  nuke                   delete marked skills from ~/.claude/skills only
+  pull implement               pull only named synced skill back
+  import <skill...>      import non-tracked skills from target dir into repo (names required)
+  nuke                   delete marked skills from target dir only
   nuke --force <skill...>  force-remove named skills from target (bypasses marker check)
 EOF
   exit 1
@@ -54,6 +69,7 @@ nuke() {
   if $force; then
     [ ${#names[@]} -eq 0 ] && { echo "error: --force requires at least one skill name" >&2; exit 1; }
     for name in "${names[@]}"; do
+      validate_name "$name"
       local dir="$TARGET_DIR/$name"
       if [ ! -d "$dir" ]; then
         echo "error: skill '$name' not found in $TARGET_DIR" >&2
@@ -81,6 +97,8 @@ nuke() {
 
 push_one() {
   local name="$1"
+  local force="${2:-false}"
+  validate_name "$name"
   local src="$REPO_SKILLS_DIR/$name"
   local dst="$TARGET_DIR/$name"
 
@@ -96,6 +114,11 @@ push_one() {
       cp -R "$src" "$dst"
       echo "$src" > "$dst/$MARKER"
       echo "refreshed $name"
+    elif $force; then
+      rm -rf "$dst"
+      cp -R "$src" "$dst"
+      echo "$src" > "$dst/$MARKER"
+      echo "forced   $name — overwrote unmanaged $dst"
     else
       echo "skipped  $name — $dst exists and is not managed by this script"
     fi
@@ -108,6 +131,7 @@ push_one() {
 
 pull_one() {
   local name="$1"
+  validate_name "$name"
   local src="$REPO_SKILLS_DIR/$name"
   local dst="$TARGET_DIR/$name"
 
@@ -142,6 +166,7 @@ pull_one() {
 
 import_one() {
   local name="$1"
+  validate_name "$name"
   local src="$REPO_SKILLS_DIR/$name"
   local dst="$TARGET_DIR/$name"
 
@@ -170,6 +195,18 @@ import_one() {
 
 # --- argument parsing --------------------------------------------------------
 
+while [[ "${1:-}" == --target || "${1:-}" == --target=* ]]; do
+  case "$1" in
+    --target=*) TARGET_DIR="${1#--target=}"; shift ;;
+    --target)
+      shift
+      [ "$#" -eq 0 ] && { echo "error: --target requires a value" >&2; exit 1; }
+      TARGET_DIR="$1"
+      shift ;;
+  esac
+done
+mkdir -p "$TARGET_DIR"
+
 [ "$#" -eq 0 ] && usage
 
 CMD="$1"
@@ -180,12 +217,22 @@ case "$CMD" in
     nuke "$@" ;;
 
   push)
-    if [ "$#" -gt 0 ]; then
-      for name in "$@"; do push_one "$name"; done
+    force=false
+    names=()
+    for arg in "$@"; do
+      case "$arg" in
+        --force) force=true ;;
+        -*) echo "error: unknown flag '$arg'" >&2; exit 1 ;;
+        *) names+=("$arg") ;;
+      esac
+    done
+
+    if [ "${#names[@]}" -gt 0 ]; then
+      for name in "${names[@]}"; do push_one "$name" "$force"; done
     else
       for src in "$REPO_SKILLS_DIR"/*/; do
         [ -d "$src" ] || continue
-        push_one "$(basename "$src")"
+        push_one "$(basename "$src")" "$force"
       done
     fi
     echo

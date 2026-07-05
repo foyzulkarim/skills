@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A Claude Code plugin marketplace (`foyzulkarim/skills`) containing the `dev-pipeline` plugin — a collection of AI skills implementing a structured **5-phase development pipeline**.
 
-- **Current version:** `3.0.0`
+- **Current version:** `4.0.0`
 - **Language:** All documentation and comments are in English.
 - **No build system, test runner, or compiled code.** The entire value is in the `SKILL.md` files and bundled bash helper scripts.
 
@@ -14,8 +14,8 @@ A Claude Code plugin marketplace (`foyzulkarim/skills`) containing the `dev-pipe
 
 1. **Requirement Engineering** — capture WHAT and WHY (problem space)
 2. **System Architecture** — design HOW (solution space)
-3. **Task Generation** — break architecture into TDD-ready tasks
-4. **TDD Implementation** — RED-GREEN-REFACTOR per task
+3. **Task Generation** — break architecture into verification-ready tasks
+4. **Implementation** — mode-appropriate verification per task (tdd, test-after, ui, checklist)
 5. **Review & Merge** — verify before merge
 
 ## Plugin structure
@@ -46,14 +46,16 @@ dev-pipeline/
     │   └── search-codebase.sh
     ├── plan-requirements/SKILL.md
     ├── review/SKILL.md
-    │   └── sub-skills/                  ← 16 review checks, dispatched by /review
+    │   ├── sub-skills/                  ← 16 review check files + _protocol.md, dispatched by /review
+    │   └── report-template.md
     ├── session-stats/SKILL.md
     │   └── dashboard.sh
     ├── setup-cost-tracking/SKILL.md
     │   └── scripts/
     ├── start-task/SKILL.md
     │   └── gh-start-task.sh
-    └── tdd/SKILL.md
+    └── implement/SKILL.md
+        └── modes/                       ← tdd, test-after, ui, checklist
 ```
 
 When adding a new skill:
@@ -90,8 +92,8 @@ When adding a new skill:
                              │
                              ▼
   ┌────────────────────────────────────────────────────────────┐
-  │  Phase 4     /tdd                                          │
-  │  Output: code + tests                                      │
+  │  Phase 4     /implement                                    │
+  │  Output: code + verification evidence                      │
   └──────────────────────────┬─────────────────────────────────┘
                              │
                              ▼
@@ -109,9 +111,9 @@ When adding a new skill:
 
 - **plan-requirements** (Phase 1) — Socratic interview to capture WHAT and WHY. Outputs `/specs/requirements/REQ-<slug>.md`. Owner: developer.
 - **plan-architecture** (Phase 2) — Collaborative system design. Reads REQ when present, runs from a brief otherwise. Bundled scripts (`file-tree.sh`, `search-codebase.sh`) detect project structure and tech stack. Outputs `/specs/architecture/ARCH-<slug>.md` (with an empty Tasks section).
-- **generate-tasks** (Phase 3) — Reads ARCH (and the linked REQ) and embeds TDD-ready task specs into `ARCH-*.md`'s Tasks section. Does not create a new file.
-- **tdd** (Phase 4) — RED-GREEN-REFACTOR loop driven from `ARCH-*.md`. Two modes: collaborative (pauses each step) and auto.
-- **review** (Phase 5) — Triage-first review with up to 16 domain-specific checks. Two modes: pipeline (verifies task implementation against ARCH/REQ) and general (PR/branch/staged). The 16 sub-skills are dispatched via parallel Agent tool calls; each receives a filtered diff, tech stack summary, severity scale, `CLAUDE.md` content, and (in pipeline mode) ARCH + REQ content. Sub-skills output findings in a standardized table format with a coverage checklist. They are **not independently invocable**.
+- **generate-tasks** (Phase 3) — Reads ARCH (and the linked REQ) and embeds verification-ready task specs into `ARCH-*.md`'s Tasks section, each with a verification mode (tdd, test-after, ui, or checklist) and a matching verification plan. Does not create a new file.
+- **implement** (Phase 4) — Implements tasks from `ARCH-*.md`, routing each to its verification mode (bundled `modes/*.md`, loaded per task): tdd (RED-GREEN-REFACTOR), test-after (increment then cover), ui (evidence-backed human checklist), checklist (command outcomes). Collaborative by default; `auto` runs one task or the whole plan behind a single approval gate, with one task-scoped commit per task.
+- **review** (Phase 5) — Triage-first review with up to 16 domain-specific checks. Two modes: pipeline (verifies task implementation against ARCH/REQ, including each task's verification-mode evidence) and general (PR/branch/staged). Checks are plain reference files (`sub-skills/<check>.md`, **not independently invocable skills**) dispatched via parallel Agent tool calls; each agent reads the shared `sub-skills/_protocol.md` (role, false-positive rules, tracing protocol, output format) plus its check file, and receives a filtered diff, tech stack summary, `CLAUDE.md` content, and (pipeline mode) ARCH + REQ content.
 
 ### Supporting skills (non-phase)
 
@@ -168,7 +170,7 @@ Version lives in two places — keep them in sync:
 
 ## Contributing
 
-Fork → edit skills under `dev-pipeline/skills/<name>/` → open PR.
+Fork → edit skills under `dev-pipeline/skills/<name>/` → open PR. See `docs/skill-refactor-guide.md` for the token-efficiency refactor playbook used for prior skill slimming work.
 
 ### Commit convention
 
@@ -219,6 +221,8 @@ The `scripts/sync-skills.sh` helper copies repo skills into `~/.claude/skills/` 
 | `scripts/sync-skills.sh import <skill> …` | Import a non-tracked skill from `~/.claude/skills/` into the repo |
 | `scripts/sync-skills.sh nuke` | Remove all `.synced-from`-managed copies from `~/.claude/skills/` |
 | `scripts/sync-skills.sh nuke --force <skill>` | Force-remove a skill even without marker (danger) |
+| `scripts/sync-skills.sh --target <dir> push ...` | Sync to `<dir>` instead of `~/.claude/skills` (e.g. another agent's skills directory); must precede the command |
+| `scripts/sync-skills.sh push --force <skill>` | Overwrite even an unmanaged (unmarked) directory at the target |
 
 ### Running skill scripts directly
 

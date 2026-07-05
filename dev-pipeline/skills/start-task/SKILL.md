@@ -2,6 +2,7 @@
 name: start-task
 description: "Bootstrap a task into a synced feature branch — one shot, zero confirmations. Detects the source from the args: GitHub issue ('#100', 'issue 100', 'gh issue 100', or bare '100'), Jira key ('PROJ-42'), or a local spec file path; ad-hoc conversation otherwise. Fetches the task, derives {type}/{number}/{slug}, syncs the default branch, creates and pushes the branch, and writes specs/context/<id>.md. Use only when the user explicitly asks to start a task or create a work branch — never trigger automatically."
 model: inherit
+disable-model-invocation: true
 color: cyan
 ---
 
@@ -94,7 +95,7 @@ Context: specs/context/<ID>.md
 Next:
   /plan-requirements   — capture WHAT and WHY
   /plan-architecture   — design the solution
-  /tdd                 — start coding
+  /implement           — start coding
 ```
 
 ## You Must NOT
