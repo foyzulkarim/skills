@@ -101,6 +101,8 @@ CLAUDE.md conventions: {content if exists}
 
 Collect findings from all checks; deduplicate (same file:line flagged by multiple checks → keep the highest severity, merge insights, list under the most relevant category, merge the review comments); determine the verdict.
 
+**Lead with what matters.** Order findings by leverage — don't bury a real issue under cosmetic nits. A few high-conviction findings beat a long list; one structural problem plus ten nits means the structural problem *is* the review.
+
 ## Available Checks
 
 Check definitions live at `dev-pipeline/skills/review/sub-skills/{check-name}.md` (plus the shared `_protocol.md`). They are applied via Agent dispatch — they are NOT independently invocable skills.
@@ -149,6 +151,8 @@ At compile time — not earlier — read `{base_directory}/report-template.md` a
 
 ## Verdicts
 
+**Approval standard:** approve when the change definitely improves overall code health, even if it isn't perfect — don't block because it isn't how you would have written it. The gate is improvement, not perfection.
+
 **Pipeline mode:** ✅ **PASS** — all checks passed, no must-fix findings. ⚠️ **PASS WITH FINDINGS** — no must-fix, but should-fix or manual checks remain; complete at developer's discretion. ❌ **FAIL** — must-fix findings or significant task completion gaps; address and re-review.
 
 **General mode:** ✅ **APPROVE** — no Critical or High issues. ⚠️ **APPROVE WITH COMMENTS** — no Critical, minor High items; merge at discretion. ❌ **REQUEST CHANGES** — Critical issues, or 3+ High, or systemic patterns.
@@ -156,6 +160,8 @@ At compile time — not earlier — read `{base_directory}/report-template.md` a
 ## Conversation After the Report
 
 The developer may **disagree** with a finding (accept and adjust the verdict if appropriate), **ask for clarification** (explain with specific code references), or request a **focused re-review** ("just re-check security" → dispatch only that check).
+
+When resolving a disagreement: technical facts and data override opinions; project conventions (CLAUDE.md) are authoritative on style; design questions resolve on engineering principles, not personal preference. For must-fix findings, don't accept "I'll clean it up later" without a tracked issue — note the deferral in the verdict.
 
 ### Re-review Protocol
 

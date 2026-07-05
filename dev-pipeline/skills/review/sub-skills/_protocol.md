@@ -78,5 +78,7 @@ For each finding, draft a review comment:
 - Provide context for WHY it's worth considering; include a concrete, minimal fix example.
 - For Critical/High findings, be direct about the risk ("This pattern allows...") while remaining collaborative.
 - End softly: "What do you think?", "Thoughts?"
+- Soft tone never means soft severity — do not downgrade or hedge a real issue to be polite ("might be a minor concern" for a production bug is dishonest).
+- Quantify impact when possible: "this N+1 adds ~50ms per item" beats "could be slow".
 
 Your check file may add domain-specific comment guidance (e.g., quantify impact, cite a WCAG criterion).

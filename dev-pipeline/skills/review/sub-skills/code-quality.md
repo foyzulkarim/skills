@@ -32,6 +32,9 @@ _Read `_protocol.md` first._
 - No god functions doing multiple unrelated things
 - Single Responsibility Principle — each function/class has one reason to change
 - Dead code and unused imports removed
+- Refactors reduce the number of concepts a reader must hold, not just relocate them — prefer restructurings that make branches/modes disappear; prefer deleting an abstraction over polishing it
+- Watch total file size, not just diff size — a small diff that grows an already-large (~1000+ line) file is an extraction signal; decompose, then add
+- No new conditional bolted onto an unrelated flow — that's a design smell, not a nit; repeated conditionals on the same shape signal a missing model or dispatcher
 
 ### TypeScript Usage (if applicable)
 
@@ -52,6 +55,8 @@ _Read `_protocol.md` first._
 - No copy-pasted logic blocks — shared code extracted when pattern repeats 3+ times
 - Abstractions match the domain, not forced DRY (don't over-abstract for 2 uses)
 - Utility functions live in appropriate shared modules
+- No feature-specific logic leaking into a shared/general-purpose module — keep logic in its owning layer
+- No bespoke near-duplicate of an existing canonical helper — reuse it instead
 
 ### Testing Signals
 
@@ -99,3 +104,7 @@ _Read `_protocol.md` first._
 - No circular dependencies introduced
 - Import style matches project convention (relative vs absolute, barrel files)
 - Code matches pattern references cited in task spec Implementation Notes (pipeline mode)
+
+## Comment Guidance
+
+For structural findings, propose the move — not just the problem. Reach for a named restructuring: replace a conditional chain with a typed model or dispatcher; collapse duplicate branches into one flow; separate orchestration from business logic; move feature logic to its owning module; reuse the canonical helper; make a type boundary explicit; delete a pass-through wrapper; extract a helper or split a large file. Prefer the remedy that removes moving pieces over one that spreads the same complexity around.
