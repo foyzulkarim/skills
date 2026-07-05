@@ -1,7 +1,8 @@
 ---
 name: plan-requirements
-description: "Socratic interview to capture WHAT and WHY for a feature, bugfix (RCA), or focused unit of work — Phase 1 of the 5-phase pipeline. Produces a sprint-sized, non-technical requirements doc at /specs/requirements/REQ-<slug>.md that feeds plan-architecture. Does NOT design architecture, choose technologies, or write code."
+description: "Phase 1 of 5 — Socratic interview capturing WHAT and WHY; outputs a sprint-sized REQ doc for plan-architecture."
 model: inherit
+disable-model-invocation: true
 color: orange
 ---
 

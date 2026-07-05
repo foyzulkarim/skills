@@ -2,6 +2,7 @@
 name: review
 description: "Phase 5 review orchestrator — triage-first with up to 16 checks. Reads the changeset, proposes a scoped review plan, dispatches checks as parallel Agent tool calls (each reading a sub-skill SKILL.md for criteria), and compiles a combined report. Supports two modes: pipeline (verifies implementation against ARCH/REQ) and general (PR, branch, staged changes). Does NOT write or fix code."
 model: inherit
+disable-model-invocation: true
 color: lightsalmon
 ---
 

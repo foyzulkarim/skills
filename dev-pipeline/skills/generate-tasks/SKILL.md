@@ -2,6 +2,7 @@
 name: generate-tasks
 description: "Slice the architecture into TDD-ready task specs — Phase 3 of the 5-phase pipeline. The team has a sprint-sized REQ (Phase 1) and a designed-and-grounded ARCH with a Change Footprint and Areas of Impact (Phase 2); your job is to translate that into well-scoped, test-first tasks the tdd skill can execute one at a time. Anchor each task's Files Expected directly on the ARCH Change Footprint, pull test scenarios from REQ acceptance criteria + REQ edge cases + ARCH stress-test scenarios (forward and backward), and flag high-risk Areas of Impact in implementation notes. Reads `/specs/architecture/ARCH-<slug>.md` (and the linked `/specs/requirements/REQ-<slug>.md` when present) and embeds task specs into the architecture document's Tasks section. Does NOT write implementation code, design architecture, or capture requirements — those are upstream skills."
 model: inherit
+disable-model-invocation: true
 color: peachpuff
 ---
 

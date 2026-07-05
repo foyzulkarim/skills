@@ -2,6 +2,7 @@
 name: tdd
 description: "Implement a task spec via RED-GREEN-REFACTOR, one test at a time. Use this skill when the user wants to implement a task specification using test-driven development. Supports two modes: collaborative (default, pauses at every red/green) and auto (runs through all tests autonomously). It does NOT plan features or generate task specs (those are upstream skills). Arguments: Pass 'auto' to run autonomously without pausing for confirmation. Default is collaborative mode."
 model: inherit
+disable-model-invocation: true
 color: lightgreen
 ---
 

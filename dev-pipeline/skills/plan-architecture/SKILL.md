@@ -1,7 +1,8 @@
 ---
 name: plan-architecture
-description: "Collaborative system design AND concrete change-footprint mapping — Phase 2 of the 5-phase pipeline. Use when ready for solution-space decisions: structure, tech choices, data models, API contracts, module boundaries, plus a walk through the codebase naming which files get created, modified, or impacted. Reads /specs/requirements/REQ-<slug>.md when present, or runs from a brief. Produces /specs/architecture/ARCH-<slug>.md. Does NOT generate tasks (Phase 3) or write code (Phase 4)."
+description: "Phase 2 of 5 — collaborative system design plus change-footprint mapping; outputs an ARCH doc for generate-tasks."
 model: inherit
+disable-model-invocation: true
 color: cornflowerblue
 ---
 

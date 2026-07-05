@@ -2,6 +2,7 @@
 name: commit
 description: "Conventional commit, one shot by default. One bash script adaptively curates the git context (full diff for small changes; noise-dropped, per-file-capped diff for large ones), the message is drafted in a single LLM pass, and a second script stages and commits. Pass 'ask' to confirm the draft and choose files before committing. An optional message hint informs the title (e.g. '/commit fix null check' or '/commit ask')."
 model: inherit
+disable-model-invocation: true
 color: lightcoral
 ---
 
