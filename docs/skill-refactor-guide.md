@@ -50,11 +50,31 @@ would change what the agent does, don't make it.
    Section A" — it does not restate the rules (see plan-architecture's
    Context Gathering vs. Phase D2).
 
+## Extract artifact templates into bundled files
+
+For **multi-turn conversational skills** whose output template is only needed
+at the final phase (plan-requirements, plan-architecture, generate-tasks if
+applicable), move the ```markdown template out of SKILL.md into
+`<skill>/artifact-template.md` and replace the section with a reference:
+
+> The full template lives at `{base_directory}/artifact-template.md`. When
+> you reach Phase F — not earlier — read that file and follow its structure
+> exactly, filling every section. Do NOT write the artifact from memory or
+> improvise the format.
+
+Why: the template would otherwise ride along in context for every turn of a
+long interview; as a file it enters context once, at generation time. The
+"not earlier / do not improvise" wording is mandatory — it prevents both
+premature loading and the agent winging the format. Do NOT do this for
+one-shot skills (commit, session-stats): they execute immediately, so
+inlining is cheaper than an extra Read.
+
 ## What you must NOT cut
 
-- **Artifact templates** (the ```markdown output formats). They are the
-  output contract — copy them through verbatim. Only cut a template section
-  if it's demonstrably redundant with another section of the template.
+- **Artifact templates are the output contract** — whether inline or
+  extracted per above, carry them through verbatim. Only cut a template
+  section if it's demonstrably redundant with another section of the
+  template.
 - **Probe/check lists that drive quality** (edge-case categories, stress-test
   angles, footprint walk steps). Compress wording, never drop a category.
 - **Concrete thresholds and calibration rules** (">100 matches → too broad",
