@@ -23,7 +23,7 @@ plan-architecture (Phase 2) ──► ARCH-*.md ◄──┘
                                   │
 generate-tasks (Phase 3) ──► Tasks embedded in ARCH-*.md
                                   │
-tdd (Phase 4) ──► Working code + passing tests
+implement (Phase 4) ──► Working code + verification evidence
                                   │
                        [YOU ARE HERE — Phase 5 of 5]
                                   │
@@ -39,7 +39,7 @@ tdd (Phase 4) ──► Working code + passing tests
 Review implementation against specs/architecture/ARCH-auth-login-flow.md
 ```
 
-The developer completed a TDD implementation. Read the ARCH document (architecture + embedded task specs) and the linked REQ (if any), verify completeness against the spec, and run code quality checks. **Task Completion Verification is always included** in pipeline mode.
+The developer completed an implementation (Phase 4). Read the ARCH document (architecture + embedded task specs) and the linked REQ (if any), verify completeness against the spec, and run code quality checks. **Task Completion Verification is always included** in pipeline mode.
 
 ### General Mode
 

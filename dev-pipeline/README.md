@@ -29,8 +29,8 @@ A structured 5-phase development pipeline for Claude Code — from requirement e
                              │
                              ▼
   ┌────────────────────────────────────────────────────────────┐
-  │  Phase 4     /tdd                                          │
-  │  Output: code + tests                                      │
+  │  Phase 4     /implement                                    │
+  │  Output: code + verification evidence                      │
   └──────────────────────────┬─────────────────────────────────┘
                              │
                              ▼
@@ -56,11 +56,11 @@ Collaborative system design — high-level structure, tech choices, data models,
 
 ### /generate-tasks (Phase 3)
 
-Reads the architecture document (and the linked REQ when present) and embeds TDD-ready task specifications directly into the `ARCH-*.md` Tasks section. Each task includes a test plan, implementation notes, scope boundaries, and REQ traceability.
+Reads the architecture document (and the linked REQ when present) and embeds verification-ready task specifications directly into the `ARCH-*.md` Tasks section. Each task carries a verification mode — `tdd`, `test-after`, `ui`, or `checklist` — plus a matching verification plan, implementation notes, scope boundaries, and REQ traceability.
 
-### /tdd (Phase 4)
+### /implement (Phase 4)
 
-Test-driven development partner. Works through RED-GREEN-REFACTOR one test at a time. Reads the task spec from `ARCH-*.md` for full context. Supports collaborative mode (pauses at every step) and autonomous mode (`/tdd auto`).
+Implementation partner that routes each task to the verification discipline it needs: `tdd` (RED-GREEN-REFACTOR), `test-after` (increment, then cover), `ui` (evidence-backed human checklist), or `checklist` (command outcomes). Reads the task spec from `ARCH-*.md` for full context and ends every task with a task-scoped conventional commit. Collaborative by default; `/implement T1 auto` runs one task without stepping, `/implement auto` runs the whole plan behind a single approval gate.
 
 ### /review (Phase 5)
 

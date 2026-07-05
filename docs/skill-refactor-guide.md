@@ -90,9 +90,8 @@ inlining is cheaper than an extra Read.
 - **generate-tasks (419 lines)** — expect the same gate/checklist duplication
   and heavy example task specs. The embedded task-spec template is the
   artifact contract: keep one full example, cut repeats.
-- **tdd (203 lines)** — the RED-GREEN-REFACTOR loop definition is the core;
-  collaborative vs. auto mode likely restate shared steps — factor the loop
-  once, describe only the *differences* per mode.
+- **implement (replaces tdd)** — already restructured: router SKILL.md +
+  bundled modes/*.md loaded per task. Keep that shape; don't re-inline modes.
 - **review (351 lines) + 16 sub-skills (~5–7KB each)** — biggest remaining win:
   1. First check how review dispatches sub-skills (Agent tool prompt? file
      read?). Sub-skills are not user commands and not model-triggered, but

@@ -95,7 +95,7 @@ Context: specs/context/<ID>.md
 Next:
   /plan-requirements   — capture WHAT and WHY
   /plan-architecture   — design the solution
-  /tdd                 — start coding
+  /implement           — start coding
 ```
 
 ## You Must NOT

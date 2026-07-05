@@ -37,8 +37,8 @@ A complete development workflow built on a 5-phase agentic framework:
                              │
                              ▼
   ┌────────────────────────────────────────────────────────────┐
-  │  Phase 4     /tdd                                          │
-  │  Output: code + tests                                      │
+  │  Phase 4     /implement                                    │
+  │  Output: code + verification evidence                      │
   └──────────────────────────┬─────────────────────────────────┘
                              │
                              ▼
@@ -56,8 +56,8 @@ A complete development workflow built on a 5-phase agentic framework:
 |-------|-------|-------------|
 | [/plan-requirements](./dev-pipeline/skills/plan-requirements) | 1 | Capture WHAT and WHY — Socratic interview producing `REQ-*.md`. Owner: developer. |
 | [/plan-architecture](./dev-pipeline/skills/plan-architecture) | 2 | Design HOW — collaborative system design producing `ARCH-*.md`. |
-| [/generate-tasks](./dev-pipeline/skills/generate-tasks) | 3 | Embed TDD-ready task specs into `ARCH-*.md`. |
-| [/tdd](./dev-pipeline/skills/tdd) | 4 | RED-GREEN-REFACTOR, one test at a time. Collaborative or autonomous. |
+| [/generate-tasks](./dev-pipeline/skills/generate-tasks) | 3 | Embed verification-ready task specs into `ARCH-*.md`, each with a verification mode. |
+| [/implement](./dev-pipeline/skills/implement) | 4 | Mode-routed implementation — tdd, test-after, ui, or checklist per task. Collaborative or autonomous, one commit per task. |
 | [/review](./dev-pipeline/skills/review) | 5 | Triage-first code review — up to 16 checks, pipeline or general mode. |
 | [/start-task](./dev-pipeline/skills/start-task) | pre-1 | One-shot branch bootstrap from a GitHub issue, Jira key, local spec, or ad-hoc brief — zero confirmation by default. |
 | [/commit](./dev-pipeline/skills/commit) | any | One-shot conventional commit — script-curated context, zero confirmation by default, `ask` mode for review/selective staging. |
@@ -86,7 +86,8 @@ dev-pipeline/
 │   ├── plan-requirements/
 │   ├── plan-architecture/
 │   ├── generate-tasks/
-│   ├── tdd/
+│   ├── implement/
+│   │   └── modes/             # tdd, test-after, ui, checklist
 │   ├── review/
 │   │   └── sub-skills/        # 16 review checks, dispatched by /review
 │   ├── commit/

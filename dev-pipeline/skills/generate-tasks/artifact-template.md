@@ -3,6 +3,7 @@
 ## Task T1: [Clear, Specific Title]
 
 > **Status:** not started
+> **Verification:** [tdd | test-after | ui | checklist]
 > **Effort:** [xs | s | m | l | xl]
 > **Priority:** [critical | high | medium | low]
 > **Depends on:** [T2, T3, or "None"]
@@ -85,9 +86,16 @@ testing inheritance — suggest a sequence here. Otherwise omit this section.]
 
 ---
 
+_For `ui` and `checklist` tasks, replace the `### Test Plan` section with
+`### Verification Checklist`: one item per line — **[what to observe / command
+to run]** — expected: [the observation or output that counts as pass]. For `ui`
+tasks, keep a short `#### Testable Seams` list (render, conditional states,
+handlers, a11y basics) that gets component tests. All other sections apply
+unchanged in every mode._
+
 _Multiple tasks: repeat the full `## Task T[n]` structure above under the single
 `# Tasks` heading._
 
-_Status values: `not started` (defined, not picked up) | `in progress` (TDD cycle
-underway) | `done` (all tests pass) | `blocked` (cannot proceed — see notes).
-The tdd skill updates this field as it works._
+_Status values: `not started` (defined, not picked up) | `in progress`
+(implementation underway) | `done` (verification evidence produced) | `blocked`
+(cannot proceed — see notes). The implement skill updates this field as it works._

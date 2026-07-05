@@ -6,7 +6,7 @@ This repository is a **Claude Code plugin marketplace** containing the `dev-pipe
 
 - **Repository:** `foyzulkarim/skills`
 - **Product:** Claude Code plugin marketplace with one plugin: `dev-pipeline`
-- **Current version:** `3.0.0` (keep `dev-pipeline/.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` in sync)
+- **Current version:** `4.0.0` (keep `dev-pipeline/.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` in sync)
 - **Language:** All documentation and comments are in English.
 
 ### The 5-Phase Pipeline
@@ -36,8 +36,8 @@ This repository is a **Claude Code plugin marketplace** containing the `dev-pipe
                              │
                              ▼
   ┌────────────────────────────────────────────────────────────┐
-  │  Phase 4     /tdd                                          │
-  │  Output: code + tests                                      │
+  │  Phase 4     /implement                                    │
+  │  Output: code + verification evidence                      │
   └──────────────────────────┬─────────────────────────────────┘
                              │
                              ▼
@@ -53,8 +53,8 @@ This repository is a **Claude Code plugin marketplace** containing the `dev-pipe
 
 - **plan-requirements** — Socratic interview producing `/specs/requirements/REQ-<slug>.md`
 - **plan-architecture** — Collaborative system design producing `/specs/architecture/ARCH-<slug>.md`
-- **generate-tasks** — Embeds TDD-ready task specs into `ARCH-*.md`
-- **tdd** — RED-GREEN-REFACTOR implementation
+- **generate-tasks** — Embeds verification-ready task specs into `ARCH-*.md`
+- **implement** — Mode-routed implementation (tdd, test-after, ui, checklist)
 - **review** — Triage-first code review with up to 16 domain-specific checks
 - **start-task** (pre-pipeline) — One-shot branch bootstrap from GitHub issue, Jira, local spec, or ad-hoc brief
 - **commit** (any phase) — One-shot conventional commit
@@ -112,7 +112,8 @@ dev-pipeline/
     │   └── scripts/                     ← cost-logger.js, statusline-wrapper.js, etc.
     ├── start-task/SKILL.md
     │   └── gh-start-task.sh
-    └── tdd/SKILL.md
+    └── implement/SKILL.md
+        └── modes/                       ← tdd, test-after, ui, checklist
 scripts/
 └── sync-skills.sh                       ← bidirectional sync with ~/.claude/skills/
 ```

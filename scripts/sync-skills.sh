@@ -4,12 +4,12 @@ set -euo pipefail
 # sync-skills.sh — bidirectional sync between repo skills and ~/.claude/skills.
 #
 #   scripts/sync-skills.sh push              push ALL skills to target
-#   scripts/sync-skills.sh push commit tdd   push only named skills
+#   scripts/sync-skills.sh push commit implement   push only named skills
 #   scripts/sync-skills.sh pull              pull ALL synced skills back
-#   scripts/sync-skills.sh pull tdd          pull only named skill back
-#   scripts/sync-skills.sh import tdd        import non-tracked skill from target (names required)
+#   scripts/sync-skills.sh pull implement          pull only named skill back
+#   scripts/sync-skills.sh import implement        import non-tracked skill from target (names required)
 #   scripts/sync-skills.sh nuke              remove all synced skills from target
-#   scripts/sync-skills.sh nuke --force tdd  force-remove a skill from target (bypass marker check)
+#   scripts/sync-skills.sh nuke --force implement  force-remove a skill from target (bypass marker check)
 #
 # Each copy gets a .synced-from marker holding its source path. Push refreshes
 # dirs that carry a marker and refuses to touch dirs that don't (they're real
@@ -28,9 +28,9 @@ usage: $(basename "$0") <command> [skill...]
 
 commands:
   push                   copy repo skills → ~/.claude/skills (creates/refreshes .synced-from marker)
-  push commit tdd        push only named skills
+  push commit implement        push only named skills
   pull                   pull ALL synced skills back into repo (strips marker)
-  pull tdd               pull only named synced skill back
+  pull implement               pull only named synced skill back
   import <skill...>      import non-tracked skills from ~/.claude/skills into repo (names required)
   nuke                   delete marked skills from ~/.claude/skills only
   nuke --force <skill...>  force-remove named skills from target (bypasses marker check)
