@@ -7,13 +7,11 @@ _Read `_protocol.md` first._
 
 ## Severity Calibration
 
-| Severity | Criteria |
-|----------|----------|
-| 🔴 Critical | Interactive element completely unreachable via keyboard, form with no label (screen reader cannot describe field) |
-| 🟠 High | Missing ARIA label on a complex interactive element, focus not managed after modal opens |
-| 🟡 Medium | Non-semantic HTML where semantic exists, heading hierarchy skipped, ARIA live region missing for dynamic content |
-| 💭 Low | Minor ARIA improvement, additional context opportunity |
-| ⚠️ Manual | Cannot verify from code — developer must test with a screen reader or axe DevTools |
+- 🔴 Critical: Interactive element completely unreachable via keyboard, form with no label (screen reader cannot describe field)
+- 🟠 High: Missing ARIA label on a complex interactive element, focus not managed after modal opens
+- 🟡 Medium: Non-semantic HTML where semantic exists, heading hierarchy skipped, ARIA live region missing for dynamic content
+- 💭 Low: Minor ARIA improvement, additional context opportunity
+- ⚠️ Manual: Cannot verify from code — developer must test with a screen reader or axe DevTools
 
 For each finding, reference the relevant WCAG 2.1 criterion (e.g., "WCAG 2.1.1 Keyboard", "WCAG 1.1.1 Non-text Content").
 

@@ -7,13 +7,11 @@ _Read `_protocol.md` first._
 
 ## Severity Calibration
 
-| Severity | Criteria |
-|----------|----------|
-| 🔴 Critical | No tests for critical path / security-sensitive logic |
-| 🟠 High | Missing error scenario tests, untested public API |
-| 🟡 Medium | Missing edge case, flaky pattern, weak assertion |
-| 💭 Low | Naming inconsistency, minor structural improvement |
-| ⚠️ Manual | Cannot verify from code — developer must check manually |
+- 🔴 Critical: No tests for critical path / security-sensitive logic
+- 🟠 High: Missing error scenario tests, untested public API
+- 🟡 Medium: Missing edge case, flaky pattern, weak assertion
+- 💭 Low: Naming inconsistency, minor structural improvement
+- ⚠️ Manual: Cannot verify from code — developer must check manually
 
 ## Focus Areas
 

@@ -7,13 +7,11 @@ _Read `_protocol.md` first — including the 2-Level Tracing Protocol._
 
 ## Severity Calibration
 
-| Severity | Criteria |
-|----------|----------|
-| 🔴 Critical | Type assertion hiding a runtime crash (`as unknown as X`), `ts-ignore` masking a real type error |
-| 🟠 High | Widespread `any` usage leaking across module boundaries, missing return type on critical exported function |
-| 🟡 Medium | Unnecessary `any`, missing explicit return type on exported function, loose generic |
-| 💭 Low | Minor typing improvement, stricter typing opportunity |
-| ⚠️ Manual | Cannot verify from code — developer must check TypeScript compiler output |
+- 🔴 Critical: Type assertion hiding a runtime crash (`as unknown as X`), `ts-ignore` masking a real type error
+- 🟠 High: Widespread `any` usage leaking across module boundaries, missing return type on critical exported function
+- 🟡 Medium: Unnecessary `any`, missing explicit return type on exported function, loose generic
+- 💭 Low: Minor typing improvement, stricter typing opportunity
+- ⚠️ Manual: Cannot verify from code — developer must check TypeScript compiler output
 
 ## Focus Areas
 

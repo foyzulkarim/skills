@@ -7,13 +7,11 @@ _Read `_protocol.md` first._
 
 ## Severity Calibration
 
-| Severity | Criteria |
-|----------|----------|
-| 🔴 Critical | Destructive DB migration (DROP column/table) without a data migration plan, removed required API field breaking existing clients |
-| 🟠 High | API response shape changed without versioning, breaking change to a shared library with multiple consumers |
-| 🟡 Medium | Env var removed without migration path, URL/route changed that may break bookmarks/clients |
-| 💭 Low | Deprecation notice missing for removed functionality, minor backward compat opportunity |
-| ⚠️ Manual | Cannot verify from code — developer must check all consumers manually (e.g., other services, mobile clients) |
+- 🔴 Critical: Destructive DB migration (DROP column/table) without a data migration plan, removed required API field breaking existing clients
+- 🟠 High: API response shape changed without versioning, breaking change to a shared library with multiple consumers
+- 🟡 Medium: Env var removed without migration path, URL/route changed that may break bookmarks/clients
+- 💭 Low: Deprecation notice missing for removed functionality, minor backward compat opportunity
+- ⚠️ Manual: Cannot verify from code — developer must check all consumers manually (e.g., other services, mobile clients)
 
 For each finding, assess: **who is affected, how many consumers, and is there a migration path?**
 

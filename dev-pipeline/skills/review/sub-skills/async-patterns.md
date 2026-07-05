@@ -7,13 +7,11 @@ _Read `_protocol.md` first — including the 2-Level Tracing Protocol._
 
 ## Severity Calibration
 
-| Severity | Criteria |
-|----------|----------|
-| 🔴 Critical | Unhandled rejection in critical path that can crash the process, race condition causing data corruption |
-| 🟠 High | Async function called without `await` or `.catch`, resource leak in async error path |
-| 🟡 Medium | Sequential awaits that could be `Promise.all`, Promise constructor anti-pattern |
-| 💭 Low | Minor async cleanup improvement |
-| ⚠️ Manual | Cannot verify from code — developer must test async behavior at runtime |
+- 🔴 Critical: Unhandled rejection in critical path that can crash the process, race condition causing data corruption
+- 🟠 High: Async function called without `await` or `.catch`, resource leak in async error path
+- 🟡 Medium: Sequential awaits that could be `Promise.all`, Promise constructor anti-pattern
+- 💭 Low: Minor async cleanup improvement
+- ⚠️ Manual: Cannot verify from code — developer must test async behavior at runtime
 
 ## Focus Areas
 

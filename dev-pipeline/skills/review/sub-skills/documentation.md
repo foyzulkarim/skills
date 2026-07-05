@@ -7,13 +7,11 @@ _Read `_protocol.md` first._
 
 ## Severity Calibration
 
-| Severity | Criteria |
-|----------|----------|
-| 🔴 Critical | Breaking change with no migration guide, removed public API with no deprecation notice |
-| 🟠 High | Public API endpoint undocumented, new required env var not documented |
-| 🟡 Medium | README not updated for changed behavior, inaccurate doc reference |
-| 💭 Low | Missing JSDoc on exported function, minor doc improvement opportunity |
-| ⚠️ Manual | Cannot verify from code — developer must check manually (e.g., rendered output of docs) |
+- 🔴 Critical: Breaking change with no migration guide, removed public API with no deprecation notice
+- 🟠 High: Public API endpoint undocumented, new required env var not documented
+- 🟡 Medium: README not updated for changed behavior, inaccurate doc reference
+- 💭 Low: Missing JSDoc on exported function, minor doc improvement opportunity
+- ⚠️ Manual: Cannot verify from code — developer must check manually (e.g., rendered output of docs)
 
 ## Focus Areas
 

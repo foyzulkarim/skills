@@ -7,13 +7,11 @@ _Read `_protocol.md` first._
 
 ## Severity Calibration
 
-| Severity | Criteria |
-|----------|----------|
-| 🔴 Critical | Swallowed error causing silent data corruption or incorrect state |
-| 🟠 High | Unhandled rejection in critical path, sensitive data leaked in error response |
-| 🟡 Medium | Missing resource cleanup in error path, poor error message quality |
-| 💭 Low | Minor logging improvement, additional context opportunity |
-| ⚠️ Manual | Cannot verify from code — developer must test manually (e.g., observe log output at runtime) |
+- 🔴 Critical: Swallowed error causing silent data corruption or incorrect state
+- 🟠 High: Unhandled rejection in critical path, sensitive data leaked in error response
+- 🟡 Medium: Missing resource cleanup in error path, poor error message quality
+- 💭 Low: Minor logging improvement, additional context opportunity
+- ⚠️ Manual: Cannot verify from code — developer must test manually (e.g., observe log output at runtime)
 
 ## Focus Areas
 

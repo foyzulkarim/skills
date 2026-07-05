@@ -7,13 +7,11 @@ _Read `_protocol.md` first._
 
 ## Severity Calibration
 
-| Severity | Criteria |
-|----------|----------|
-| 🔴 Critical | O(n²)/O(n³) on unbounded input, unbounded memory growth, complete absence of pagination |
-| 🟠 High | N+1 queries in hot path, blocking sync ops in request handler, large payload buffered in memory |
-| 🟡 Medium | Missed `Promise.all` opportunity, unnecessary deep clone, missing index on FK field |
-| 💭 Low | Minor optimization opportunity, cosmetic efficiency improvement |
-| ⚠️ Manual | Cannot verify from code — developer must check manually (e.g., production query plan) |
+- 🔴 Critical: O(n²)/O(n³) on unbounded input, unbounded memory growth, complete absence of pagination
+- 🟠 High: N+1 queries in hot path, blocking sync ops in request handler, large payload buffered in memory
+- 🟡 Medium: Missed `Promise.all` opportunity, unnecessary deep clone, missing index on FK field
+- 💭 Low: Minor optimization opportunity, cosmetic efficiency improvement
+- ⚠️ Manual: Cannot verify from code — developer must check manually (e.g., production query plan)
 
 ## Focus Areas
 

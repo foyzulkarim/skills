@@ -7,13 +7,11 @@ _Read `_protocol.md` first — including the 2-Level Tracing Protocol._
 
 ## Severity Calibration
 
-| Severity | Criteria |
-|----------|----------|
-| 🔴 Critical | Memory leak in hot path (e.g., unbounded listener accumulation on every request), event loop block causing request timeouts |
-| 🟠 High | Prototype pollution from user input, reference mutation of shared objects |
-| 🟡 Medium | Megamorphism potential, unnecessary large object retention in closure |
-| 💭 Low | Minor runtime optimization opportunity |
-| ⚠️ Manual | Cannot verify from code — developer must profile at runtime |
+- 🔴 Critical: Memory leak in hot path (e.g., unbounded listener accumulation on every request), event loop block causing request timeouts
+- 🟠 High: Prototype pollution from user input, reference mutation of shared objects
+- 🟡 Medium: Megamorphism potential, unnecessary large object retention in closure
+- 💭 Low: Minor runtime optimization opportunity
+- ⚠️ Manual: Cannot verify from code — developer must profile at runtime
 
 ## Focus Areas
 

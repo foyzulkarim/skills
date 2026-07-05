@@ -9,13 +9,11 @@ Trace every requirement from REQ → ARCH → task spec → implementation, veri
 
 ## Severity Calibration
 
-| Severity | Criteria |
-|----------|----------|
-| 🔴 Critical | Missing acceptance criteria, broken core functionality, must-fix before merge |
-| 🟠 High | Significant gap vs spec, auth/authz issue, type safety hole |
-| 🟡 Medium | Minor deviation from spec, missing edge case verification |
-| 💭 Low | Suggestion or minor inconsistency |
-| ⚠️ Manual | Cannot verify from code — developer must check manually |
+- 🔴 Critical: Missing acceptance criteria, broken core functionality, must-fix before merge
+- 🟠 High: Significant gap vs spec, auth/authz issue, type safety hole
+- 🟡 Medium: Minor deviation from spec, missing edge case verification
+- 💭 Low: Suggestion or minor inconsistency
+- ⚠️ Manual: Cannot verify from code — developer must check manually
 
 ## Focus Areas
 

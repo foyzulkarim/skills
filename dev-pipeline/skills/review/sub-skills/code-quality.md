@@ -7,13 +7,11 @@ _Read `_protocol.md` first._
 
 ## Severity Calibration
 
-| Severity | Criteria |
-|----------|----------|
-| 🔴 Critical | Broken core functionality, layer boundary violation causing data integrity risk |
-| 🟠 High | Significant structural problem, circular dependency, god function owning multiple concerns |
-| 🟡 Medium | Code smell, DRY violation at 3+ repetitions, deep nesting, naming inconsistency |
-| 💭 Low | Style inconsistency, minor refactoring opportunity, single-location magic number |
-| ⚠️ Manual | Cannot verify from code — developer must check manually |
+- 🔴 Critical: Broken core functionality, layer boundary violation causing data integrity risk
+- 🟠 High: Significant structural problem, circular dependency, god function owning multiple concerns
+- 🟡 Medium: Code smell, DRY violation at 3+ repetitions, deep nesting, naming inconsistency
+- 💭 Low: Style inconsistency, minor refactoring opportunity, single-location magic number
+- ⚠️ Manual: Cannot verify from code — developer must check manually
 
 ## Focus Areas
 

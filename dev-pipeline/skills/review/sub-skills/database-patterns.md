@@ -7,13 +7,11 @@ _Read `_protocol.md` first — including the 2-Level Tracing Protocol._
 
 ## Severity Calibration
 
-| Severity | Criteria |
-|----------|----------|
-| 🔴 Critical | Query injection via string interpolation, destructive migration without rollback, transaction missing for multi-step write |
-| 🟠 High | N+1 in hot path, unbounded query (no LIMIT) on large table, missing index causing full table scan |
-| 🟡 Medium | SELECT * when few fields needed, transaction scope too large (holding connection too long) |
-| 💭 Low | Minor query optimization opportunity |
-| ⚠️ Manual | Cannot verify from code — developer must check query plan in production (EXPLAIN ANALYZE) |
+- 🔴 Critical: Query injection via string interpolation, destructive migration without rollback, transaction missing for multi-step write
+- 🟠 High: N+1 in hot path, unbounded query (no LIMIT) on large table, missing index causing full table scan
+- 🟡 Medium: SELECT * when few fields needed, transaction scope too large (holding connection too long)
+- 💭 Low: Minor query optimization opportunity
+- ⚠️ Manual: Cannot verify from code — developer must check query plan in production (EXPLAIN ANALYZE)
 
 **This check owns all database/ORM N+1 analysis.** The performance check handles non-database N+1 (API call loops, repeated computation). Do not duplicate — any N+1 involving a DB/ORM query is flagged here.
 

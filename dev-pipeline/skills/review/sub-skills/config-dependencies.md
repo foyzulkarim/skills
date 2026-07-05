@@ -7,13 +7,11 @@ _Read `_protocol.md` first._
 
 ## Severity Calibration
 
-| Severity | Criteria |
-|----------|----------|
-| 🔴 Critical | Known CVE in added/updated dependency, secret committed to source |
-| 🟠 High | Unmaintained dependency added, lock file out of sync with package.json |
-| 🟡 Medium | Missing env var documentation, new dep added without size/license check |
-| 💭 Low | Minor config improvement, optional hardening |
-| ⚠️ Manual | Cannot verify from code — developer must check (e.g., CVE database, runtime behavior of config) |
+- 🔴 Critical: Known CVE in added/updated dependency, secret committed to source
+- 🟠 High: Unmaintained dependency added, lock file out of sync with package.json
+- 🟡 Medium: Missing env var documentation, new dep added without size/license check
+- 💭 Low: Minor config improvement, optional hardening
+- ⚠️ Manual: Cannot verify from code — developer must check (e.g., CVE database, runtime behavior of config)
 
 ## Focus Areas
 

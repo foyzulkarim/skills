@@ -7,13 +7,11 @@ _Read `_protocol.md` first._
 
 ## Severity Calibration
 
-| Severity | Criteria |
-|----------|----------|
-| 🔴 Critical | SQL injection, XSS, exposed credentials, auth bypass, data loss risk |
-| 🟠 High | Missing auth check, CORS misconfiguration, rate limiting gap on sensitive route |
-| 🟡 Medium | Sensitive data in logs, missing security header, overly permissive input |
-| 💭 Low | Minor hardening opportunity, defense-in-depth suggestion |
-| ⚠️ Manual | Cannot verify from code — developer must test manually (e.g., pen test a flow) |
+- 🔴 Critical: SQL injection, XSS, exposed credentials, auth bypass, data loss risk
+- 🟠 High: Missing auth check, CORS misconfiguration, rate limiting gap on sensitive route
+- 🟡 Medium: Sensitive data in logs, missing security header, overly permissive input
+- 💭 Low: Minor hardening opportunity, defense-in-depth suggestion
+- ⚠️ Manual: Cannot verify from code — developer must test manually (e.g., pen test a flow)
 
 For Critical and High findings, briefly explain the attack vector.
 

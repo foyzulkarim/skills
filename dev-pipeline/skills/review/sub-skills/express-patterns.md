@@ -7,13 +7,11 @@ _Read `_protocol.md` first — including the 2-Level Tracing Protocol._
 
 ## Severity Calibration
 
-| Severity | Criteria |
-|----------|----------|
-| 🔴 Critical | Auth middleware applied after route handler, unhandled async rejection crashing the server, multiple `res.send` calls causing "headers already sent" crash |
-| 🟠 High | Request body used without validation, CORS wildcard in production, rate limiting missing on auth endpoint |
-| 🟡 Medium | Middleware ordering inefficiency, type coercion issue with `req.params.id` |
-| 💭 Low | Minor middleware improvement, optional hardening |
-| ⚠️ Manual | Cannot verify from code — developer must test the request flow manually |
+- 🔴 Critical: Auth middleware applied after route handler, unhandled async rejection crashing the server, multiple `res.send` calls causing "headers already sent" crash
+- 🟠 High: Request body used without validation, CORS wildcard in production, rate limiting missing on auth endpoint
+- 🟡 Medium: Middleware ordering inefficiency, type coercion issue with `req.params.id`
+- 💭 Low: Minor middleware improvement, optional hardening
+- ⚠️ Manual: Cannot verify from code — developer must test the request flow manually
 
 ## Focus Areas
 

@@ -7,13 +7,11 @@ _Read `_protocol.md` first — including the 2-Level Tracing Protocol._
 
 ## Severity Calibration
 
-| Severity | Criteria |
-|----------|----------|
-| 🔴 Critical | Hooks rules violation causing runtime crash, hydration mismatch causing broken rendering, Next.js routing violation shipping non-page code as a route |
-| 🟠 High | Stale closure causing incorrect behavior, server/client boundary violation |
-| 🟡 Medium | Unstable reference causing unnecessary re-renders, derived state stored in useState |
-| 💭 Low | Minor optimization (useMemo/useCallback), minor hook cleanup |
-| ⚠️ Manual | Cannot verify from code — developer must test in browser |
+- 🔴 Critical: Hooks rules violation causing runtime crash, hydration mismatch causing broken rendering, Next.js routing violation shipping non-page code as a route
+- 🟠 High: Stale closure causing incorrect behavior, server/client boundary violation
+- 🟡 Medium: Unstable reference causing unnecessary re-renders, derived state stored in useState
+- 💭 Low: Minor optimization (useMemo/useCallback), minor hook cleanup
+- ⚠️ Manual: Cannot verify from code — developer must test in browser
 
 ## Focus Areas
 
