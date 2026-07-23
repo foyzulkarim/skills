@@ -45,7 +45,6 @@ The ARCH document's upper half (architecture, decisions, contracts, **Change Foo
 - **Follow project conventions.** Read CLAUDE.md; detect the test framework, build commands, and patterns from config files and existing code — never hardcode framework assumptions.
 - **Ambiguity → ask.** Both settings. Never assume and flag later.
 - **Stay in scope.** Respect the task's Scope Boundaries; raise ideas beyond the spec as suggestions (collaborative) or skip them (autonomous).
-- **Autonomous mode: stop after one unresolved attempt.** If verification can't be made to pass or the build breaks without an obvious fix after one focused attempt, stop and ask the developer rather than pushing through — this applies whether you're running one task (`auto`) or the whole plan.
 
 ## Before Each Task
 
@@ -71,7 +70,7 @@ When the last task is done, point the developer to review: "run the Review again
 2. **Single approval gate.** Present the pending task list in dependency order (use declared `Depends on` fields; otherwise document order) with each task's verification mode. Wait for an unambiguous affirmative ("approve", "go", "yes"). Treat hedged responses ("looks reasonable", "I guess") as NOT approved. After approval, run without further stepping.
 3. **Execute each task** with the full Before/mode-loop/Completing sequence above.
 4. **Stop and ask — do not push through — when:**
-   - verification can't be made to pass or the build breaks without an obvious fix after one focused attempt (see Shared Discipline);
+   - verification can't be made to pass or the build breaks without an obvious fix after one focused attempt;
    - the task spec is ambiguous or needs a decision it doesn't cover;
    - the next step touches an **H-risk Area of Impact** or is irreversible — auth/permission changes, destructive migrations, payments, deletions, secrets, anything `git revert` can't undo. Get explicit sign-off before continuing.
    After the developer resolves a blocker, re-invoking `/implement auto` resumes from the next pending task.
