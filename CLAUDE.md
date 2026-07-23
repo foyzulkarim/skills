@@ -133,7 +133,7 @@ When adding a new skill:
 - `/specs/requirements/REQ-<slug>.md` — produced by plan-requirements
 - `/specs/architecture/ARCH-<slug>.md` — produced by plan-architecture; tasks embedded in-place by generate-tasks
 - `/specs/context/<identifier>.md` — produced by start-task
-- `CODE-REVIEW-*.md` — produced by review (general mode)
+- `/specs/reviews/CODE-REVIEW-*.md` — produced by review (general mode)
 
 **Important:** These artifacts must never be committed to `master` of this repo. The doc-hygiene CI enforces this.
 

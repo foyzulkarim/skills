@@ -27,6 +27,7 @@ shows the developer the workflow was thorough.}
 - [x] Results collected and deduplicated
 - [x] Report compiled
 - [x] Verdict determined
+- [x] Report saved to specs/reviews/
 
 ## Verdict: {verdict}
 

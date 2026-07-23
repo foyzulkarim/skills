@@ -122,13 +122,6 @@ else
   echo "Created branch: $BRANCH_NAME"
 fi
 
-# Push to origin
-echo "Pushing to origin..."
-git push -u origin "$BRANCH_NAME" 2>/dev/null || {
-  echo "Error: Failed to push branch. Check your permissions." >&2
-  exit 1
-}
-
 # ── Create context file ───────────────────────────────────────────────────────
 mkdir -p specs/context
 
@@ -161,6 +154,26 @@ ${BODY:-_No description provided._}
 EOF
 
 echo "Context saved to: $CONTEXT_FILE"
+
+# ── Commit the context file on the branch ─────────────────────────────────────
+# Only the file this script just generated — never the developer's other changes.
+if [[ -n "$(git status --porcelain -- "$CONTEXT_FILE")" ]]; then
+  git add -- "$CONTEXT_FILE"
+  git commit --quiet -m "chore(${ISSUE_NUM}): add task context
+
+Refs: ${ISSUE_NUM}" -- "$CONTEXT_FILE" || {
+    echo "Error: Failed to commit context file." >&2
+    exit 1
+  }
+  echo "Committed context file on ${BRANCH_NAME}."
+fi
+
+# ── Push to origin ────────────────────────────────────────────────────────────
+echo "Pushing to origin..."
+git push -u origin "$BRANCH_NAME" 2>/dev/null || {
+  echo "Error: Failed to push branch. Check your permissions." >&2
+  exit 1
+}
 
 # ── Summary ───────────────────────────────────────────────────────────────────
 echo ""
