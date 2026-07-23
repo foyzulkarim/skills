@@ -43,10 +43,13 @@ Compute every field silently from the blob:
 - **Title** — imperative mood, total header ≤72 chars. Base on the hint if given.
 - **Description** — 1–3 specific sentences: what changed and why.
 
-Write it to a temp file:
+Write it to a temp file **unique to this checkout** — parallel worktrees each run
+their own `/commit`, and a shared fixed path races. Use
+`/tmp/commit-msg-{task-number}.txt`; when `TASK_NUMBER` is `NONE`, use
+`/tmp/commit-msg-{branch}.txt` with `/` replaced by `-`:
 
 ```bash
-cat > /tmp/commit-msg.txt <<'EOF'
+cat > /tmp/commit-msg-{task-number}.txt <<'EOF'
 {type}({task-number}): {title}
 
 {description}
@@ -64,7 +67,7 @@ EOF
 selection, then run.
 
 ```bash
-{base_directory}/commit.sh /tmp/commit-msg.txt [file ...]
+{base_directory}/commit.sh /tmp/commit-msg-{task-number}.txt [file ...]
 ```
 
 No file args → stages everything. File args (ask mode) → stages only those.

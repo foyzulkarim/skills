@@ -94,6 +94,6 @@ One-shot conventional commit — bundled scripts (`gather.sh`/`commit.sh`) own a
 
 - Requirements: `/specs/requirements/REQ-<slug>.md`
 - Architecture (with embedded tasks): `/specs/architecture/ARCH-<slug>.md`
-- Review reports: `CODE-REVIEW-*.md` at repo root
+- Review reports: `/specs/reviews/CODE-REVIEW-*.md`
 - Context files: `/specs/context/<identifier>.md`
 - Branch naming: `{type}/{task-number}/{slug}`
