@@ -129,10 +129,6 @@ Produce the artifact only when **all** of these are true:
 
 If any are false, keep asking.
 
-## Phase 1 Gate
-
-Before handing off to plan-architecture, the developer must answer **yes** to: *could a teammate who wasn't in this conversation read this REQ and walk into sprint planning with full context?*
-
 ## Reminders
 
 - Use today's date in the artifact.
