@@ -147,7 +147,7 @@ Track your own progress through the run:
 At compile time — not earlier — read `{base_directory}/report-template.md` and follow its structure exactly, including your completed progress checklist as its "Review Process" section. Do NOT write the report from memory.
 
 **Pipeline mode:** present the report inline.
-**General mode:** save to the repository root as `CODE-REVIEW-PR-{number}.md`, `CODE-REVIEW-BRANCH-{safe-name}.md`, `CODE-REVIEW-STAGED-{YYYY-MM-DD-HHMM}.md`, or `CODE-REVIEW-DIFF-{safe-name}.md`.
+**General mode:** save under `specs/reviews/` (creating the directory if it doesn't exist) as `REV-PR-{number}.md`, `REV-BRANCH-{safe-name}.md`, `REV-STAGED-{YYYY-MM-DD-HHMM}.md`, or `REV-DIFF-{safe-name}.md`.
 
 ## Verdicts
 
