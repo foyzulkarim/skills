@@ -1,6 +1,6 @@
 ---
 name: setup-cost-tracking
-description: Install genuine per-session cost tracking for Claude Code by wiring bundled logger scripts into the user's statusline — preserving any existing statusline and hooks. Idempotent; safe to re-run.
+description: Install genuine per-session cost tracking for Claude Code by wiring bundled logger scripts into the user's statusline — preserving any existing statusline and hooks. Use when the user asks to set up, install, enable, or repair cost tracking / cost logging / session cost capture. Idempotent; safe to re-run.
 model: inherit
 disable-model-invocation: true
 color: orange
