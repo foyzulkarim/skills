@@ -140,14 +140,17 @@ Track your own progress through the run:
 - [ ] Checks dispatched: {list}
 - [ ] Results collected and deduplicated
 - [ ] Report compiled and verdict determined
+- [ ] Report saved to specs/reviews/
 ```
 
 ## The Report
 
 At compile time — not earlier — read `{base_directory}/report-template.md` and follow its structure exactly, including your completed progress checklist as its "Review Process" section. Do NOT write the report from memory.
 
-**Pipeline mode:** present the report inline.
-**General mode:** save under `specs/reviews/` (creating the directory if it doesn't exist) as `REV-PR-{number}.md`, `REV-BRANCH-{safe-name}.md`, `REV-STAGED-{YYYY-MM-DD-HHMM}.md`, or `REV-DIFF-{safe-name}.md`.
+**Always save the report** under `specs/reviews/` (creating the directory if it doesn't exist) — regardless of mode, never skip this step.
+
+**Pipeline mode:** save as `CODE-REVIEW-PIPELINE-{arch-slug}.md` (derived from the ARCH file name) and also present the report inline.
+**General mode:** save as `CODE-REVIEW-PR-{number}.md`, `CODE-REVIEW-BRANCH-{safe-name}.md`, `CODE-REVIEW-STAGED-{YYYY-MM-DD-HHMM}.md`, or `CODE-REVIEW-DIFF-{safe-name}.md`.
 
 ## Verdicts
 
