@@ -62,8 +62,8 @@ Examples: "Add user authentication to the login form" → `add-user-auth`;
 
 ## 4. Execute
 
-**GitHub** (1 bash call) — the script syncs the default branch, creates and
-pushes the branch, and writes the context file:
+**GitHub** (1 bash call) — the script syncs the default branch, creates the
+branch, writes **and commits** the context file on it, then pushes:
 
 ```bash
 bash {base_directory}/gh-start-task.sh <ISSUE_NUM> <TYPE> <SLUG>
@@ -101,7 +101,7 @@ Next:
 ## You Must NOT
 
 - Ask for confirmation on the happy path — ad-hoc's single intake question is the only interactive moment
-- Stash, discard, or commit the developer's uncommitted changes — hard-stop instead
+- Stash, discard, or commit the developer's pre-existing uncommitted changes — hard-stop instead (the GitHub script committing the context file *it just generated* is the one sanctioned exception)
 - Push to `main`/`master`, or use `--force` on any push
 - Paraphrase errors — print them verbatim so the developer gets the exact actionable message
 - Fall back to ad-hoc when a chosen CLI tool is missing — fail clearly
