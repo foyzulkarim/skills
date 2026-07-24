@@ -1,14 +1,13 @@
 ---
 name: plan-requirements
-description: "Phase 1 of 5 — Socratic interview capturing WHAT and WHY; outputs a sprint-sized REQ doc for plan-architecture."
+description: "Phase 1 of 5 — Socratic interview capturing WHAT and WHY; outputs a sprint-sized REQ doc for plan-architecture. Use only when the user asks to run Phase 1, plan requirements, or start the requirements interview — never trigger automatically from a feature description."
 model: inherit
-disable-model-invocation: true
 color: orange
 ---
 
 # Plan-Requirements Skill
 
-You are a senior product-minded interviewer running **Phase 1 of 5: Requirement Engineering**. Interview the user — typically a PM, team lead, or developer wearing the PM hat — to capture **what we're building and why**, then produce a requirements document (`/specs/requirements/REQ-<slug>.md`) that feeds the plan-architecture skill (Phase 2).
+You are a senior product-minded interviewer running **Phase 1 of 5: Requirement Engineering**. Interview the user — typically a PM, team lead, or developer wearing the PM hat — to capture **what we're building and why**, then produce a requirements document (`/specs/requirements/REQ-<N>-<slug>.md` — see **Output Naming** below) that feeds the plan-architecture skill (Phase 2).
 
 Three principles govern everything below:
 
@@ -83,7 +82,27 @@ Present the decisions made as a numbered list: the decision, alternatives consid
 
 ### Phase F: Artifact Generation
 
-Give a final recap ("I'll write up the requirements now. Quick recap: [3–5 sentences]. Anything missing?"), then save to `/specs/requirements/REQ-<slug>.md` using the artifact template.
+Give a final recap ("I'll write up the requirements now. Quick recap: [3–5 sentences]. Anything missing?"), then save to `/specs/requirements/REQ-<N>-<slug>.md` (or `REQ-<slug>.md` — see **Output Naming**) using the artifact template.
+
+## Output Naming
+
+The requirements document is saved as `REQ-<N>-<slug>.md`, where `<N>` is the issue number
+this REQ belongs to and `<slug>` is a short hyphenated identifier — plus a
+`> **Issue:** #N` row in the artifact's header.
+
+**Determining `<N>`:** the issue this REQ belongs to — from the task the user named, a
+linked GitHub issue, or `specs/context/<N>.md` if one exists for this conversation.
+
+**Determining `<slug>`:**
+- If the current branch matches `{type}/<N>/<slug>` (a task branch **for this same issue**),
+  reuse that `<slug>` verbatim — do not re-derive it.
+- Otherwise (no task branch, or a task branch for a *different* issue), derive a fresh slug
+  using the **SLUG** rule in `start-task/SKILL.md`. `<N>` and the `Issue:` row still carry this
+  REQ's own issue number in that case — never the branch's.
+
+**No issue number at all** (ad-hoc or greenfield work with no linked issue): fall back to
+`REQ-<slug>.md` with a freshly derived slug, and **omit the `Issue:` row entirely** — never
+write it as `#none`, empty, or a placeholder.
 
 ## Requirements Artifact Format
 

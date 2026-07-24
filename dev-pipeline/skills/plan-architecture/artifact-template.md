@@ -1,6 +1,7 @@
 # Architecture: [Feature / System Name]
 
 > **Date:** [today's date]
+> **Issue:** #[N] _(omit this row entirely when there is no linked issue — never `#none` or empty)_
 > **Phase:** 2 of 5 (System Architecture)
 > **Requirements source:** [path to REQ-*.md, or "Standalone brief — see Inferred Requirements"]
 > **Type:** [feature | refactor | migration | infrastructure]
@@ -158,4 +159,4 @@ _Broader-than-files impact — modules, services, teams, contracts, cross-cuttin
 # Tasks
 
 _This section is populated by the **generate-tasks** skill (Phase 3)._
-_Run: `/generate-tasks from: specs/architecture/ARCH-<slug>.md`_
+_Run: `/generate-tasks from: specs/architecture/ARCH-<N>-<slug>.md`_

@@ -2,7 +2,6 @@
 name: session-stats
 description: "Render a dashboard of the current Claude Code session — message counts, token usage, cache read/write, dollar cost, context %, lines changed, cost-per-turn sparkline, and a tool-call histogram — parsed from the session transcript JSONL by a bundled bash script. One bash call, zero analysis, zero confirmation. Optionally pass a session id to inspect a different session. Use when the user asks for session stats, usage, token or cost breakdown, or a session dashboard."
 model: inherit
-disable-model-invocation: true
 color: green
 ---
 

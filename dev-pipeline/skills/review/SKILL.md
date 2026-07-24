@@ -1,8 +1,7 @@
 ---
 name: review
-description: "Phase 5 of 5 — triage-first review orchestrator; dispatches up to 16 domain checks in parallel and compiles one report."
+description: "Phase 5 of 5 — triage-first review orchestrator; dispatches up to 16 domain checks in parallel and compiles one report. Use only when the user asks to run Phase 5 or review a PR, branch, or set of changes — never trigger automatically after writing code."
 model: inherit
-disable-model-invocation: true
 color: lightsalmon
 ---
 
@@ -14,7 +13,7 @@ You are NOT autonomous — you propose scope, the developer confirms. You do NOT
 
 ## Two Entry Modes
 
-**Pipeline mode** — `Review implementation against specs/architecture/ARCH-<slug>.md`. The developer completed Phase 4. Read the ARCH document (architecture + embedded task specs) and the linked REQ (if any), verify completeness against the spec, and run code quality checks. **Task Completion Verification is always included** in pipeline mode, and it verifies each task's evidence per its `Verification` mode (tests for tdd/test-after; checklist evidence for ui/checklist).
+**Pipeline mode** — `Review implementation against specs/architecture/ARCH-<N>-<slug>.md`. The developer completed Phase 4. Read the ARCH document (architecture + embedded task specs) and the linked REQ (if any), verify completeness against the spec, and run code quality checks. **Task Completion Verification is always included** in pipeline mode, and it verifies each task's evidence per its `Verification` mode (tests for tdd/test-after; checklist evidence for ui/checklist).
 
 **General mode** — no spec verification; gather the diff, detect the stack, propose checks:
 
@@ -149,7 +148,7 @@ At compile time — not earlier — read `{base_directory}/report-template.md` a
 
 **Always save the report** under `specs/reviews/` (creating the directory if it doesn't exist) — regardless of mode, never skip this step.
 
-**Pipeline mode:** save as `CODE-REVIEW-PIPELINE-{arch-slug}.md` (derived from the ARCH file name) and also present the report inline.
+**Pipeline mode:** save as `CODE-REVIEW-PIPELINE-<N>-<slug>.md`, carrying over the ARCH file name's identifying part verbatim — `ARCH-42-add-user-auth.md` → `CODE-REVIEW-PIPELINE-42-add-user-auth.md`. If the ARCH has no issue number (`ARCH-<slug>.md`), the report has none either. The issue number must survive, so `archive-issue` can correlate this report back to its issue. Also present the report inline.
 **General mode:** save as `CODE-REVIEW-PR-{number}.md`, `CODE-REVIEW-BRANCH-{safe-name}.md`, `CODE-REVIEW-STAGED-{YYYY-MM-DD-HHMM}.md`, or `CODE-REVIEW-DIFF-{safe-name}.md`.
 
 ## Verdicts

@@ -1,6 +1,7 @@
 # Requirements: [Feature / Bugfix Name]
 
 > **Date:** [today's date]
+> **Issue:** #[N] _(omit this row entirely when there is no linked issue — never `#none` or empty)_
 > **Type:** [feature | bugfix | refactor | infrastructure]
 > **Source:** [verbal brief | PRD path | ticket key | RCA doc]
 > **Phase:** 1 of 5 (Requirement Engineering)
@@ -74,4 +75,4 @@ Each requirement is specific, testable, and assigned an ID for traceability.
 
 ---
 _This requirements document is the input for the **plan-architecture** skill._
-_Next step: `/plan-architecture from: specs/requirements/REQ-<slug>.md`_
+_Next step: `/plan-architecture from: specs/requirements/REQ-<N>-<slug>.md`_

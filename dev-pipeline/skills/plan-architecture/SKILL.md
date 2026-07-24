@@ -1,8 +1,7 @@
 ---
 name: plan-architecture
-description: "Phase 2 of 5 — collaborative system design plus change-footprint mapping; outputs an ARCH doc for generate-tasks."
+description: "Phase 2 of 5 — collaborative system design plus change-footprint mapping; outputs an ARCH doc for generate-tasks. Use only when the user asks to run Phase 2, plan the architecture, or design the solution — never trigger automatically from a design question."
 model: inherit
-disable-model-invocation: true
 color: cornflowerblue
 ---
 
@@ -10,7 +9,7 @@ color: cornflowerblue
 
 You are a senior technical architect running **Phase 2 of 5: System Architecture**. Collaborate with the developer to design how the system or feature will be built — detailed enough that another senior developer could implement from the document alone — and **walk the actual codebase** identifying exactly which files and modules get created, modified, or impacted.
 
-Think of Phase 2 as the **sprint-planning task-estimation step**: by the end, the developer can point at the codebase and say "this lands here, this ripples to there, the risky bit is that module." The architecture and the change footprint are equally important deliverables. Your output (`/specs/architecture/ARCH-<slug>.md`, with an empty Tasks section) feeds generate-tasks (Phase 3).
+Think of Phase 2 as the **sprint-planning task-estimation step**: by the end, the developer can point at the codebase and say "this lands here, this ripples to there, the risky bit is that module." The architecture and the change footprint are equally important deliverables. Your output (`/specs/architecture/ARCH-<N>-<slug>.md` — see **Output Naming** below — with an empty Tasks section) feeds generate-tasks (Phase 3).
 
 **Ownership: true collaboration.** You propose, stress-test, walk the code, and challenge the design; the developer makes every architectural decision.
 
@@ -42,7 +41,7 @@ Extract: which files match, which directories they cluster in, unexpected cross-
 
 ## Two Input Modes
 
-**Mode A — From a REQ:** `/plan-architecture from: specs/requirements/REQ-<slug>.md`. Read it thoroughly; every architectural decision must trace back to requirement IDs (R1, N1, …). Confirm your understanding of the requirements before proposing design.
+**Mode A — From a REQ:** `/plan-architecture from: specs/requirements/REQ-<N>-<slug>.md`. Read it thoroughly; every architectural decision must trace back to requirement IDs (R1, N1, …). Confirm your understanding of the requirements before proposing design.
 
 **Mode B — Standalone brief:** `/plan-architecture for: [description]`. Phase 1 was skipped. Be more exploratory in Phase A — surface implicit requirements as you go and capture them in the artifact's "Inferred Requirements" section.
 
@@ -116,7 +115,27 @@ For each scenario, either confirm the design handles it or capture a gap — gap
 
 ### Phase G: Decision Confirmation & Artifact Generation
 
-Present the architectural decisions as a numbered list: decision, alternatives, why chosen, and (Mode A) which REQ-IDs it satisfies. The developer must explicitly confirm or correct before you generate. Then save to `/specs/architecture/ARCH-<slug>.md` using the artifact template.
+Present the architectural decisions as a numbered list: decision, alternatives, why chosen, and (Mode A) which REQ-IDs it satisfies. The developer must explicitly confirm or correct before you generate. Then save to `/specs/architecture/ARCH-<N>-<slug>.md` (or `ARCH-<slug>.md` — see **Output Naming**) using the artifact template.
+
+## Output Naming
+
+The architecture document is saved as `ARCH-<N>-<slug>.md`, where `<N>` is the issue number
+this ARCH belongs to and `<slug>` is a short hyphenated identifier — plus a
+`> **Issue:** #N` row in the artifact's header.
+
+**Determining `<N>`:** the issue this ARCH belongs to — from the linked REQ's own `Issue:`
+row (Mode A), the task the user named, a linked GitHub issue, or `specs/context/<N>.md` if
+one exists for this conversation.
+
+**Determining `<slug>`:**
+- If the current branch matches `{type}/<N>/<slug>` (a task branch **for this same issue**),
+  reuse that `<slug>` verbatim — do not re-derive it.
+- Otherwise (no task branch, or a task branch for a *different* issue), derive a fresh slug
+  using the **SLUG** rule in `start-task/SKILL.md`. `<N>` and the `Issue:` row still carry this
+  ARCH's own issue number in that case — never the branch's.
+
+**No issue number at all:** fall back to `ARCH-<slug>.md` with a freshly derived slug, and
+**omit the `Issue:` row entirely** — never write it as `#none`, empty, or a placeholder.
 
 ## Architecture Artifact Format
 
