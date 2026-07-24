@@ -16,5 +16,8 @@ node_modules/
 # Git worktrees
 .worktrees/
 
+# archive-issue's local wiki clone
+.wiki/
+
 # Tool caches
 .serena/

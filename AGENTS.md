@@ -71,7 +71,9 @@ The plugin version lives in **two** places that must agree:
 1. `dev-pipeline/.claude-plugin/plugin.json` → `version`
 2. `.claude-plugin/marketplace.json` → `plugins[0].version`
 
-Current version: `4.0.0`. Bump both together.
+Bump both together. Do not restate the current version in this file — read it from
+`plugin.json`. This line previously carried a hardcoded copy and silently drifted a full
+patch release behind, which is exactly the failure the "two places" rule exists to prevent.
 
 ## Commit convention
 

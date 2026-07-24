@@ -46,13 +46,13 @@ A structured 5-phase development pipeline for Claude Code — from requirement e
 
 ### /plan-requirements (Phase 1)
 
-Socratic interview that captures **what** and **why** — intent, behaviors, edge cases, failure modes, and acceptance criteria. Produces `/specs/requirements/REQ-<slug>.md`. Owner: the developer. Claude is the interviewer, not the designer.
+Socratic interview that captures **what** and **why** — intent, behaviors, edge cases, failure modes, and acceptance criteria. Produces `/specs/requirements/REQ-<N>-<slug>.md` (or `REQ-<slug>.md` with no linked issue). Owner: the developer. Claude is the interviewer, not the designer.
 
 Skip this phase when the requirements are already clear (typical for new features in an existing system).
 
 ### /plan-architecture (Phase 2)
 
-Collaborative system design — high-level structure, tech choices, data models, API contracts, module boundaries, patterns. Reads `REQ-*.md` when present. Produces `/specs/architecture/ARCH-<slug>.md` with an empty Tasks section that the next phase fills in.
+Collaborative system design — high-level structure, tech choices, data models, API contracts, module boundaries, patterns. Reads `REQ-*.md` when present. Produces `/specs/architecture/ARCH-<N>-<slug>.md` (or `ARCH-<slug>.md` with no linked issue) with an empty Tasks section that the next phase fills in.
 
 ### /generate-tasks (Phase 3)
 
@@ -69,6 +69,22 @@ Comprehensive code review with a triage-first approach. Proposes relevant checks
 ### /start-task (pre-pipeline)
 
 One-shot branch bootstrap, zero confirmation by default. Detects the task source from the args — GitHub issue (`#100`, `issue 100`, or bare `100`), Jira key (via `acli`), local spec file, or ad-hoc brief — fetches the task, derives `{type}/{task-number}/{slug}`, syncs the default branch, creates and pushes the branch, and writes `specs/context/<id>.md`. The GitHub path runs entirely through a bundled script. Opt-in only.
+
+### /move-to-worktree (supporting)
+
+Companion to `/start-task` for parallel Phase 4 lanes. Parks the current clean, pushed feature branch in its own `.worktrees/<issue#>` and returns the primary checkout to the default branch, so the next parallel lane can start. Operates on git state only — it does not install dependencies or write project configuration; a bundled script owns all mutation.
+
+### /finish-worktree (supporting)
+
+Teardown counterpart to `/move-to-worktree`, run after an issue's PR has squash-merged and its issue has closed. Verifies the merge via `gh` (PR merged, local tip matches the merged head, issue closed, remote branch gone), fast-forwards the default branch, removes the worktree, and deletes the local branch. A bundled script owns all mutation.
+
+### /archive-issue (supporting)
+
+Retires a closed issue's `specs/` artifacts (context, requirements, architecture, review reports) into the GitHub wiki, once GitHub itself becomes the source of truth for the issue. Resolves everything from the issue number via `gh issue view` and the artifact naming contract below — no separate anchor file. Bootstraps the wiki index on first use; the wiki push requires explicit confirmation.
+
+### /release-notes (supporting)
+
+Drafts a changelog entry for the next release by summarizing commits since the last git tag, suggests the next semver version, and prepends the entry to `CHANGELOG.md`. Version baseline comes from `git describe --tags`, never from a project manifest.
 
 ### /session-stats (supporting)
 
@@ -92,8 +108,15 @@ One-shot conventional commit — bundled scripts (`gather.sh`/`commit.sh`) own a
 
 ## Output Conventions
 
-- Requirements: `/specs/requirements/REQ-<slug>.md`
-- Architecture (with embedded tasks): `/specs/architecture/ARCH-<slug>.md`
-- Review reports: `/specs/reviews/CODE-REVIEW-*.md`
+- Requirements: `/specs/requirements/REQ-<N>-<slug>.md`, where `<N>` is the linked issue number
+- Architecture (with embedded tasks): `/specs/architecture/ARCH-<N>-<slug>.md`
+- Review reports: `/specs/reviews/CODE-REVIEW-*.md` (pipeline mode: `CODE-REVIEW-PIPELINE-<N>-<slug>.md`, derived from the ARCH filename)
 - Context files: `/specs/context/<identifier>.md`
 - Branch naming: `{type}/{task-number}/{slug}`
+- Both `REQ-*.md`/`ARCH-*.md` artifacts also carry a `> **Issue:** #N` metadata row in their header, so an artifact's owning issue is recoverable even if the filename alone is ambiguous.
+
+**Breaking change in 5.0.0:** artifacts written by `plan-requirements` / `plan-architecture` are
+now issue-prefixed (`REQ-<N>-<slug>.md` / `ARCH-<N>-<slug>.md`) when a task branch or linked
+issue is in play. Existing `REQ-<slug>.md` / `ARCH-<slug>.md` files from before this release
+keep working — both naming shapes are read indefinitely, and no migration is required. Work
+with no linked issue (ad-hoc, greenfield) continues to produce the un-prefixed shape.
