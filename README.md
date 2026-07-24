@@ -70,6 +70,10 @@ A complete development workflow built on a 5-phase agentic framework:
 - **New feature in an existing system** → Phase 2 → 3 → 4 → 5 (skip requirements; brief is enough)
 - **Bugfix** → Phase 1 (as RCA) → 3 → 4 → 5 (skip architecture)
 
+### Case studies
+
+- **[Claude Lens V2 — 127K lines in 21 days](https://github.com/foyzulkarim/claude-lens/blob/main/docs/claude-lens-v2-presentation.html)** — a 10-slide build retrospective of the entire V2 product (54 PRs, five phases, parallel agent lanes on a Saturday). Download and open in a browser for the full deck experience. Companion long-form report: [`merged-pr-report.md`](https://github.com/foyzulkarim/claude-lens/blob/main/docs/merged-pr-report.md).
+
 ### Install
 
 ```
