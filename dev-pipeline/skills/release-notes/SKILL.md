@@ -1,6 +1,6 @@
 ---
 name: release-notes
-description: "Draft a changelog for the next release by summarizing git commits since the last tag. Use when preparing a version bump or cutting a release."
+description: "Draft a changelog for the next release by summarizing git commits since the last tag. Use only when the user asks to draft release notes, write a changelog entry, or prepare the next version's notes — never trigger automatically."
 model: inherit
 color: plum
 ---
@@ -85,5 +85,13 @@ next semver version and prepend the entry to `CHANGELOG.md` at the project root.
   verbatim commit-message dump.
 - Include today's date (from the `currentDate` context, or `date +%Y-%m-%d`)
   in the entry heading.
-- Do **not** create the tag, bump any version file, or push anything unless the
-  user explicitly asks — this skill only drafts and records the notes.
+
+## You Must NOT
+
+- Create, move, or push a git tag — the tag is the developer's release action, not yours.
+- Bump the version in any manifest, lockfile, or config file. This skill records what
+  changed; it does not perform the release.
+- Push anything, or open a PR. The `CHANGELOG.md` edit stays in the working tree.
+- Infer the current version from a project manifest when no tag exists — ask the developer
+  instead. The version baseline is git's, never the toolchain's.
+- Rewrite, reorder, or delete existing `CHANGELOG.md` entries — only prepend the new one.

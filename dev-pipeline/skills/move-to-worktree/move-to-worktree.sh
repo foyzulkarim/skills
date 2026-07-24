@@ -24,6 +24,17 @@ if [[ ! "$BRANCH" =~ ^[a-z][a-z0-9-]*/([0-9]+)/ ]]; then
 fi
 ISSUE_NUM="${BASH_REMATCH[1]}"
 
+# The worktree is nested inside the repo, so it must be ignored — otherwise
+# `git add -A` in the primary checkout stages it as an embedded 160000 gitlink
+# and commits this lane's HEAD. Checked before any mutation.
+if ! git check-ignore -q ".worktrees/${ISSUE_NUM}"; then
+  echo "Error: '.worktrees/' is not ignored by this repository." >&2
+  echo "A worktree nested there would be committed as an embedded git repository." >&2
+  echo "Add it first, then re-run:" >&2
+  echo "  echo '.worktrees/' >> .gitignore" >&2
+  exit 1
+fi
+
 if [[ -n "$(git status --porcelain)" ]]; then
   echo "Error: working tree is not clean. Commit or stash before moving to a worktree." >&2
   exit 1
@@ -48,8 +59,18 @@ if (( AHEAD > 0 )); then
   git push origin "$BRANCH"
 fi
 
-DEFAULT_BRANCH="$(git remote show origin 2>/dev/null | grep 'HEAD branch' | sed 's/.*: //' || true)"
-DEFAULT_BRANCH="${DEFAULT_BRANCH:-main}"
+# Resolve the default branch from the local ref first: `git remote show` needs the
+# network, and a failed lookup is indistinguishable from an empty answer — falling
+# back to a hard-coded 'main' would check out the wrong branch on a 'master' repo.
+DEFAULT_BRANCH="$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null | sed 's@^origin/@@' || true)"
+if [[ -z "$DEFAULT_BRANCH" ]]; then
+  DEFAULT_BRANCH="$(git remote show origin 2>/dev/null | sed -n 's/.*HEAD branch: //p' || true)"
+fi
+if [[ -z "$DEFAULT_BRANCH" ]]; then
+  echo "Error: could not determine the default branch of 'origin'." >&2
+  echo "Run 'git remote set-head origin --auto' and re-run." >&2
+  exit 1
+fi
 
 WORKTREE_DIR="$ROOT/.worktrees/${ISSUE_NUM}"
 if [[ -e "$WORKTREE_DIR" ]]; then

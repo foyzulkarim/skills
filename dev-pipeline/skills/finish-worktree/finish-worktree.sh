@@ -21,8 +21,18 @@ fi
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
 
-DEFAULT_BRANCH="$(git remote show origin 2>/dev/null | grep 'HEAD branch' | sed 's/.*: //' || true)"
-DEFAULT_BRANCH="${DEFAULT_BRANCH:-main}"
+# Resolve the default branch from the local ref first: `git remote show` needs the
+# network, and a failed lookup is indistinguishable from an empty answer — falling
+# back to a hard-coded 'main' would reject a 'master' repo's primary checkout.
+DEFAULT_BRANCH="$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null | sed 's@^origin/@@' || true)"
+if [[ -z "$DEFAULT_BRANCH" ]]; then
+  DEFAULT_BRANCH="$(git remote show origin 2>/dev/null | sed -n 's/.*HEAD branch: //p' || true)"
+fi
+if [[ -z "$DEFAULT_BRANCH" ]]; then
+  echo "Error: could not determine the default branch of 'origin'." >&2
+  echo "Run 'git remote set-head origin --auto' and re-run." >&2
+  exit 1
+fi
 
 CURRENT="$(git branch --show-current)"
 if [[ "$CURRENT" != "$DEFAULT_BRANCH" ]]; then

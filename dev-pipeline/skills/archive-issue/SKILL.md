@@ -1,6 +1,6 @@
 ---
 name: archive-issue
-description: "Retire a closed issue's working artifacts out of specs/ into the GitHub wiki — use when the user asks to archive a finished issue, empty out specs/ for a done task, or move an issue's requirements/architecture/review docs to the wiki."
+description: "Retire a closed issue's working artifacts out of specs/ into the GitHub wiki. Use only when the user asks to archive a finished issue, empty out specs/ for a done task, or move an issue's requirements/architecture/review docs to the wiki."
 model: inherit
 color: gold
 ---
@@ -58,7 +58,7 @@ archive" while files for `<N>` remain unmatched under `specs/`:
 | Source | How it's found |
 |---|---|
 | `specs/context/<N>.md` | direct path |
-| `specs/requirements/REQ-<N>-*.md` | glob first; if it misses, grep `specs/requirements/*.md` for a `> **Issue:** #<N>` row (covers artifacts written before the naming contract landed); if still nothing, check for an un-prefixed `REQ-<slug>.md` whose slug matches the current task branch's `{type}/<N>/{slug}` |
+| `specs/requirements/REQ-<N>-*.md` | glob first; if it misses, grep `specs/requirements/*.md` for a `> **Issue:** #<N>` row (covers artifacts written before the naming contract landed); if still nothing, check for an un-prefixed `REQ-<slug>.md` whose slug matches a `{type}/<N>/{slug}` branch found in `git for-each-ref --format='%(refname:short)' refs/heads refs/remotes`, or — when that branch was already deleted, the usual case for an old issue — the slugified issue title from Step 1 |
 | `specs/architecture/ARCH-<N>-*.md` | same three-tier fallback as REQ |
 | `specs/reviews/CODE-REVIEW-PIPELINE-<N>-*.md` | glob — the filename already carries `<N>` because it derives from the ARCH filename (`review/SKILL.md`'s pipeline-mode save step) |
 | `specs/reviews/CODE-REVIEW-{PR,BRANCH,STAGED,DIFF}-*.md` | read **every** file's `Target` row (`review/report-template.md:8`) and match it to issue `<N>` — never by assuming a PR number equals the issue number, and never by directory. Branch-mode: `Target` is a branch name — match if it is `{type}/<N>/{slug}`. PR-mode: `Target` is a PR URL — resolve its head branch (`gh pr view <PR#> --json headRefName`) and match that the same way. Staged/diff-mode reports carry no branch reference and can only be attributed if the report content otherwise names issue `<N>` explicitly |

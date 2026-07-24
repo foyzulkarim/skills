@@ -26,7 +26,7 @@ assert_exit() {
 make_root() { mktemp -d; }
 cleanup() { rm -rf "${1:?cleanup called with empty path}"; }
 
-# --- Test 1: specs/ with a file causes failure ---
+# --- Test 1: specs/ with a file is detected ---
 
 root=$(make_root)
 mkdir -p "$root/specs/context"
@@ -34,7 +34,7 @@ touch "$root/specs/context/42.md"
 assert_exit "exits 1 when specs/ contains a file" 1 "$CHECK" "$root"
 cleanup "$root"
 
-# --- Test 2: CODE-REVIEW-*.md causes failure ---
+# --- Test 2: CODE-REVIEW-*.md is detected ---
 
 root=$(make_root)
 touch "$root/CODE-REVIEW-PR-7.md"
@@ -68,6 +68,32 @@ cleanup "$root"
 
 root=$(make_root)
 assert_exit "exits 0 when specs/ does not exist" 0 "$CHECK" "$root"
+cleanup "$root"
+
+# --- Test 7: .wiki/ (archive-issue clone) is not this branch's concern ---
+
+root=$(make_root)
+mkdir -p "$root/.wiki/issue-35"
+touch "$root/.wiki/issue-35/CODE-REVIEW-PR-63.md"
+assert_exit "exits 0 for artifacts inside the .wiki/ clone" 0 "$CHECK" "$root"
+cleanup "$root"
+
+# --- Test 8: .worktrees/ (parallel lanes) is not this branch's concern ---
+
+root=$(make_root)
+mkdir -p "$root/.worktrees/42/specs/reviews" "$root/.worktrees/42/specs/context"
+touch "$root/.worktrees/42/specs/reviews/CODE-REVIEW-PIPELINE-42-x.md"
+touch "$root/.worktrees/42/specs/context/42.md"
+assert_exit "exits 0 for artifacts inside a .worktrees/ lane" 0 "$CHECK" "$root"
+cleanup "$root"
+
+# --- Test 9: a real artifact is still detected alongside pruned dirs ---
+
+root=$(make_root)
+mkdir -p "$root/.wiki" "$root/.worktrees/42" "$root/specs/architecture"
+touch "$root/.wiki/CODE-REVIEW-PR-1.md"
+touch "$root/specs/architecture/ARCH-35-x.md"
+assert_exit "exits 1 when a real artifact sits beside pruned dirs" 1 "$CHECK" "$root"
 cleanup "$root"
 
 # --- summary ---

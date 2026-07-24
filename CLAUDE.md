@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A Claude Code plugin marketplace (`foyzulkarim/skills`) containing the `dev-pipeline` plugin — a collection of AI skills implementing a structured **5-phase development pipeline**.
 
-- **Current version:** `5.0.0`
+- **Current version:** see `dev-pipeline/.claude-plugin/plugin.json` — never restate it here.
 - **Language:** All documentation and comments are in English.
 - **No build system, test runner, or compiled code.** The entire value is in the `SKILL.md` files and bundled bash helper scripts.
 
@@ -126,10 +126,10 @@ When adding a new skill:
 ### Supporting skills (non-phase)
 
 - **start-task** — Pre-pipeline bootstrap, zero-confirmation by default. Detects the task source from the args (GitHub issue number, Jira key, local spec path, or ad-hoc), fetches the task, derives `{type}/{number}/{slug}`, then a bundled script (`gh-start-task.sh`, GitHub path) or manual git steps sync main, create and push the branch, and write `specs/context/<id>.md`. Rejects local spec paths containing `..` to prevent path traversal.
-- **commit** — Standalone one-shot conventional commit. Bundled scripts (`gather.sh`/`commit.sh`) own all git inspection and mutation; the diff is adaptively curated in bash so the LLM drafts the message in a single pass. Zero-confirmation by default; `ask` argument enables draft confirmation and selective staging. Automatically excludes files matching sensitive patterns (`.env`, `secret`, `credential`, `token`, `api-key`, `private-key`, `password`) from staging.
+- **commit** — Standalone one-shot conventional commit. Bundled scripts (`gather.sh`/`commit.sh`) own all git inspection and mutation; the diff is adaptively curated in bash so the LLM drafts the message in a single pass. Zero-confirmation by default; `ask` argument enables draft confirmation and selective staging. Automatically excludes files matching sensitive patterns (`.env`, `secret`, `credential`, `token`, `api-key`, `private-key`, `password`) from staging, and unstages embedded git repositories (a nested `.worktrees/<N>` or stray clone that `git add -A` would commit as a `160000` gitlink) while preserving `.gitmodules`-registered submodules.
 - **session-stats** — Terminal dashboard of the current session. A bundled script (`dashboard.sh`) locates the transcript JSONL via `CLAUDE_CODE_SESSION_ID`, aggregates tokens/cost/tools with `jq`, and prints cards; the LLM only relays the output verbatim.
 - **setup-cost-tracking** — One-time system-level setup for per-session cost capture. Wires logger scripts into the Claude Code statusline and Stop hooks, **preserving any existing user configuration**. Idempotent; safe to re-run. Additive only — backs up settings files before editing and records the original command for reversal.
-- **move-to-worktree** — Parks the current clean, pushed feature branch in `.worktrees/<issue#>` and returns the primary checkout to the default branch, for parallel Phase 4 lanes. Git only — no dependency install, no port allocation; a bundled script (`move-to-worktree.sh`) owns all mutation.
+- **move-to-worktree** — Parks the current clean, pushed feature branch in `.worktrees/<issue#>` and returns the primary checkout to the default branch, for parallel Phase 4 lanes. Git only — no dependency install, no port allocation; a bundled script (`move-to-worktree.sh`) owns all mutation. Requires `.worktrees/` to be gitignored in the target repo and hard-stops otherwise, since a nested worktree that git can see gets committed as an embedded gitlink.
 - **finish-worktree** — Teardown counterpart, run after the issue's PR has squash-merged and the issue has closed. Verifies the merge via `gh` (PR merged, tip matches, issue closed, remote branch gone), then removes the worktree and deletes the local branch. A bundled script (`finish-worktree.sh`) owns all mutation.
 - **archive-issue** — Retires a closed issue's `specs/` artifacts into the GitHub wiki. Resolves everything from the issue number via `gh issue view` and the artifact naming contract (no script — this is markdown authoring). Wiki push requires explicit confirmation.
 - **release-notes** — Drafts a `CHANGELOG.md` entry from commits since the last git tag; suggests the next semver version from that tag, never from a project manifest.
@@ -148,7 +148,7 @@ When adding a new skill:
 - `/specs/reviews/CODE-REVIEW-*.md` — produced by review; pipeline mode saves as `CODE-REVIEW-PIPELINE-<N>-<slug>.md` (derived from the ARCH filename), general mode as `CODE-REVIEW-{PR,BRANCH,STAGED,DIFF}-*.md`
 - Existing `REQ-<slug>.md` / `ARCH-<slug>.md` files from before 5.0.0 keep working — both naming shapes are read indefinitely, no migration required
 
-**Important:** These artifacts must never be committed to `master` of this repo. The doc-hygiene CI enforces this.
+**Important:** These artifacts merge to `master` with their feature branch and are retired to the GitHub wiki afterwards, once the PR has merged and the issue has closed — run `/archive-issue <issue#>` then. The doc-hygiene CI flags anything still unarchived as a PR warning; it does not block the merge.
 
 ## SKILL.md format
 
@@ -197,11 +197,7 @@ Commits follow **Conventional Commits**:
 
 ### Pull request requirements
 
-- Run the doc-hygiene self-test before opening a PR:
-  ```bash
-  bash .github/scripts/test-doc-hygiene.sh
-  ```
-- Ensure no `specs/` or `CODE-REVIEW-*.md` files are present in the branch (these are pipeline artifacts meant for feature branches only).
+- Leave `specs/` artifacts in place — they merge with the branch and get archived after. There is no pre-PR hygiene gate; CI posts a reminder warning listing what to retire once the issue closes.
 - Test skills locally:
   ```bash
   scripts/sync-skills.sh push <skill-name>
@@ -218,9 +214,13 @@ Commits follow **Conventional Commits**:
 
 ### Doc hygiene CI
 
-The `.github/workflows/doc-hygiene.yml` runs on every PR targeting `master`. It blocks branch-only artifacts:
+The `.github/workflows/doc-hygiene.yml` runs on every PR targeting `master`. It is **advisory — it never fails the build.** It annotates the PR with any pipeline artifact still awaiting archival:
 - Any file under `specs/` (requirements, architecture, context files generated during pipeline use)
 - Any file matching `CODE-REVIEW-*.md` (generated review reports)
+
+The annotation is a reminder to run `/archive-issue <issue#>` after the PR merges and the issue closes — it is not a request to delete anything before merging. Blocking these was the old behavior; it made `/archive-issue` unusable in this repo, since the skill reads the artifacts from `master` *after* the merge.
+
+`.wiki/` (the `archive-issue` wiki clone) and `.worktrees/*` (parallel lanes) are pruned from the walk — they're separate checkouts inside the repo root that belong to other branches.
 
 ### Sync workflow
 

@@ -74,6 +74,8 @@ One-shot branch bootstrap, zero confirmation by default. Detects the task source
 
 Companion to `/start-task` for parallel Phase 4 lanes. Parks the current clean, pushed feature branch in its own `.worktrees/<issue#>` and returns the primary checkout to the default branch, so the next parallel lane can start. Operates on git state only — it does not install dependencies or write project configuration; a bundled script owns all mutation.
 
+**Prerequisite:** `.worktrees/` must be gitignored in your repo. The worktree is nested inside the repo root, so an unignored one is staged by any `git add -A` as an embedded `160000` gitlink — silently committing the lane's HEAD onto another branch. The skill hard-stops with the one-line remedy rather than editing `.gitignore` for you.
+
 ### /finish-worktree (supporting)
 
 Teardown counterpart to `/move-to-worktree`, run after an issue's PR has squash-merged and its issue has closed. Verifies the merge via `gh` (PR merged, local tip matches the merged head, issue closed, remote branch gone), fast-forwards the default branch, removes the worktree, and deletes the local branch. A bundled script owns all mutation.

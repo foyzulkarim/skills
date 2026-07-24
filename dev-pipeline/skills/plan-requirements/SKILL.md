@@ -1,6 +1,6 @@
 ---
 name: plan-requirements
-description: "Phase 1 of 5 — Socratic interview capturing WHAT and WHY; outputs a sprint-sized REQ doc for plan-architecture."
+description: "Phase 1 of 5 — Socratic interview capturing WHAT and WHY; outputs a sprint-sized REQ doc for plan-architecture. Use only when the user asks to run Phase 1, plan requirements, or start the requirements interview — never trigger automatically from a feature description."
 model: inherit
 color: orange
 ---
@@ -97,7 +97,7 @@ linked GitHub issue, or `specs/context/<N>.md` if one exists for this conversati
 - If the current branch matches `{type}/<N>/<slug>` (a task branch **for this same issue**),
   reuse that `<slug>` verbatim — do not re-derive it.
 - Otherwise (no task branch, or a task branch for a *different* issue), derive a fresh slug
-  using the rule in `start-task/SKILL.md:56-61`. `<N>` and the `Issue:` row still carry this
+  using the **SLUG** rule in `start-task/SKILL.md`. `<N>` and the `Issue:` row still carry this
   REQ's own issue number in that case — never the branch's.
 
 **No issue number at all** (ad-hoc or greenfield work with no linked issue): fall back to

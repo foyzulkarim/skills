@@ -1,6 +1,6 @@
 ---
 name: implement
-description: "Phase 4 of 5 — implements tasks from the ARCH doc with mode-appropriate verification (tdd, test-after, ui, checklist); pass 'auto' to run without stepping."
+description: "Phase 4 of 5 — implements tasks from the ARCH doc with mode-appropriate verification (tdd, test-after, ui, checklist); pass 'auto' to run without stepping. Use only when the user asks to run Phase 4 or implement tasks from an ARCH doc — never trigger automatically from a coding request."
 model: inherit
 color: lightgreen
 ---

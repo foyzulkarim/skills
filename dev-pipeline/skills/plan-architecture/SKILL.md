@@ -1,6 +1,6 @@
 ---
 name: plan-architecture
-description: "Phase 2 of 5 — collaborative system design plus change-footprint mapping; outputs an ARCH doc for generate-tasks."
+description: "Phase 2 of 5 — collaborative system design plus change-footprint mapping; outputs an ARCH doc for generate-tasks. Use only when the user asks to run Phase 2, plan the architecture, or design the solution — never trigger automatically from a design question."
 model: inherit
 color: cornflowerblue
 ---
@@ -131,7 +131,7 @@ one exists for this conversation.
 - If the current branch matches `{type}/<N>/<slug>` (a task branch **for this same issue**),
   reuse that `<slug>` verbatim — do not re-derive it.
 - Otherwise (no task branch, or a task branch for a *different* issue), derive a fresh slug
-  using the rule in `start-task/SKILL.md:56-61`. `<N>` and the `Issue:` row still carry this
+  using the **SLUG** rule in `start-task/SKILL.md`. `<N>` and the `Issue:` row still carry this
   ARCH's own issue number in that case — never the branch's.
 
 **No issue number at all:** fall back to `ARCH-<slug>.md` with a freshly derived slug, and

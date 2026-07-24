@@ -1,6 +1,6 @@
 ---
 name: generate-tasks
-description: "Phase 3 of 5 — slices the ARCH doc into verification-ready task specs (tdd/test-after/ui/checklist), embedded in its Tasks section for the implement skill."
+description: "Phase 3 of 5 — slices the ARCH doc into verification-ready task specs (tdd/test-after/ui/checklist), embedded in its Tasks section for the implement skill. Use only when the user asks to run Phase 3 or generate tasks from an ARCH doc — never trigger automatically."
 model: inherit
 color: peachpuff
 ---

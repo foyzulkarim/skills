@@ -10,16 +10,18 @@ would change what the agent does, don't make it.
 
 ## Ground rules
 
-1. **All user-facing skills are user-command-only.** Every skill a user
-   invokes with `/name` has `disable-model-invocation: true` in frontmatter
-   (already applied to all 9). This means its description is NEVER loaded
-   into session context — it only appears in the `/` picker and marketplace
-   UI. Keep the flag when rewriting.
-2. **Descriptions are picker one-liners.** No trigger keywords, no "use this
-   when…", no "does NOT do X" disclaimers — the user already chose to invoke
-   it. Format used so far:
+1. **Skills are model-invocable.** `disable-model-invocation` was removed
+   plugin-wide in 5.0.0 — it blocked the model from reaching a skill during
+   autonomous runs. Do **not** re-add it. Every description is loaded into
+   session context and is the model's discovery surface, so it carries real
+   weight now.
+2. **Descriptions do double duty: picker label and match target.** Phase
+   skills use
    `"Phase N of 5 — <what it does in ~10 words>; outputs <artifact> for <next skill>."`
-   Non-phase skills: one sentence saying what the command does.
+   Supporting skills whose invocation should stay deliberate append an
+   explicit scope clause — `commit`'s "Use only when the user asks for a
+   commit", `start-task`'s "never trigger automatically". Keep any such
+   clause when rewriting; it is the only invocation control left.
 3. **The body can assume deliberate invocation.** Delete "When to Use This
    Skill" sections; keep only *skip conditions* ("for X, go straight to
    /other-skill") compressed to 1–2 sentences in the intro.
@@ -109,9 +111,8 @@ inlining is cheaper than an extra Read.
 2. Rewrite in place applying the cut list. Preserve section order where it
    survives — smaller diffs are easier to review.
 3. Verify:
-   - `bash .github/scripts/test-doc-hygiene.sh` passes
    - frontmatter intact: `name`, one-line `description`, `model: inherit`,
-     `disable-model-invocation: true` (user-facing only), `color`
+     `color`
    - `wc -l` before/after — expect 30–40% reduction; if you got <20%, look
      again for duplicate gates/diagrams; if >50%, check you didn't cut
      contract material

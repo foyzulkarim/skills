@@ -22,12 +22,16 @@ No arguments — it operates on the branch currently checked out. The script:
 
 1. Hard-stops unless run in the **primary checkout**, on a **task branch**
    (`{type}/{issue#}/{slug}`), with a **clean tree** and its matching `origin/` **upstream** set —
-   i.e. exactly the state `/start-task` leaves behind.
+   i.e. exactly the state `/start-task` leaves behind. Also hard-stops unless
+   `.worktrees/` is **gitignored**: the worktree is nested inside the repo, so an
+   unignored one gets staged by any `git add -A` as an embedded gitlink, committing
+   this lane's HEAD onto another branch. Remedy is one line in `.gitignore`; the
+   script never edits it for you.
 2. Pushes any local-only commits, checks out and fast-forwards the default branch (this must
    happen *before* the worktree is created — git refuses to check out a branch
    in two places).
-3. `git worktree add .worktrees/<issue#> <branch>` — nested inside the repo root
-   (gitignored), never a `../` sibling. The context file `specs/context/<issue#>.md`
+3. `git worktree add .worktrees/<issue#> <branch>` — nested inside the repo root,
+   never a `../` sibling. The context file `specs/context/<issue#>.md`
    travels with the branch (it's committed).
 
 Non-zero exit → hard-stop, print stderr verbatim.
@@ -47,6 +51,7 @@ primary) does the teardown.
 
 - Run the underlying git commands yourself — the script owns all mutation.
 - Stash, discard, or commit anything to satisfy the clean-tree check — hard-stop instead.
+- Edit `.gitignore` yourself to satisfy the gitignore check — report the remedy and stop.
 - Move a branch whose upstream is ahead or does not match `origin/<branch>`.
 - Create the worktree while the primary is still on the feature branch.
 - Install dependencies, write port configuration, or otherwise touch the project's

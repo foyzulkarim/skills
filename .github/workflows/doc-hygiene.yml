@@ -11,5 +11,26 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Block branch-only artifacts from master
-        run: bash .github/scripts/check-doc-hygiene.sh .
+      # Advisory only — never fails the build. Pipeline artifacts are expected to
+      # merge to master; /archive-issue retires them to the wiki afterwards, once
+      # the PR has merged and the issue has closed. This step is the reminder.
+      - name: Flag unarchived pipeline artifacts
+        run: |
+          if output=$(bash .github/scripts/check-doc-hygiene.sh .); then
+            echo "No unarchived pipeline artifacts."
+            exit 0
+          fi
+
+          {
+            echo "### Unarchived pipeline artifacts"
+            echo ""
+            echo "These merge to master as normal. After this PR merges and the issue closes, retire them with \`/archive-issue <issue#>\`."
+            echo ""
+            echo '```'
+            echo "$output"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          while IFS= read -r line; do
+            [ -n "$line" ] && echo "::warning::$line"
+          done <<< "$output"

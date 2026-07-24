@@ -70,14 +70,16 @@ selection, then run.
 ```
 
 No file args → stages everything. File args (ask mode) → stages only those.
-Either way the script drops sensitive files and commits with hooks running.
+Either way the script drops sensitive files and embedded git repositories
+(nested worktrees, stray clones — real submodules are kept), then commits with
+hooks running.
 
 - Hook failure → report the script output and stop. No workarounds.
-- `NOTHING_STAGED` → everything was excluded as sensitive; report and stop.
+- `NOTHING_STAGED` → everything was excluded; report and stop.
 
 ## Report
 
-≤3 lines: the commit header, anything excluded as sensitive, confirmation that
+≤3 lines: the commit header, anything excluded, confirmation that
 it's committed. Do not re-print the message body.
 
 ## You Must NOT
