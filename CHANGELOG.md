@@ -28,8 +28,9 @@
 
 ### Maintenance
 
-- Doc-hygiene CI is now advisory rather than blocking, and prunes `.wiki/` and `.worktrees/`
-  from its walk so archived and parallel-lane artifacts stop tripping it.
+- Doc-hygiene CI removed entirely (workflow + reporter script + self-test). It only ever
+  posted an advisory reminder to archive `specs/`/`CODE-REVIEW-*.md` artifacts after merge;
+  that reminder is now a manual `/archive-issue` step, so the whole `.github/` machinery is gone.
 - `commit.sh` unstages embedded git repositories (a nested `.worktrees/<N>` or stray clone
   that `git add -A` would commit as a `160000` gitlink) while preserving registered submodules.
 - `AGENTS.md` and `CLAUDE.md` no longer restate the plugin version; `plugin.json` and

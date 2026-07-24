@@ -148,7 +148,7 @@ When adding a new skill:
 - `/specs/reviews/CODE-REVIEW-*.md` — produced by review; pipeline mode saves as `CODE-REVIEW-PIPELINE-<N>-<slug>.md` (derived from the ARCH filename), general mode as `CODE-REVIEW-{PR,BRANCH,STAGED,DIFF}-*.md`
 - Existing `REQ-<slug>.md` / `ARCH-<slug>.md` files from before 5.0.0 keep working — both naming shapes are read indefinitely, no migration required
 
-**Important:** These artifacts merge to `master` with their feature branch and are retired to the GitHub wiki afterwards, once the PR has merged and the issue has closed — run `/archive-issue <issue#>` then. The doc-hygiene CI flags anything still unarchived as a PR warning; it does not block the merge.
+**Important:** These artifacts merge to `master` with their feature branch and are retired to the GitHub wiki afterwards, once the PR has merged and the issue has closed — run `/archive-issue <issue#>` then.
 
 ## SKILL.md format
 
@@ -197,7 +197,7 @@ Commits follow **Conventional Commits**:
 
 ### Pull request requirements
 
-- Leave `specs/` artifacts in place — they merge with the branch and get archived after. There is no pre-PR hygiene gate; CI posts a reminder warning listing what to retire once the issue closes.
+- Leave `specs/` artifacts in place — they merge with the branch and get archived after. There is no pre-PR hygiene gate; retire them with `/archive-issue <issue#>` once the PR merges and the issue closes.
 - Test skills locally:
   ```bash
   scripts/sync-skills.sh push <skill-name>
@@ -212,16 +212,6 @@ Commits follow **Conventional Commits**:
 - **Markdown + YAML frontmatter** — every `SKILL.md` has YAML frontmatter followed by a long markdown body defining agent behavior.
 
 ## Testing
-
-### Doc hygiene CI
-
-The `.github/workflows/doc-hygiene.yml` runs on every PR targeting `master`. It is **advisory — it never fails the build.** It annotates the PR with any pipeline artifact still awaiting archival:
-- Any file under `specs/` (requirements, architecture, context files generated during pipeline use)
-- Any file matching `CODE-REVIEW-*.md` (generated review reports)
-
-The annotation is a reminder to run `/archive-issue <issue#>` after the PR merges and the issue closes — it is not a request to delete anything before merging. Blocking these was the old behavior; it made `/archive-issue` unusable in this repo, since the skill reads the artifacts from `master` *after* the merge.
-
-`.wiki/` (the `archive-issue` wiki clone) and `.worktrees/*` (parallel lanes) are pruned from the walk — they're separate checkouts inside the repo root that belong to other branches.
 
 ### Sync workflow
 

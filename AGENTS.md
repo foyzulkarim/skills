@@ -14,7 +14,6 @@ There is no build/lint/typecheck. The only verification steps are:
 
 | Command | Purpose |
 |---|---|
-| `bash .github/scripts/test-doc-hygiene.sh` | Self-test for the doc-hygiene reporter (9 cases). Run when changing the reporter itself; it is not a pre-PR gate |
 | `bash dev-pipeline/skills/<skill>/<script>.sh` | Run a bundled helper directly, e.g. `plan-architecture/file-tree.sh` |
 | `scripts/sync-skills.sh push <skill>` | Copy a skill into `~/.claude/skills/` for live testing |
 
@@ -32,16 +31,9 @@ Skills are tested by pushing them into `~/.claude/skills/`. Each pushed copy get
 | `scripts/sync-skills.sh nuke` | Remove all marker-managed copies from `~/.claude/skills/` |
 | `scripts/sync-skills.sh nuke --force <skill>` | Force-remove a skill even with no marker (danger) |
 
-## Doc-hygiene CI (advisory)
+## Pipeline artifacts on `master`
 
-`.github/workflows/doc-hygiene.yml` runs `check-doc-hygiene.sh` on every PR targeting `master`. It **never fails the build** — it posts warning annotations and a job summary listing:
-
-- any file under `specs/` (requirements, architecture, context artifacts), or
-- any file matching `CODE-REVIEW-*.md`.
-
-These are *expected* to merge to `master`. `/archive-issue <issue#>` retires them to the GitHub wiki after the PR merges and the issue closes, reading them from `master` at that point — so deleting them pre-merge destroys the very content the skill exists to preserve. The annotation is the reminder to archive, nothing more.
-
-`.wiki/` and `.worktrees/*` are pruned from the walk: both are separate checkouts nested in the repo root belonging to other branches.
+`specs/` files and `CODE-REVIEW-*.md` reports are *expected* to merge to `master` with their feature branch. `/archive-issue <issue#>` retires them to the GitHub wiki after the PR merges and the issue closes, reading them from `master` at that point — so deleting them pre-merge destroys the very content the skill exists to preserve. There is no CI gate enforcing this; archival is a manual step you run once the issue closes.
 
 ## Skill authoring conventions
 
@@ -60,7 +52,7 @@ These conventions differ from generic defaults and are enforced by the marketpla
 3. **No `plugin.json` or `marketplace.json` registration is needed** — `plugin.json`'s `skills` field points to `./skills/`, which is auto-scanned.
 4. Update `dev-pipeline/README.md` if user-facing.
 5. Test locally: `scripts/sync-skills.sh push <skill-name>`.
-6. Open a PR. Leave any `specs/` or `CODE-REVIEW-*.md` artifacts in place — CI flags them as an archive reminder, not a blocker.
+6. Open a PR. Leave any `specs/` or `CODE-REVIEW-*.md` artifacts in place — they merge with the branch and get archived after the issue closes.
 
 ## Review sub-skills are NOT independently invocable
 
