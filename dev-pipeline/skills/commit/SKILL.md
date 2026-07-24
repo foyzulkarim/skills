@@ -1,8 +1,7 @@
 ---
 name: commit
-description: "One-shot conventional commit; bundled scripts adaptively gather diff context, draft the message, and stage+commit — pass `ask` to confirm first or add a hint for the title."
+description: "One-shot conventional commit; bundled scripts adaptively gather diff context, draft the message, and stage+commit — pass `ask` to confirm first or add a hint for the title. Use only when the user asks for a commit."
 model: inherit
-disable-model-invocation: true
 color: lightcoral
 ---
 
