@@ -114,6 +114,30 @@ refactor that would break plugin distribution.
 
 ---
 
+## Second Review Pass — 2026-07-24 (independent read of the PR diff)
+
+A fresh review against `gh pr diff 36` surfaced findings the first pass missed — chiefly one
+blocking contradiction it had only seen the surface of. All are now fixed (`aa8ba6e`, `4a723fb`,
+both pushed).
+
+| # | Sev | Finding | Disposition |
+|---|-----|---------|-------------|
+| S1 | 🔴 | **`archive-issue` was inoperable in this repo as shipped.** PR-committed `CLAUDE.md:151` said pipeline artifacts "must never be committed to `master`" and the doc-hygiene CI blocked them — but `archive-issue` Step 6 `git rm`s exactly those files *from `master`*, post-merge. The two policies are mutually exclusive; the skill would always find nothing. The branch's own history is the evidence: `df6e46f` is titled "clear branch artifacts" and deletes `specs/context/35.md`, because it had to in order to pass the blocking gate. The test-plan line "`check-doc-hygiene.sh .` exit 0" was therefore measuring the bug, not the fix. The first pass logged only the downstream symptom (its #10, "CI will false-positive on `.wiki/`") and never reached the policy itself. | ✅ Fixed in `aa8ba6e` — lifecycle flipped to merge-then-archive, CI made advisory. |
+| S2 | 🟠 | **The PR body promised an `ARCH-35` doc that was never committed.** `git log --all --diff-filter=A -- 'specs/architecture/*'` contains only `ARCH-22.md` and `ARCH-fix-review-subskill-dispatch.md`; `specs/architecture/` is empty on disk. The design rationale for a breaking release is unrecoverable, and `/archive-issue 35` would have produced a wiki hub with a promised-but-absent architecture sub-page. | ✅ Fixed by correcting the PR body — the false claim is replaced with an explicit note that no ARCH doc exists and rationale lives in the commits. The document itself cannot be recovered. |
+| S3 | 🟡 | **`move-to-worktree.sh` never fetched before its behind-check.** `git rev-list --left-right --count '@{u}...HEAD'` reads the local `origin/<branch>` ref; a stale one reports "not behind" and parks a branch that is genuinely behind, or lets the push fail non-fast-forward mid-run. `finish-worktree.sh` already fetched — the two halves of one feature disagreed. | ✅ Fixed in `4a723fb` — fetches first, warns rather than hard-stops when offline. |
+| S4 | 🟡 | **`move-to-worktree.sh` had a partial-mutation window.** `checkout` → `pull` → `worktree add` meant a failure in either of the first two left the primary checkout off the feature branch with no lane created — while the SKILL.md described a non-zero exit as a clean hard-stop. | ✅ Fixed in `4a723fb` — the lane is created immediately after the checkout, failure returns the primary to the feature branch, and the default-branch fast-forward is deferred past it and downgraded to a warning. |
+| S5 | 🟢 | `archive-issue` Step 6 commits to the main repo but never said the commit is unpushed, nor accounted for a protected default branch. | ✅ Fixed in `4a723fb`. |
+| S6 | 🟢 | No documented minimum git version (`git branch --show-current` needs 2.22, `git worktree remove` 2.17) and no manifest to carry it. | ✅ Fixed in `4a723fb` — recorded in CLAUDE.md's Technology stack section. |
+
+**Verified clean on the second pass:** command injection (every interpolation quoted, `ISSUE_NUM`
+regex-validated before reaching `grep -E`), no `eval`, no `--force`, no credentials on argv,
+wiki push confirmation-gated. `finish-worktree`'s five-stage merge proof (merged PR exists →
+local tip equals merged head → issue CLOSED → remote branch gone → worktree clean) is stronger
+than the norm for teardown tooling, and its `-D` comment correctly explains why `-d` cannot work
+under squash-merge.
+
+---
+
 ## Code Quality & Conventions
 
 **Result:** Findings present (2 Medium). Bash scripts are well-structured and follow existing project conventions; SKILL.md authoring is consistent across most new skills with one notable convention gap. The artifact-naming contract is a useful structural change but introduces a non-trivial duplication between two skills.
