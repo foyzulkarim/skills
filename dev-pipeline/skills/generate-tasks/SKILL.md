@@ -2,7 +2,6 @@
 name: generate-tasks
 description: "Phase 3 of 5 — slices the ARCH doc into verification-ready task specs (tdd/test-after/ui/checklist), embedded in its Tasks section for the implement skill."
 model: inherit
-disable-model-invocation: true
 color: peachpuff
 ---
 
@@ -34,9 +33,9 @@ Routing heuristic: *what can judge this work done? An assertion writable before 
 
 ## Your Input
 
-**Primary:** `/generate-tasks from: specs/architecture/ARCH-<slug>.md` — the design you generate tasks against. If its `Requirements source` field links a REQ, **read the REQ too**: its acceptance criteria become test scenarios, and each task references the REQ-IDs it satisfies. If no REQ is linked, the ARCH's "Inferred Requirements" section serves the same role.
+**Primary:** `/generate-tasks from: specs/architecture/ARCH-<N>-<slug>.md` — the design you generate tasks against. If its `Requirements source` field links a REQ, **read the REQ too**: its acceptance criteria become test scenarios, and each task references the REQ-IDs it satisfies. If no REQ is linked, the ARCH's "Inferred Requirements" section serves the same role.
 
-**Secondary:** `/generate-tasks for: [brief]` — for small, well-known patterns (health checks, logger setup, dependency upgrades) where the full pipeline is overkill. Create a lightweight `ARCH-<slug>.md` with just an Architecture Summary, Inferred Requirements, and Out of Scope; embed the task spec(s) there; rely on CLAUDE.md conventions, and be more conservative — fewer assumptions, more questions. This keeps every task discoverable in `/specs/architecture/` with full context in one place.
+**Secondary:** `/generate-tasks for: [brief]` — for small, well-known patterns (health checks, logger setup, dependency upgrades) where the full pipeline is overkill. Create a lightweight `ARCH-<N>-<slug>.md` (or `ARCH-<slug>.md` with no linked issue) with just an Architecture Summary, Inferred Requirements, and Out of Scope; embed the task spec(s) there; rely on CLAUDE.md conventions, and be more conservative — fewer assumptions, more questions. This keeps every task discoverable in `/specs/architecture/` with full context in one place.
 
 ## Conversation Flow
 
@@ -81,7 +80,7 @@ Fill in the rest: description and context (anchored on the task's Footprint slic
 
 ### 5. Write to the Architecture Document
 
-Once the developer confirms, read `{base_directory}/artifact-template.md` — not earlier — and follow its structure exactly to replace the `# Tasks` placeholder in `ARCH-<slug>.md`. Do NOT write task specs from memory or improvise the format. Everything above the `# Tasks` heading is owned by plan-architecture and must not be modified.
+Once the developer confirms, read `{base_directory}/artifact-template.md` — not earlier — and follow its structure exactly to replace the `# Tasks` placeholder in `ARCH-<N>-<slug>.md`. Do NOT write task specs from memory or improvise the format. Everything above the `# Tasks` heading is owned by plan-architecture and must not be modified.
 
 ## Transformation Guidelines
 
@@ -134,4 +133,4 @@ A well-sized task supports a tight implement-verify cycle: **2–4 production fi
 
 - Use today's date in task specs.
 - Always read CLAUDE.md, the linked REQ, and relevant source code before drafting the verification plan.
-- When done, point the developer to the implement skill: "/implement T1 from: `specs/architecture/ARCH-<slug>.md`"
+- When done, point the developer to the implement skill: "/implement T1 from: `specs/architecture/ARCH-<N>-<slug>.md`"

@@ -2,7 +2,6 @@
 name: review
 description: "Phase 5 of 5 — triage-first review orchestrator; dispatches up to 16 domain checks in parallel and compiles one report."
 model: inherit
-disable-model-invocation: true
 color: lightsalmon
 ---
 
@@ -14,7 +13,7 @@ You are NOT autonomous — you propose scope, the developer confirms. You do NOT
 
 ## Two Entry Modes
 
-**Pipeline mode** — `Review implementation against specs/architecture/ARCH-<slug>.md`. The developer completed Phase 4. Read the ARCH document (architecture + embedded task specs) and the linked REQ (if any), verify completeness against the spec, and run code quality checks. **Task Completion Verification is always included** in pipeline mode, and it verifies each task's evidence per its `Verification` mode (tests for tdd/test-after; checklist evidence for ui/checklist).
+**Pipeline mode** — `Review implementation against specs/architecture/ARCH-<N>-<slug>.md`. The developer completed Phase 4. Read the ARCH document (architecture + embedded task specs) and the linked REQ (if any), verify completeness against the spec, and run code quality checks. **Task Completion Verification is always included** in pipeline mode, and it verifies each task's evidence per its `Verification` mode (tests for tdd/test-after; checklist evidence for ui/checklist).
 
 **General mode** — no spec verification; gather the diff, detect the stack, propose checks:
 

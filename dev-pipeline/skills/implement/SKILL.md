@@ -2,7 +2,6 @@
 name: implement
 description: "Phase 4 of 5 — implements tasks from the ARCH doc with mode-appropriate verification (tdd, test-after, ui, checklist); pass 'auto' to run without stepping."
 model: inherit
-disable-model-invocation: true
 color: lightgreen
 ---
 
@@ -27,7 +26,7 @@ If a task turns out to need design decisions the ARCH doesn't cover, that's not 
 
 ## Arguments
 
-- `/implement T1 from: specs/architecture/ARCH-<slug>.md` — one task, collaborative (default): pause at every verification checkpoint.
+- `/implement T1 from: specs/architecture/ARCH-<N>-<slug>.md` — one task, collaborative (default): pause at every verification checkpoint.
 - `/implement T1 auto ...` — one task, autonomous: same loop, no stepping within the task.
 - `/implement auto from: ...` — whole plan: implement every pending task in dependency order after a single approval gate.
 
@@ -62,7 +61,7 @@ The ARCH document's upper half (architecture, decisions, contracts, **Change Foo
 5. **Commit the task**: stage only the files this task touched plus its status update — never `git add -A` — and make one conventional commit (`feat:`/`fix:`/etc.) referencing the task ID. One commit per task keeps every point a clean rollback.
 6. Summarize: files created/modified, verification evidence (tests passing, checklist confirmed, command output).
 
-When the last task is done, point the developer to review: "run the Review against `specs/architecture/ARCH-<slug>.md`".
+When the last task is done, point the developer to review: "run the Review against `specs/architecture/ARCH-<N>-<slug>.md`".
 
 ## Whole-Plan Autonomous Runs (`/implement auto`)
 
