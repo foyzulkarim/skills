@@ -27,12 +27,16 @@ No arguments — it operates on the branch currently checked out. The script:
    unignored one gets staged by any `git add -A` as an embedded gitlink, committing
    this lane's HEAD onto another branch. Remedy is one line in `.gitignore`; the
    script never edits it for you.
-2. Pushes any local-only commits, checks out and fast-forwards the default branch (this must
-   happen *before* the worktree is created — git refuses to check out a branch
-   in two places).
+2. Fetches `origin/<branch>` so the behind-check reflects reality, then pushes any
+   local-only commits and checks out the default branch (this must happen *before*
+   the worktree is created — git refuses to check out a branch in two places).
 3. `git worktree add .worktrees/<issue#> <branch>` — nested inside the repo root,
    never a `../` sibling. The context file `specs/context/<issue#>.md`
-   travels with the branch (it's committed).
+   travels with the branch (it's committed). If this step fails, the script returns
+   the primary checkout to the feature branch rather than stranding it on the
+   default branch with no lane created.
+4. Fast-forwards the default branch **after** the lane is parked. A failure here is
+   reported as a warning, not an error — the move already succeeded.
 
 Non-zero exit → hard-stop, print stderr verbatim.
 

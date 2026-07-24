@@ -49,6 +49,14 @@ if [[ "$UPSTREAM" != "origin/$BRANCH" ]]; then
   exit 1
 fi
 
+# The behind-check reads the *local* origin/<branch> ref, so refresh it first: a
+# stale ref reports "not behind" and parks a branch that is genuinely behind, or
+# lets the push below fail non-fast-forward halfway through. Not fatal when
+# offline — the check then honestly reflects the last known state.
+if ! git fetch --quiet origin "$BRANCH" 2>/dev/null; then
+  echo "Warning: could not reach origin; the up-to-date check below uses the last fetched state." >&2
+fi
+
 read -r BEHIND AHEAD < <(git rev-list --left-right --count '@{u}...HEAD')
 if (( BEHIND > 0 )); then
   echo "Error: '$BRANCH' is behind '$UPSTREAM'. Synchronize it before moving." >&2
@@ -79,10 +87,28 @@ if [[ -e "$WORKTREE_DIR" ]]; then
 fi
 
 # ── Free the branch, then check it out in its own worktree ───────────────────
-git checkout "$DEFAULT_BRANCH" --quiet
-git pull --ff-only origin "$DEFAULT_BRANCH" --quiet
+# git refuses to check out one branch in two places, so the primary must leave
+# the feature branch first. That makes this the only window where a failure can
+# strand the primary off the branch with no worktree to show for it — so the
+# worktree is created immediately after, and anything that can fail without
+# costing the lane (the default-branch fast-forward) is deferred past it.
 mkdir -p "$(dirname "$WORKTREE_DIR")"
-git worktree add "$WORKTREE_DIR" "$BRANCH"
+git checkout "$DEFAULT_BRANCH" --quiet
+
+if ! git worktree add "$WORKTREE_DIR" "$BRANCH"; then
+  echo "Error: could not create the worktree at ${WORKTREE_DIR}." >&2
+  echo "Returning the primary checkout to '${BRANCH}' — nothing was moved." >&2
+  git checkout "$BRANCH" --quiet || \
+    echo "Warning: could not return to '${BRANCH}'; run 'git checkout ${BRANCH}' yourself." >&2
+  exit 1
+fi
+
+# Non-critical: the lane is already parked. A stale default branch is a one-command
+# fix, so a failure here must not read as "the move failed".
+if ! git pull --ff-only origin "$DEFAULT_BRANCH" --quiet; then
+  echo "Warning: worktree created, but ${DEFAULT_BRANCH} could not be fast-forwarded." >&2
+  echo "Run 'git pull --ff-only origin ${DEFAULT_BRANCH}' when convenient." >&2
+fi
 
 # ── Summary ───────────────────────────────────────────────────────────────────
 echo ""

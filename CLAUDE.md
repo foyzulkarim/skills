@@ -207,6 +207,7 @@ Commits follow **Conventional Commits**:
 
 - **No build system** — this repo contains no `package.json`, `pyproject.toml`, `Cargo.toml`, or equivalent.
 - **Bash** — helper scripts are portable bash (macOS and Linux). They require standard utilities: `git`, `jq`, `find`, `grep`, `awk`, `sed`.
+- **git ≥ 2.22** — `move-to-worktree` and `finish-worktree` use `git branch --show-current` (2.22) and `git worktree remove` (2.17). `gh` is additionally required by `finish-worktree`, `archive-issue`, and `start-task`'s GitHub path.
 - **Node.js** — only required when running `setup-cost-tracking` (statusline scripts are JS).
 - **Markdown + YAML frontmatter** — every `SKILL.md` has YAML frontmatter followed by a long markdown body defining agent behavior.
 

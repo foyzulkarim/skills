@@ -135,6 +135,12 @@ successfully attributed — **excluding** anything named in the unresolved block
 separately from the wiki push in Step 7 — they're two different repos with two different
 histories.
 
+This commit lands on whatever branch the main repo is currently on — normally the default
+branch, since archival runs post-merge. **Tell the developer it is unpushed** and let them
+decide how it reaches the remote: a protected default branch needs a PR, an unprotected one
+just needs a push. Never push the main repo yourself; Step 7's confirmation covers the wiki
+only.
+
 ## Step 7 — Commit and push the wiki, with confirmation
 
 Inside `.wiki/`: `git -C .wiki pull --ff-only` immediately before committing (not only back in
