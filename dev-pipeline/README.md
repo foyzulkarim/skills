@@ -24,7 +24,7 @@ A structured 5-phase development pipeline for Claude Code — from requirement e
                              ▼
   ┌────────────────────────────────────────────────────────────┐
   │  Phase 3     /generate-tasks                               │
-  │  Output: tasks in ARCH                                     │
+  │  Output: TASKS-<N>-<slug>.md                               │
   └──────────────────────────┬─────────────────────────────────┘
                              │
                              ▼
@@ -52,15 +52,15 @@ Skip this phase when the requirements are already clear (typical for new feature
 
 ### /plan-architecture (Phase 2)
 
-Collaborative system design — high-level structure, tech choices, data models, API contracts, module boundaries, patterns. Reads `REQ-*.md` when present. Produces `/specs/architecture/ARCH-<N>-<slug>.md` (or `ARCH-<slug>.md` with no linked issue) with an empty Tasks section that the next phase fills in.
+Collaborative system design — high-level structure, tech choices, data models, API contracts, module boundaries, patterns, and a change-footprint walk that names the concrete files in scope. Reads `REQ-*.md` when present. Produces `/specs/architecture/ARCH-<N>-<slug>.md` (or `ARCH-<slug>.md` with no linked issue) — architecture-only; the next phase emits a sibling `TASKS-<N>-<slug>.md` and the ARCH header carries a `> **Tasks:**` row that names it.
 
 ### /generate-tasks (Phase 3)
 
-Reads the architecture document (and the linked REQ when present) and embeds verification-ready task specifications directly into the `ARCH-*.md` Tasks section. Each task carries a verification mode — `tdd`, `test-after`, `ui`, or `checklist` — plus a matching verification plan, implementation notes, scope boundaries, and REQ traceability.
+Reads the architecture document (and the linked REQ when present) and emits verification-ready task specifications as a separate `TASKS-<N>-<slug>.md` sibling of ARCH. Each task carries a verification mode — `tdd`, `test-after`, `ui`, or `checklist` — plus a matching verification plan, implementation notes, scope boundaries, and REQ traceability.
 
 ### /implement (Phase 4)
 
-Implementation partner that routes each task to the verification discipline it needs: `tdd` (RED-GREEN-REFACTOR), `test-after` (increment, then cover), `ui` (evidence-backed human checklist), or `checklist` (command outcomes). Reads the task spec from `ARCH-*.md` for full context and ends every task with a task-scoped conventional commit. Collaborative by default; `/implement T1 auto` runs one task without stepping, `/implement auto` runs the whole plan behind a single approval gate.
+Implementation partner that routes each task to the verification discipline it needs: `tdd` (RED-GREEN-REFACTOR), `test-after` (increment, then cover), `ui` (evidence-backed human checklist), or `checklist` (command outcomes). Reads the task spec from `TASKS-*.md` (with `ARCH-*.md` as architecture-only context) and ends every task with a task-scoped conventional commit. Collaborative by default; `/implement T1 auto` runs one task without stepping, `/implement auto` runs the whole plan behind a single approval gate.
 
 ### /review (Phase 5)
 
@@ -92,6 +92,10 @@ Drafts a changelog entry for the next release by summarizing commits since the l
 
 Terminal dashboard of the current Claude Code session, rendered by a bundled bash script from the session's transcript JSONL (`~/.claude/projects/<project>/<session-id>.jsonl`): message counts, token usage, cache read/write, dollar cost, context %, lines changed, a cost-per-turn sparkline, and a tool-call histogram. One bash call, no LLM analysis. Pass a session id to inspect a different session.
 
+### /setup-cost-tracking (supporting)
+
+One-time system-level setup for per-session cost capture. Wires bundled logger scripts into the Claude Code statusline and Stop hooks, **preserving any existing user configuration**. Idempotent and safe to re-run; additive only — backs up settings files before editing and records the original command for reversal. Run once per machine; the session stats dashboard then reads the captured cost.
+
 ### /commit (supporting)
 
 One-shot conventional commit — bundled scripts (`gather.sh`/`commit.sh`) own all git inspection and mutation; the diff is adaptively curated in bash so the LLM drafts the message in a single pass. Zero-confirmation by default; `ask` argument enables draft confirmation and selective staging. Can be used at any stage of the pipeline.
@@ -100,7 +104,8 @@ One-shot conventional commit — bundled scripts (`gather.sh`/`commit.sh`) own a
 
 - **Greenfield** → Phase 1 → 2 → 3 → 4 → 5
 - **New feature in an existing system** → Phase 2 → 3 → 4 → 5 (skip requirements; brief is enough)
-- **Bugfix** → Phase 1 (as RCA) → 3 → 4 → 5 (skip architecture)
+- **Bugfix (needs root-cause analysis)** → Phase 1 (as RCA) → 3 → 4 → 5 (skip architecture)
+- **Trivial bugfix (known cause, doesn't touch the design, under ~half a day)** → Phase 3 → 4 → 5 (skip both requirements and architecture)
 
 ## Install
 
@@ -111,7 +116,8 @@ One-shot conventional commit — bundled scripts (`gather.sh`/`commit.sh`) own a
 ## Output Conventions
 
 - Requirements: `/specs/requirements/REQ-<N>-<slug>.md`, where `<N>` is the linked issue number
-- Architecture (with embedded tasks): `/specs/architecture/ARCH-<N>-<slug>.md`
+- Architecture (architecture-only, references its tasks via the `> **Tasks:**` header row): `/specs/architecture/ARCH-<N>-<slug>.md`
+- Tasks: `/specs/tasks/TASKS-<N>-<slug>.md` (sibling of ARCH; shares the `<N>-<slug>` stem)
 - Review reports: `/specs/reviews/CODE-REVIEW-*.md` (pipeline mode: `CODE-REVIEW-PIPELINE-<N>-<slug>.md`, derived from the ARCH filename)
 - Context files: `/specs/context/<identifier>.md`
 - Branch naming: `{type}/{task-number}/{slug}`

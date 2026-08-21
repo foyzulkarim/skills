@@ -95,7 +95,7 @@ When adding a new skill:
                              ▼
   ┌────────────────────────────────────────────────────────────┐
   │  Phase 3     /generate-tasks                               │
-  │  Output: tasks in ARCH                                     │
+  │  Output: TASKS-<N>-<slug>.md                               │
   └──────────────────────────┬─────────────────────────────────┘
                              │
                              ▼
@@ -118,9 +118,9 @@ When adding a new skill:
 ### Phase skills
 
 - **plan-requirements** (Phase 1) — Socratic interview to capture WHAT and WHY. Outputs `/specs/requirements/REQ-<N>-<slug>.md` (or `REQ-<slug>.md` with no linked issue). Owner: developer.
-- **plan-architecture** (Phase 2) — Collaborative system design. Reads REQ when present, runs from a brief otherwise. Bundled scripts (`file-tree.sh`, `search-codebase.sh`) detect project structure and tech stack. Outputs `/specs/architecture/ARCH-<N>-<slug>.md` (or `ARCH-<slug>.md` with no linked issue), with an empty Tasks section.
-- **generate-tasks** (Phase 3) — Reads ARCH (and the linked REQ) and embeds verification-ready task specs into `ARCH-*.md`'s Tasks section, each with a verification mode (tdd, test-after, ui, or checklist) and a matching verification plan. Does not create a new file.
-- **implement** (Phase 4) — Implements tasks from `ARCH-*.md`, routing each to its verification mode (bundled `modes/*.md`, loaded per task): tdd (RED-GREEN-REFACTOR), test-after (increment then cover), ui (evidence-backed human checklist), checklist (command outcomes). Collaborative by default; `auto` runs one task or the whole plan behind a single approval gate, with one task-scoped commit per task.
+- **plan-architecture** (Phase 2) — Collaborative system design. Reads REQ when present, runs from a brief otherwise. Bundled scripts (`file-tree.sh`, `search-codebase.sh`) detect project structure and tech stack. Outputs `/specs/architecture/ARCH-<N>-<slug>.md` (or `ARCH-<slug>.md` with no linked issue), architecture-only; the task specs are emitted separately by generate-tasks as `TASKS-<N>-<slug>.md`.
+- **generate-tasks** (Phase 3) — Reads ARCH (and the linked REQ) and emits verification-ready task specs as `TASKS-<N>-<slug>.md` alongside ARCH, each with a verification mode (tdd, test-after, ui, or checklist) and a matching verification plan. ARCH's `> **Tasks:**` header row names the file.
+- **implement** (Phase 4) — Implements tasks from `TASKS-<N>-<slug>.md` (with ARCH for context), routing each to its verification mode (bundled `modes/*.md`, loaded per task): tdd (RED-GREEN-REFACTOR), test-after (increment then cover), ui (evidence-backed human checklist), checklist (command outcomes). Collaborative by default; `auto` runs one task or the whole plan behind a single approval gate, with one task-scoped commit per task.
 - **review** (Phase 5) — Triage-first review with up to 16 domain-specific checks. Two modes: pipeline (verifies task implementation against ARCH/REQ, including each task's verification-mode evidence) and general (PR/branch/staged). Checks are plain reference files (`sub-skills/<check>.md`, **not independently invocable skills**) dispatched via parallel Agent tool calls; each agent reads the shared `sub-skills/_protocol.md` (role, false-positive rules, tracing protocol, output format) plus its check file, and receives a filtered diff, tech stack summary, `CLAUDE.md` content, and (pipeline mode) ARCH + REQ content.
 
 ### Supporting skills (non-phase)
@@ -143,10 +143,11 @@ When adding a new skill:
 ### Artifact paths
 
 - `/specs/requirements/REQ-<N>-<slug>.md` — produced by plan-requirements; `<N>` is the linked issue number, omitted (along with the `Issue:` row) when there is none
-- `/specs/architecture/ARCH-<N>-<slug>.md` — produced by plan-architecture; tasks embedded in-place by generate-tasks
+- `/specs/architecture/ARCH-<N>-<slug>.md` — produced by plan-architecture; architecture-only (no `# Tasks` section). Declares the matching tasks file in its header
+- `/specs/tasks/TASKS-<N>-<slug>.md` — produced by generate-tasks; sibling of ARCH, shares the `<N>-<slug>` stem
 - `/specs/context/<identifier>.md` — produced by start-task
 - `/specs/reviews/CODE-REVIEW-*.md` — produced by review; pipeline mode saves as `CODE-REVIEW-PIPELINE-<N>-<slug>.md` (derived from the ARCH filename), general mode as `CODE-REVIEW-{PR,BRANCH,STAGED,DIFF}-*.md`
-- Existing `REQ-<slug>.md` / `ARCH-<slug>.md` files from before 5.0.0 keep working — both naming shapes are read indefinitely, no migration required
+- Existing `REQ-<slug>.md` / `ARCH-<slug>.md` files from before 5.0.0 keep working — both naming shapes are read indefinitely, no migration required. Pre-split ARCH docs with embedded `# Tasks` also keep working (implement's legacy detection falls back to the embedded section; run `/generate-tasks` to migrate)
 
 **Important:** These artifacts merge to `master` with their feature branch and are retired to the GitHub wiki afterwards, once the PR has merged and the issue has closed — run `/archive-issue <issue#>` then.
 
@@ -226,7 +227,11 @@ The `scripts/sync-skills.sh` helper copies repo skills into `~/.claude/skills/` 
 | `scripts/sync-skills.sh nuke` | Remove all `.synced-from`-managed copies from `~/.claude/skills/` |
 | `scripts/sync-skills.sh nuke --force <skill>` | Force-remove a skill even without marker (danger) |
 | `scripts/sync-skills.sh --target <dir> push ...` | Sync to `<dir>` instead of `~/.claude/skills` (e.g. another agent's skills directory); must precede the command |
+| `scripts/sync-skills.sh --to <harness> push ...` | Resolve a harness alias (from `scripts/sync-targets.json`) to its skills dir, then push; must precede the command |
+| `scripts/sync-skills.sh list-targets` | Print harness aliases from `scripts/sync-targets.json` and their resolved dirs |
 | `scripts/sync-skills.sh push --force <skill>` | Overwrite even an unmanaged (unmarked) directory at the target |
+
+**Harness targets:** `scripts/sync-targets.json` maps harness aliases → skills dirs (`~` allowed). The repo-local `/sync-skills` skill (`.claude/skills/sync-skills/`, not shipped with the plugin) turns natural-language requests like "copy the skills to oh-my-pi" into the right `--to` invocation, and on an unmapped harness probes conventional paths, confirms, and offers to add the mapping.
 
 ### Running skill scripts directly
 
