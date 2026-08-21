@@ -111,6 +111,8 @@ A few system tools are required by individual skills — install before you star
 dev-pipeline/
 ├── .claude-plugin/
 │   └── plugin.json
+├── rules/                     # domain-specific review rules (api, api-test, database, database-test, service, service-test)
+├── scripts/                   # file-tree.sh, search-codebase.sh — shared helpers for plan-architecture
 ├── skills/
 │   ├── plan-requirements/
 │   ├── plan-architecture/
