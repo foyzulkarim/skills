@@ -25,11 +25,17 @@ Skills are tested by pushing them into `~/.claude/skills/`. Each pushed copy get
 |---|---|
 | `scripts/sync-skills.sh push` | Push all repo skills → `~/.claude/skills/` |
 | `scripts/sync-skills.sh push <skill> …` | Push only named skills |
+| `scripts/sync-skills.sh push --force <skill>` | Overwrite even an unmanaged (unmarked) directory at the target |
 | `scripts/sync-skills.sh pull` | Pull all tracked skills back into the repo |
 | `scripts/sync-skills.sh pull <skill> …` | Pull only named tracked skill(s) |
 | `scripts/sync-skills.sh import <skill> …` | Import a non-tracked skill from `~/.claude/skills/` into the repo |
 | `scripts/sync-skills.sh nuke` | Remove all marker-managed copies from `~/.claude/skills/` |
 | `scripts/sync-skills.sh nuke --force <skill>` | Force-remove a skill even with no marker (danger) |
+| `scripts/sync-skills.sh --target <dir> push ...` | Sync to `<dir>` instead of `~/.claude/skills/` (e.g. another agent's skills dir); must precede the command |
+| `scripts/sync-skills.sh --to <harness> push ...` | Resolve `<harness>` via `scripts/sync-targets.json` (e.g. `oh-my-pi`, `opencode`) and push there; must precede the command. Requires `jq`. |
+| `scripts/sync-skills.sh list-targets` | Print all configured harness aliases and their resolved directories |
+
+The `--to <harness>` and `list-targets` paths read `scripts/sync-targets.json`, which maps harness aliases (e.g. `oh-my-pi` → `~/.omp/skills`) to skills dirs; `~` is expanded at resolve time.
 
 ## Pipeline artifacts on `master`
 
