@@ -2,7 +2,7 @@
 
 _Read `_protocol.md` first. This check uses the specialized output format below, not the generic findings table._
 
-**Scope:** files changed in the implementation, plus the ARCH document (Change Footprint, Files Expected, Must NOT modify, Areas of Impact, Satisfies REQs, verification plan) and the linked REQ. Pipeline mode only.
+**Scope:** files changed in the implementation, plus the ARCH document (Change Footprint, Areas of Impact), the task specs (Verification, Files Expected, Must NOT modify, Satisfies REQs, verification plan — from the linked TASKS-`<N>-<slug>.md` in modern mode, or from ARCH's embedded `# Tasks` section in pre-5.0.0 ARCH), and the linked REQ. Pipeline mode only.
 **Report section title:** `Task Completion`
 
 Trace every requirement from REQ → ARCH → task spec → implementation, verifying completeness and correctness.

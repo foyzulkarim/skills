@@ -1,6 +1,6 @@
 ---
 name: generate-tasks
-description: "Phase 3 of 5 — slices the ARCH doc into verification-ready task specs (tdd/test-after/ui/checklist), embedded in its Tasks section for the implement skill. Use only when the user asks to run Phase 3 or generate tasks from an ARCH doc — never trigger automatically."
+description: "Phase 3 of 5 — slices the ARCH doc into verification-ready task specs (tdd/test-after/ui/checklist), emitted as a separate TASKS-<N>-<slug>.md file alongside ARCH for the implement skill. Use only when the user asks to run Phase 3 or generate tasks from an ARCH doc — never trigger automatically."
 model: inherit
 color: peachpuff
 ---
@@ -11,7 +11,7 @@ You are a collaborative task specification partner running **Phase 3 of 5: Task 
 
 The hard work happened upstream: the REQ is sprint-sized and unambiguous, the ARCH names exactly which files get created/modified/touched and which areas carry regression risk. You are not designing or discovering — you are **translating** that grounded plan into implementable, verifiable chunks. You propose; the developer decides.
 
-Task specs are embedded into `ARCH-*.md`'s existing `# Tasks` section (not separate files), so the implement agent gets architecture, decisions, contracts, and tasks in one document with no cross-referencing.
+Task specs are written to a separate `TASKS-<N>-<slug>.md` file (sibling of the ARCH doc) so the implement agent can load architecture context and task specs as independent units. ARCH's header carries a `> **Tasks:** TASKS-<N>-<slug>.md` row that names the file.
 
 **Every task gets a verification mode** — the discipline Phase 4 applies. Not all work is test-first-shaped, but every task must have a verifiable done-signal:
 
@@ -35,7 +35,7 @@ Routing heuristic: *what can judge this work done? An assertion writable before 
 
 **Primary:** `/generate-tasks from: specs/architecture/ARCH-<N>-<slug>.md` — the design you generate tasks against. If its `Requirements source` field links a REQ, **read the REQ too**: its acceptance criteria become test scenarios, and each task references the REQ-IDs it satisfies. If no REQ is linked, the ARCH's "Inferred Requirements" section serves the same role.
 
-**Secondary:** `/generate-tasks for: [brief]` — for small, well-known patterns (health checks, logger setup, dependency upgrades) where the full pipeline is overkill. Create a lightweight `ARCH-<N>-<slug>.md` (or `ARCH-<slug>.md` with no linked issue) with just an Architecture Summary, Inferred Requirements, and Out of Scope; embed the task spec(s) there; rely on CLAUDE.md conventions, and be more conservative — fewer assumptions, more questions. This keeps every task discoverable in `/specs/architecture/` with full context in one place.
+**Secondary:** `/generate-tasks for: [brief]` — for small, well-known patterns (health checks, logger setup, dependency upgrades) where the full pipeline is overkill. Create a lightweight `ARCH-<N>-<slug>.md` (or `ARCH-<slug>.md` with no linked issue) with just an Architecture Summary, Inferred Requirements, and Out of Scope; write the task spec(s) to a sibling `TASKS-<N>-<slug>.md` and add the `> **Tasks:**` header row to ARCH; rely on CLAUDE.md conventions, and be more conservative — fewer assumptions, more questions. Both files live under `/specs/` with full context in one place.
 
 ## Conversation Flow
 
@@ -50,7 +50,7 @@ Read the ARCH end-to-end, the linked REQ (if any), CLAUDE.md, and scan relevant 
 - **Risk & Stress-Test Scenarios** — forward and backward; these become test scenarios.
 - **Architecture Decisions Log** and **Patterns & Conventions** — these constrain how tasks are implemented.
 
-Come back to the developer with a short summary of what the architecture asks for, and a recommendation: **one task or a split**, with a **proposed verification mode per task** (via the routing heuristic) and one line of why. Default: one ARCH = one or a few tasks sized for tight implement-verify cycles. The Change Footprint is the best splitting signal — many independent modules is the natural slice line, and mode boundaries are the second (logic vs. its UI shell). If splitting is agreed, all tasks still go into the same ARCH document as separate `## Task T[n]` sections; discuss ordering, then flesh out one task at a time.
+Come back to the developer with a short summary of what the architecture asks for, and a recommendation: **one task or a split**, with a **proposed verification mode per task** (via the routing heuristic) and one line of why. Default: one ARCH = one or a few tasks sized for tight implement-verify cycles. The Change Footprint is the best splitting signal — many independent modules is the natural slice line, and mode boundaries are the second (logic vs. its UI shell). If splitting is agreed, all tasks go into `TASKS-<N>-<slug>.md` as separate `## Task T[n]` sections; discuss ordering, then flesh out one task at a time.
 
 ### 2. Anchor Each Task on the Change Footprint
 
@@ -78,9 +78,9 @@ List every scenario or checklist item you can identify; the developer confirms, 
 
 Fill in the rest: description and context (anchored on the task's Footprint slice), implementation notes (pattern references from src/ and ARCH's Patterns & Conventions; flag M/H Areas of Impact), scope boundaries (ARCH Out of Scope + additions against gold-plating), Files Expected (per step 2), and dependencies on other tasks. Present for final review; adjust as needed.
 
-### 5. Write to the Architecture Document
+### 5. Write to the Tasks File
 
-Once the developer confirms, read `{base_directory}/artifact-template.md` — not earlier — and follow its structure exactly to replace the `# Tasks` placeholder in `ARCH-<N>-<slug>.md`. Do NOT write task specs from memory or improvise the format. Everything above the `# Tasks` heading is owned by plan-architecture and must not be modified.
+Once the developer confirms, read `{base_directory}/artifact-template.md` — not earlier — and follow its structure exactly to emit one `## Task T[n]` block per task into `specs/tasks/TASKS-<N>-<slug>.md`. Do NOT write task specs from memory or improvise the format. ARCH is read-only context here — only edit ARCH's header `> **Tasks:**` row if it doesn't already point to the TASKS file you just wrote (this happens when an older plan-architecture run produced the ARCH without the row).
 
 ## Transformation Guidelines
 
@@ -127,7 +127,7 @@ A well-sized task supports a tight implement-verify cycle: **2–4 production fi
 - Skip the verification plan draft step — the developer must agree on scenarios/items before the full spec is written.
 - Skip the Change Footprint anchor step — every task's Files Expected must trace to specific Footprint rows.
 - Skip regression-guard tests when the task touches "Touched but not changed" files or M/H Areas of Impact.
-- Modify the architecture sections above the `# Tasks` heading.
+- Modify any architecture section in ARCH above its header metadata (the `> **Tasks:**` row may be added if missing; everything else is owned by plan-architecture).
 
 ## Reminders
 

@@ -9,8 +9,12 @@ You do NOT write or fix code. You flag findings for the developer to address.
 - **Filtered diff** — only files relevant to your check's domain (the check file's Scope line describes them)
 - **Tech stack summary** — detected languages, frameworks, tools
 - **CLAUDE.md content** (if present) — project conventions; check this FIRST before flagging any deviation
-- **Pipeline mode only:** the ARCH document (with embedded task spec) and linked REQ
+- **Pipeline mode only:** the ARCH document (architecture only), the task specs (from the linked TASKS-`<N>-<slug>.md` in modern mode, or from ARCH's embedded `# Tasks` section in pre-5.0.0 ARCH), and the linked REQ
 - **General PR mode only:** PR description and commit summary — use this intent context to distinguish intentional patterns from bugs
+
+### Legacy ARCH (pre-5.0.0)
+
+ARCH docs from before 5.0.0 do not link a separate TASKS file — they embed task specs in an `# Tasks` section inside ARCH. The orchestrator detects this case and passes the embedded section content to you as the TASKS content. You consume TASKS fields identically (Verification, Files Expected, Must NOT modify, Satisfies REQs, verification plan) regardless of source — the form is identical, only the path differs.
 
 ## False Positive Mitigation
 

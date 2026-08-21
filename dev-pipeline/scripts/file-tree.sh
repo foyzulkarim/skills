@@ -152,7 +152,7 @@ echo "|------|---------|"
 [[ -f "$TARGET_DIR/package.json" ]]     && echo "| package.json | Node.js dependencies |"
 [[ -f "$TARGET_DIR/README.md" ]]        && echo "| README.md | Project documentation |"
 [[ -d "$TARGET_DIR/.claude-plugin" ]]   && echo "| .claude-plugin/ | Plugin configuration |"
-[[ -d "$TARGET_DIR/specs" ]]            && echo "| specs/ | Requirements and architecture docs |"
+[[ -d "$TARGET_DIR/specs" ]]            && echo "| specs/ | Requirements, architecture, tasks, and review docs |"
 [[ -d "$TARGET_DIR/.claude" ]]          && echo "| .claude/ | Claude settings and memory |"
 
 echo ""

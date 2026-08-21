@@ -1,6 +1,6 @@
 ---
 name: archive-issue
-description: "Retire a closed issue's working artifacts out of specs/ into the GitHub wiki. Use only when the user asks to archive a finished issue, empty out specs/ for a done task, or move an issue's requirements/architecture/review docs to the wiki."
+description: "Retire a closed issue's working artifacts out of specs/ into the GitHub wiki. Use only when the user asks to archive a finished issue, empty out specs/ for a done task, or move an issue's requirements/architecture/tasks/review docs to the wiki."
 model: inherit
 color: gold
 ---
@@ -13,9 +13,10 @@ skill retires them out of `specs/` straight into the GitHub wiki. **Nothing arch
 committed to the main repo** — the wiki is the only place this content lives.
 
 This skill resolves everything from the issue number alone via `gh issue view` plus the
-artifact naming contract (`REQ-<N>-<slug>.md` / `ARCH-<N>-<slug>.md` and the `> **Issue:** #N`
-metadata row) that `plan-requirements` and `plan-architecture` write. There is no separate
-anchor file — GitHub already holds the title, URL, and state.
+artifact naming contract (`REQ-<N>-<slug>.md` / `ARCH-<N>-<slug>.md` / `TASKS-<N>-<slug>.md`
+and the `> **Issue:** #N` metadata row) that `plan-requirements`, `plan-architecture`, and
+`generate-tasks` write. There is no separate anchor file — GitHub already holds the title,
+URL, and state.
 
 **Declared dependency:** matching review reports to this issue reads the `Target` metadata
 row defined in `review/report-template.md:8`. If that row's format ever changes, review
@@ -60,6 +61,7 @@ archive" while files for `<N>` remain unmatched under `specs/`:
 | `specs/context/<N>.md` | direct path |
 | `specs/requirements/REQ-<N>-*.md` | glob first; if it misses, grep `specs/requirements/*.md` for a `> **Issue:** #<N>` row (covers artifacts written before the naming contract landed); if still nothing, check for an un-prefixed `REQ-<slug>.md` whose slug matches a `{type}/<N>/{slug}` branch found in `git for-each-ref --format='%(refname:short)' refs/heads refs/remotes`, or — when that branch was already deleted, the usual case for an old issue — the slugified issue title from Step 1 |
 | `specs/architecture/ARCH-<N>-*.md` | same three-tier fallback as REQ |
+| `specs/tasks/TASKS-<N>-*.md` | same three-tier fallback as REQ (the TASKS file shares the `<N>-<slug>` stem with ARCH; ARCH's `> **Tasks:**` header row names it explicitly when present) |
 | `specs/reviews/CODE-REVIEW-PIPELINE-<N>-*.md` | glob — the filename already carries `<N>` because it derives from the ARCH filename (`review/SKILL.md`'s pipeline-mode save step) |
 | `specs/reviews/CODE-REVIEW-{PR,BRANCH,STAGED,DIFF}-*.md` | read **every** file's `Target` row (`review/report-template.md:8`) and match it to issue `<N>` — never by assuming a PR number equals the issue number, and never by directory. Branch-mode: `Target` is a branch name — match if it is `{type}/<N>/{slug}`. PR-mode: `Target` is a PR URL — resolve its head branch (`gh pr view <PR#> --json headRefName`) and match that the same way. Staged/diff-mode reports carry no branch reference and can only be attributed if the report content otherwise names issue `<N>` explicitly |
 
@@ -110,8 +112,8 @@ wiki's git tree.
 
 ## Step 4 — Write the sub-pages
 
-Carry the REQ/ARCH/review content over largely as-is — these are already well-formed docs;
-don't rewrite them, just relocate them into `.wiki/issue-NNN/` **under their original
+Carry the REQ/ARCH/TASKS/review content over largely as-is — these are already well-formed
+docs; don't rewrite them, just relocate them into `.wiki/issue-NNN/` **under their original
 filenames** and drop anything that's now stale (e.g. a REQ doc's "next step: run
 `/plan-architecture`" footer no longer applies once archived). Only for documents that
 actually exist — never invent a placeholder, never rename one that does exist.
@@ -130,10 +132,10 @@ number — no grouping model:
 ## Step 6 — Retire the sources from the main repo
 
 `git rm`, in the **main repo** (not `.wiki/`): `specs/context/<N>.md`, whichever of
-`specs/requirements/`/`specs/architecture/` were mirrored, and every review report Step 2
-successfully attributed — **excluding** anything named in the unresolved block. Commit this
-separately from the wiki push in Step 7 — they're two different repos with two different
-histories.
+`specs/requirements/`/`specs/architecture/`/`specs/tasks/` were mirrored, and every review
+report Step 2 successfully attributed — **excluding** anything named in the unresolved
+block. Commit this separately from the wiki push in Step 7 — they're two different repos
+with two different histories.
 
 This commit lands on whatever branch the main repo is currently on — normally the default
 branch, since archival runs post-merge. **Tell the developer it is unpushed** and let them

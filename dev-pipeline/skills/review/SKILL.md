@@ -13,7 +13,7 @@ You are NOT autonomous — you propose scope, the developer confirms. You do NOT
 
 ## Two Entry Modes
 
-**Pipeline mode** — `Review implementation against specs/architecture/ARCH-<N>-<slug>.md`. The developer completed Phase 4. Read the ARCH document (architecture + embedded task specs) and the linked REQ (if any), verify completeness against the spec, and run code quality checks. **Task Completion Verification is always included** in pipeline mode, and it verifies each task's evidence per its `Verification` mode (tests for tdd/test-after; checklist evidence for ui/checklist).
+**Pipeline mode** — `Review implementation against specs/architecture/ARCH-<N>-<slug>.md`. The developer completed Phase 4. Read the ARCH document (architecture only) and the linked TASKS-`<N>-<slug>.md` (task specs, named by ARCH's `> **Tasks:**` header row) and the linked REQ (if any), verify completeness against the spec, and run code quality checks. **Task Completion Verification is always included** in pipeline mode, and it verifies each task's evidence per its `Verification` mode (tests for tdd/test-after; checklist evidence for ui/checklist). For pre-5.0.0 ARCH docs that embed task specs in an `# Tasks` section (no separate TASKS file), see **Legacy ARCH handling** below.
 
 **General mode** — no spec verification; gather the diff, detect the stack, propose checks:
 
@@ -23,6 +23,12 @@ You are NOT autonomous — you propose scope, the developer confirms. You do NOT
 | `branch` | `Review branch feature-x` | `git diff {default_branch}...{branch}` + `git log {default_branch}..{branch} --oneline` |
 | `staged` | `Review staged` (also the default for bare `Review`) | `git diff --cached` + `git diff --cached --stat` |
 | `diff` | `Review diff changes.diff` | Read the file directly |
+
+## Legacy ARCH handling (pipeline mode)
+
+ARCH docs from before 5.0.0 embed task specs in an `# Tasks` section inside ARCH itself — there is no separate TASKS file. When the TASKS file is absent (no `> **Tasks:**` row in ARCH, or the row exists but the named file is missing), check ARCH for an embedded `# Tasks` section. If present with real specs (a `## Task T[n]` heading plus ~20+ non-blank lines, no placeholder wording), extract the section content and treat it as the TASKS source for sub-skill dispatch.
+
+Surface the legacy path in your triage proposal ("task source: embedded `# Tasks` — pre-5.0.0 ARCH") so the developer sees it. Sub-skill agents consume TASKS content identically regardless of source — they don't need to know whether it came from a separate file or an embedded section.
 
 ## Preflight Checks
 
@@ -90,7 +96,7 @@ for your domain criteria. Apply both to the following files:
 
 Tech stack: {summary}
 CLAUDE.md conventions: {content if exists}
-{Pipeline mode: ARCH content and linked REQ content}
+{Pipeline mode: ARCH content, TASKS content (from the linked TASKS-<N>-<slug>.md file in modern mode, or from ARCH's embedded `# Tasks` section in pre-5.0.0 ARCH), and linked REQ content}
 {General PR mode: PR description and commit message summary}
 ```
 
@@ -148,7 +154,7 @@ At compile time — not earlier — read `{base_directory}/report-template.md` a
 
 **Always save the report** under `specs/reviews/` (creating the directory if it doesn't exist) — regardless of mode, never skip this step.
 
-**Pipeline mode:** save as `CODE-REVIEW-PIPELINE-<N>-<slug>.md`, carrying over the ARCH file name's identifying part verbatim — `ARCH-42-add-user-auth.md` → `CODE-REVIEW-PIPELINE-42-add-user-auth.md`. If the ARCH has no issue number (`ARCH-<slug>.md`), the report has none either. The issue number must survive, so `archive-issue` can correlate this report back to its issue. Also present the report inline.
+**Pipeline mode:** save as `CODE-REVIEW-PIPELINE-<N>-<slug>.md`, carrying over the ARCH file name's identifying part verbatim — `ARCH-42-add-user-auth.md` → `CODE-REVIEW-PIPELINE-42-add-user-auth.md`. If the ARCH has no issue number (`ARCH-<slug>.md`), the report has none either. The issue number must survive, so `archive-issue` can correlate this report back to its issue. (The stem is shared between ARCH and TASKS; the report derives from the ARCH filename by convention.) Also present the report inline.
 **General mode:** save as `CODE-REVIEW-PR-{number}.md`, `CODE-REVIEW-BRANCH-{safe-name}.md`, `CODE-REVIEW-STAGED-{YYYY-MM-DD-HHMM}.md`, or `CODE-REVIEW-DIFF-{safe-name}.md`.
 
 ## Verdicts

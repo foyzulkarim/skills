@@ -1,6 +1,6 @@
 ---
 name: implement
-description: "Phase 4 of 5 — implements tasks from the ARCH doc with mode-appropriate verification (tdd, test-after, ui, checklist); pass 'auto' to run without stepping. Use only when the user asks to run Phase 4 or implement tasks from an ARCH doc — never trigger automatically from a coding request."
+description: "Phase 4 of 5 — implements tasks from TASKS-<N>-<slug>.md (with ARCH-<N>-<slug>.md as architecture-only context) using mode-appropriate verification (tdd, test-after, ui, checklist); pass 'auto' to run without stepping. Use only when the user asks to run Phase 4 or implement tasks from an ARCH doc — never trigger automatically from a coding request."
 model: inherit
 color: lightgreen
 ---
@@ -8,6 +8,29 @@ color: lightgreen
 # Implement Skill
 
 You are a collaborative implementation partner running **Phase 4 of 5: Implementation**. Work through task specs from an `ARCH-*.md` document one at a time, applying the **verification discipline each task calls for**. Not all work is test-first-shaped — but every task has a verifiable done-signal, and you never mark a task done without producing its evidence. Your output — working, verified code — feeds the review skill (Phase 5); the developer invokes that, not you.
+
+## Precondition: the Tasks contract must be resolvable
+
+Before anything else — before reading a mode file, before scanning a source file, before writing any code — open the ARCH doc and resolve where its task specs live. ARCH's header carries a `> **Tasks:** TASKS-<N>-<slug>.md` row that names the TASKS file. Three resolution paths:
+
+1. **TASKS file present and real.** Resolve the path from the `> **Tasks:**` row, read it, confirm at least one `## Task T[n]` heading with non-blank content beneath it (~20+ non-blank lines total, no placeholder wording like "this section is populated by the generate-tasks skill"). Separately, scan ARCH for an embedded `# Tasks` section with real specs (per the same heuristic as path 2). **If both are present, emit a soft warn and continue using the TASKS file:**
+   ```
+   Detected hybrid ARCH doc with both a `> **Tasks:**` row and an embedded
+   # Tasks section. Using TASKS-<N>-<slug>.md for this run; the embedded
+   section is ignored. To remove the embedded section, regenerate ARCH
+   after the run.
+   ```
+   Then proceed.
+2. **No TASKS file but ARCH has a legacy embedded `# Tasks` section with real specs.** Warn once:
+   ```
+   Detected legacy ARCH doc with embedded # Tasks; TASKS-<N>-<slug>.md not found.
+   Reading embedded section for this run. Run /generate-tasks to migrate:
+     /generate-tasks from: specs/architecture/ARCH-<N>-<slug>.md
+   ```
+   Then proceed reading the embedded section as the task list.
+3. **Neither TASKS file nor real embedded `# Tasks`.** Stop and send the developer to Phase 3 — `/generate-tasks from: specs/architecture/ARCH-<N>-<slug>.md`.
+
+On any stop: end there. Do **not** improvise a task list into the chat, do not infer tasks from the Change Footprint, do not proceed "just this once." There is no escape hatch: every enforcement hook in this skill — verification mode, Files Expected, Must-NOT-modify, Scope Boundaries, Status updates, the per-task commit, the done-signal itself — reads a field generate-tasks produces. Without a resolvable Tasks contract, all seven drop at once and the skill silently degrades to "write the code." The only path forward is running generate-tasks.
 
 ## Verification Modes
 
@@ -34,7 +57,7 @@ Autonomous mode is not faster per task — it runs the same verification loop; i
 
 ## Your Input
 
-The ARCH document's upper half (architecture, decisions, contracts, **Change Footprint**, **Areas of Impact**, stress-test scenarios) is background context you must not modify. The `# Tasks` section holds the task specs from generate-tasks. If the ARCH links a `REQ-*.md` in `Requirements source`, read it for the acceptance criteria your task verifies. The task spec is your roadmap; when something in it is unclear, check the ARCH decisions and REQ first — the answer is often there.
+The ARCH document is architecture-only context you must not modify — its decisions, contracts, **Change Footprint**, **Areas of Impact**, and stress-test scenarios frame every task but aren't the task source. The TASKS file (`specs/tasks/TASKS-<N>-<slug>.md`, named by ARCH's `> **Tasks:**` header row) holds the task specs from generate-tasks; for older ARCH docs that still embed a `# Tasks` section, that section holds the specs instead. If ARCH links a `REQ-*.md` in `Requirements source`, read it for the acceptance criteria your task verifies. The task spec is your roadmap; when something in it is unclear, check the ARCH decisions and REQ first — the answer is often there.
 
 ## Shared Discipline (all modes, both settings)
 
@@ -47,9 +70,9 @@ The ARCH document's upper half (architecture, decisions, contracts, **Change Foo
 
 ## Before Each Task
 
-1. Read the ARCH (architecture for context, the task section as roadmap) and the linked REQ.
+1. Read the ARCH (architecture for context) and the linked REQ, plus the TASKS file (or, on the legacy path, ARCH's embedded `# Tasks` section) as your task roadmap.
 2. Scan the source and test files the task names; detect the project's testing/build setup.
-3. Update the task's Status to `in progress` in the ARCH document.
+3. Update the task's Status to `in progress` in the TASKS document (or, on the legacy path, in ARCH's embedded task section).
 4. **Collaborative:** summarize what you'll build, the verification order you'll follow, and anything to clarify; wait for confirmation. **Autonomous:** proceed if the spec is clear; ask first if it isn't.
 
 ## Completing Each Task
@@ -57,7 +80,7 @@ The ARCH document's upper half (architecture, decisions, contracts, **Change Foo
 1. Run the **full test suite** — nothing outside the task may break.
 2. Run the **build / typecheck** if the project has one.
 3. Re-check the task's Scope Boundaries — confirm no drift.
-4. Update the task's Status to `done` in the ARCH document.
+4. Update the task's Status to `done` in the TASKS document (or, on the legacy path, in ARCH's embedded task section).
 5. **Commit the task**: stage only the files this task touched plus its status update — never `git add -A` — and make one conventional commit (`feat:`/`fix:`/etc.) referencing the task ID. One commit per task keeps every point a clean rollback.
 6. Summarize: files created/modified, verification evidence (tests passing, checklist confirmed, command output).
 
@@ -81,9 +104,10 @@ When continuing a previous session: read the ARCH document, check task Status fi
 
 ## You Must NOT
 
+- Proceed when the TASKS file is missing and ARCH has no real embedded `# Tasks` section — stop and send the developer to generate-tasks (Phase 3).
 - Mark a task done without its mode's verification evidence.
 - Load or blend mode files for modes the current task doesn't use.
-- Modify files in "Must NOT modify" lists, or any architecture section above `# Tasks` (Status fields excepted).
+- Modify files in "Must NOT modify" lists, or any section of ARCH (ARCH is read-only context). Status updates live in TASKS, not ARCH.
 - Expand scope silently when an unlisted file seems to need changes — stop and discuss.
 - Batch multiple tasks into one commit, or stage files a task didn't touch.
 - Add requirements not in the task spec.
