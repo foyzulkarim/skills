@@ -182,9 +182,9 @@ Version lives in two places — keep them in sync:
 - `dev-pipeline/.claude-plugin/plugin.json` → `version`
 - `.claude-plugin/marketplace.json` → `plugins[0].version`
 
-## Contributing
+## Local development
 
-Fork → edit skills under `dev-pipeline/skills/<name>/` → open PR. See `docs/skill-refactor-guide.md` for the token-efficiency refactor playbook used for prior skill slimming work.
+Edit skills under `dev-pipeline/skills/<name>/`. See `docs/skill-refactor-guide.md` for the token-efficiency refactor playbook used for prior skill slimming work.
 
 ### Commit convention
 

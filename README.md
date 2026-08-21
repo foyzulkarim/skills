@@ -132,14 +132,7 @@ dev-pipeline/
 └── README.md
 ```
 
-## Contribute
-
-1. Fork this repo
-2. Add or modify skills under `dev-pipeline/skills/<skill-name>/`
-3. The `skills` field in `plugin.json` points to `./skills/` — the directory is auto-scanned, no per-skill registration needed
-4. Open a pull request
-
-### Test skills locally
+## Test locally
 
 `scripts/sync-skills.sh` is a bidirectional sync helper that copies repo skills into `~/.claude/skills/` for live testing, and can pull changes back.
 
