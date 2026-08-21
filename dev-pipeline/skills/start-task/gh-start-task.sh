@@ -48,9 +48,6 @@ echo "  State: $STATE"
 
 # ── Derive type from labels if not provided ───────────────────────────────────
 if [[ -z "${2:-}" ]]; then
-  if [[ "$TYPE" == "feat" ]] && echo "$LABELS" | grep -qiE 'bug|fix|hotfix'; then
-    TYPE="fix"
-  fi
   if echo "$LABELS" | grep -qiE 'enhancement|feature'; then
     TYPE="feat"
   elif echo "$LABELS" | grep -qiE 'bug|fix|hotfix'; then
@@ -127,31 +124,45 @@ mkdir -p specs/context
 
 CONTEXT_FILE="specs/context/${ISSUE_NUM}.md"
 
-cat > "$CONTEXT_FILE" << EOF
+cat > "$CONTEXT_FILE" << 'EOF'
 ---
-name: ${ISSUE_NUM}
-description: "${TITLE}"
+name: __ISSUE_NUM__
+description: "__TITLE__"
 type: task
 source: github
 ---
 
-# Task ${ISSUE_NUM}: ${TITLE}
+# Task __ISSUE_NUM__: __TITLE__
 
-- **Type:** ${TYPE}
-- **Source:** GitHub issue #${ISSUE_NUM}
-- **State:** ${STATE}
-- **Labels:** ${LABELS:-none}
-- **Created:** $(date +%Y-%m-%d)
+- **Type:** __TYPE__
+- **Source:** GitHub issue #__ISSUE_NUM__
+- **State:** __STATE__
+- **Labels:** __LABELS__
+- **Created:** __DATE__
 
 ## Description
 
-${BODY:-_No description provided._}
+__BODY__
 
 ## Notes
 
 <!-- Add your notes, acceptance criteria, and context here -->
 
 EOF
+
+# Substitute placeholders with actual values (no further bash expansion after this).
+sed -i \
+  -e "s|__ISSUE_NUM__|${ISSUE_NUM}|g" \
+  -e "s|__TITLE__|${TITLE}|g" \
+  -e "s|__TYPE__|${TYPE}|g" \
+  -e "s|__STATE__|${STATE}|g" \
+  -e "s|__LABELS__|${LABELS:-none}|g" \
+  -e "s|__DATE__|$(date +%Y-%m-%d)|g" \
+  "$CONTEXT_FILE"
+
+# Substitute __BODY__ separately so multi-line body content lands verbatim.
+awk -v body="${BODY:-_No description provided._}" '{gsub(/__BODY__/, body); print}' "$CONTEXT_FILE" > "${CONTEXT_FILE}.tmp"
+mv "${CONTEXT_FILE}.tmp" "$CONTEXT_FILE"
 
 echo "Context saved to: $CONTEXT_FILE"
 
