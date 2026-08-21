@@ -21,8 +21,9 @@ bash {base_directory}/move-to-worktree.sh
 No arguments — it operates on the branch currently checked out. The script:
 
 1. Hard-stops unless run in the **primary checkout**, on a **task branch**
-   (`{type}/{issue#}/{slug}`), with a **clean tree** and its matching `origin/` **upstream** set —
-   i.e. exactly the state `/start-task` leaves behind. Also hard-stops unless
+   (`{type}/{issue#}/{slug}`), with a **clean tree** and its upstream set to
+   **`origin/<branch>`** literally (not a fork-style `upstream` remote) — i.e.
+   exactly the state `/start-task` leaves behind. Also hard-stops unless
    `.worktrees/` is **gitignored**: the worktree is nested inside the repo, so an
    unignored one gets staged by any `git add -A` as an embedded gitlink, committing
    this lane's HEAD onto another branch. Remedy is one line in `.gitignore`; the
