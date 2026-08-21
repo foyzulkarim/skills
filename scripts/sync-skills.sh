@@ -10,10 +10,16 @@ set -euo pipefail
 #   scripts/sync-skills.sh import implement        import non-tracked skill from target (names required)
 #   scripts/sync-skills.sh nuke              remove all synced skills from target
 #   scripts/sync-skills.sh nuke --force implement  force-remove a skill from target (bypass marker check)
+#   scripts/sync-skills.sh list-targets      print harness aliases from sync-targets.json + resolved dirs
 #
 #   --target <dir> overrides the default target (~/.claude/skills), e.g. to
 #   sync skills into another agent's skills directory. Must precede the command:
 #     scripts/sync-skills.sh --target ~/.codex/skills push commit
+#
+#   --to <harness> resolves a harness alias to its skills dir via the sibling
+#   sync-targets.json mapping (a deterministic shorthand for --target). Must
+#   precede the command:
+#     scripts/sync-skills.sh --to oh-my-pi push commit
 #
 # Each copy gets a .synced-from marker holding its source path. Push refreshes
 # dirs that carry a marker and refuses to touch dirs that don't (they're real
@@ -23,6 +29,61 @@ set -euo pipefail
 REPO_SKILLS_DIR="$(cd "$(dirname "$0")/../dev-pipeline/skills" && pwd)"
 TARGET_DIR="${HOME}/.claude/skills"
 MARKER=".synced-from"
+TARGETS_FILE="$(cd "$(dirname "$0")" && pwd)/sync-targets.json"
+
+# Expand a leading ~ (or ~/) to $HOME. Only the leading tilde is special.
+expand_tilde() {
+  case "$1" in
+    "~") echo "$HOME" ;;
+    "~/"*) echo "${HOME}/${1#\~/}" ;;
+    *) echo "$1" ;;
+  esac
+}
+
+# Resolve a harness alias (e.g. "oh-my-pi") to a skills dir via sync-targets.json.
+# On an unknown alias, prints the known keys to stderr and exits non-zero so both
+# the CLI and the skill wrapper get an actionable failure.
+resolve_target() {
+  local alias="$1"
+  if [ ! -f "$TARGETS_FILE" ]; then
+    echo "error: mapping file not found: $TARGETS_FILE" >&2
+    exit 1
+  fi
+  if ! command -v jq >/dev/null 2>&1; then
+    echo "error: 'jq' is required to resolve --to <harness> aliases" >&2
+    exit 1
+  fi
+  local dir
+  dir="$(jq -r --arg k "$alias" 'if has($k) then .[$k] else empty end' "$TARGETS_FILE")"
+  if [ -z "$dir" ]; then
+    echo "error: unknown harness '$alias' in $TARGETS_FILE" >&2
+    echo "known: $(jq -r 'keys | join(", ")' "$TARGETS_FILE")" >&2
+    exit 1
+  fi
+  expand_tilde "$dir"
+}
+
+list_targets() {
+  if [ ! -f "$TARGETS_FILE" ]; then
+    echo "error: mapping file not found: $TARGETS_FILE" >&2
+    exit 1
+  fi
+  if ! command -v jq >/dev/null 2>&1; then
+    echo "error: 'jq' is required to read $TARGETS_FILE" >&2
+    exit 1
+  fi
+  echo "Harness targets (from $TARGETS_FILE):"
+  local alias raw dir
+  while IFS= read -r alias; do
+    raw="$(jq -r --arg k "$alias" '.[$k]' "$TARGETS_FILE")"
+    dir="$(expand_tilde "$raw")"
+    if [ -d "$dir" ]; then
+      printf '  %-14s %s\n' "$alias" "$dir"
+    else
+      printf '  %-14s %s  (missing)\n' "$alias" "$dir"
+    fi
+  done < <(jq -r 'keys[]' "$TARGETS_FILE")
+}
 
 validate_name() {
   local name="$1"
@@ -35,10 +96,12 @@ validate_name() {
 
 usage() {
   cat <<EOF >&2
-usage: $(basename "$0") [--target <dir>] <command> [skill...]
+usage: $(basename "$0") [--target <dir> | --to <harness>] <command> [skill...]
 
   --target <dir>         sync to <dir> instead of ~/.claude/skills (e.g. another agent's skills dir)
                          must come before the command
+  --to <harness>         resolve a harness alias (see sync-targets.json) to its skills dir
+                         must come before the command, e.g. --to oh-my-pi push commit
 
 commands:
   push                   copy repo skills → target dir (creates/refreshes .synced-from marker)
@@ -49,6 +112,7 @@ commands:
   import <skill...>      import non-tracked skills from target dir into repo (names required)
   nuke                   delete marked skills from target dir only
   nuke --force <skill...>  force-remove named skills from target (bypasses marker check)
+  list-targets           print harness aliases from sync-targets.json + resolved dirs
 EOF
   exit 1
 }
@@ -195,16 +259,29 @@ import_one() {
 
 # --- argument parsing --------------------------------------------------------
 
-while [[ "${1:-}" == --target || "${1:-}" == --target=* ]]; do
+while [[ "${1:-}" == --target || "${1:-}" == --target=* || "${1:-}" == --to || "${1:-}" == --to=* ]]; do
   case "$1" in
-    --target=*) TARGET_DIR="${1#--target=}"; shift ;;
+    --target=*) TARGET_DIR="$(expand_tilde "${1#--target=}")"; shift ;;
     --target)
       shift
       [ "$#" -eq 0 ] && { echo "error: --target requires a value" >&2; exit 1; }
-      TARGET_DIR="$1"
+      TARGET_DIR="$(expand_tilde "$1")"
+      shift ;;
+    --to=*) TARGET_DIR="$(resolve_target "${1#--to=}")"; shift ;;
+    --to)
+      shift
+      [ "$#" -eq 0 ] && { echo "error: --to requires a harness name" >&2; exit 1; }
+      TARGET_DIR="$(resolve_target "$1")"
       shift ;;
   esac
 done
+
+# list-targets needs no target dir and must not create one — handle before mkdir.
+if [ "${1:-}" == "list-targets" ]; then
+  list_targets
+  exit 0
+fi
+
 mkdir -p "$TARGET_DIR"
 
 [ "$#" -eq 0 ] && usage
