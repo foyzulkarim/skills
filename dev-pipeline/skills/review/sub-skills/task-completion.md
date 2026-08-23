@@ -30,6 +30,7 @@ Trace every requirement from REQ → ARCH → task spec → implementation, veri
 ## Check-Specific Rules
 
 - Read the ARCH and REQ documents fully before starting; build your checklist from REQ-IDs, verification items, and Change Footprint rows.
+- Test existence and assertion content is read statically, never executed. Do not claim a test "passes"; claim a test "exists and asserts X." If a task's verification mode is `tdd`/`test-after`, the test's *existence* with matching assertions is the evidence; trust the developer's claim of execution.
 - False-positive addition: if an unexpected file appears, confirm it is not listed in an "also touches" note in the task spec.
 
 ## Output Format (specialized)
