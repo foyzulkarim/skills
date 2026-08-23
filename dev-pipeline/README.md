@@ -1,6 +1,6 @@
 # dev-pipeline
 
-A structured 5-phase development pipeline for Claude Code — from requirement engineering through code review.
+A structured 5-phase development pipeline for Claude Code — from requirement engineering through code review, with an optional QA gate that runs independently of review.
 
 ## The pipeline
 
@@ -31,13 +31,21 @@ A structured 5-phase development pipeline for Claude Code — from requirement e
   ┌────────────────────────────────────────────────────────────┐
   │  Phase 4     /implement                                    │
   │  Output: code + verification evidence                      │
-  └──────────────────────────┬─────────────────────────────────┘
-                             │
-                             ▼
-  ┌────────────────────────────────────────────────────────────┐
-  │  Phase 5     /review                                       │
-  │  Output: PR                                                │
-  └────────────────────────────────────────────────────────────┘
+  └──────────────┬─────────────────────────────┬───────────────┘
+                 │                             │
+                 ▼                             ▼
+  ┌───────────────────────────┐  ┌───────────────────────────┐
+  │  Phase 5   /review        │  │  QA gate (when applicable)│
+  │  Output: PR + report      │  │  /plan-qa                 │
+  │                           │  │    ↓                      │
+  │                           │  │  /execute-qa              │
+  │                           │  │  Output: QA-RESULTS-*.md  │
+  └──────────────┬────────────┘  └─────────────┬─────────────┘
+                 └───────────────┬─────────────┘
+                                 ▼
+                               merge
+        (QA gate is skipped when the change has
+         no running surface worth driving)
 
   ┌────────────────────────────────────────────────────────────┐
   │  /commit → use at any stage                                │
@@ -64,7 +72,16 @@ Implementation partner that routes each task to the verification discipline it n
 
 ### /review (Phase 5)
 
-Comprehensive code review with a triage-first approach. Proposes relevant checks, runs them as parallel agents, and produces a combined report. Up to 16 specialized checks. Two modes: pipeline (verifies implementation against `ARCH-*.md`) and general (PR/branch/staged).
+Comprehensive code review with a triage-first approach. Proposes relevant checks, runs them as parallel agents, and produces a combined report. Up to 17 specialized checks. Two modes: pipeline (verifies implementation against `ARCH-*.md`) and general (PR/branch/staged).
+
+### /plan-qa (QA gate)
+
+Post-implementation QA planning — independent of `/review` (the developer chooses whether to run them sequentially or in parallel, and in what order). Interviews the developer to turn the specs and the diff into an executable QA specification: cases with tagged steps (`[bash]`/`[browser]`), project traps codified as `Guard:`s on the exact steps that need them, a Coverage Map over every changed file, identities, preconditions, and named operator handoffs for the few actions an agent genuinely cannot do. Every Expected line is falsifiable — `[assert]` (machine-verifiable) or `[judge]` with an explicit pass/fail criterion fixed at plan time. Produces `/specs/qa/QA-<N>-<slug>.md`. Skip this gate when the change has no running surface worth driving.
+
+
+### /execute-qa (QA gate)
+
+Runs after `/plan-qa` produces the specification. Preconditions run first (a red automated suite means the run does not begin); cases execute in order with their tagged drivers and guards; operator handoffs print verbatim and wait. `[assert]` lines verify mechanically; `[judge]` lines are judged only against the plan's written criterion, with the observed evidence quoted next to the verdict and ambiguity escalating to PARTIAL — never a guessed pass. Appends one run section of verdicts and findings to `/specs/qa/QA-RESULTS-<N>-<slug>.md`; never modifies the plan.
 
 ### /start-task (pre-pipeline)
 
@@ -82,11 +99,15 @@ Teardown counterpart to `/move-to-worktree`, run after an issue's PR has squash-
 
 ### /archive-issue (supporting)
 
-Retires a closed issue's `specs/` artifacts (context, requirements, architecture, review reports) into the GitHub wiki, once GitHub itself becomes the source of truth for the issue. Resolves everything from the issue number via `gh issue view` and the artifact naming contract below — no separate anchor file. Bootstraps the wiki index on first use; the wiki push requires explicit confirmation.
+Retires a closed issue's `specs/` artifacts (context, requirements, architecture, tasks, review reports, QA plans, QA results) into the GitHub wiki, once GitHub itself becomes the source of truth for the issue. Resolves everything from the issue number via `gh issue view` and the artifact naming contract below — no separate anchor file. Bootstraps the wiki index on first use; the wiki push requires explicit confirmation.
 
 ### /release-notes (supporting)
 
 Drafts a changelog entry for the next release by summarizing commits since the last git tag, suggests the next semver version, and prepends the entry to `CHANGELOG.md`. Version baseline comes from `git describe --tags`, never from a project manifest.
+
+### /sync-skills (supporting)
+
+Natural-language wrapper over `scripts/sync-skills.sh` for distributing this plugin's skills to other agent harnesses. The user names a harness ("copy the skills to oh-my-pi"); the skill resolves the alias to a skills directory via `scripts/sync-targets.json` (mapped: `claude`, `oh-my-pi`, `opencode`) and runs the sync. Unknown aliases probe conventional paths (`~/.<name>/skills`, `~/.config/<name>/skills`), confirm with the user, and offer to persist the mapping. All mutation lives in the script — the skill parses intent, invokes, and relays.
 
 ### /session-stats (supporting)
 
@@ -107,6 +128,8 @@ One-shot conventional commit — bundled scripts (`gather.sh`/`commit.sh`) own a
 - **Bugfix (needs root-cause analysis)** → Phase 1 (as RCA) → 3 → 4 → 5 (skip architecture)
 - **Trivial bugfix (known cause, doesn't touch the design, under ~half a day)** → Phase 3 → 4 → 5 (skip both requirements and architecture)
 
+The QA gate (`/plan-qa` → `/execute-qa`) attaches to any scenario whose change has a running surface worth driving. Review and QA are independent gates — the developer chooses whether to run them sequentially or in parallel, and in what order.
+
 ## Install
 
 ```
@@ -119,9 +142,16 @@ One-shot conventional commit — bundled scripts (`gather.sh`/`commit.sh`) own a
 - Architecture (architecture-only, references its tasks via the `> **Tasks:**` header row): `/specs/architecture/ARCH-<N>-<slug>.md`
 - Tasks: `/specs/tasks/TASKS-<N>-<slug>.md` (sibling of ARCH; shares the `<N>-<slug>` stem)
 - Review reports: `/specs/reviews/CODE-REVIEW-*.md` (pipeline mode: `CODE-REVIEW-PIPELINE-<N>-<slug>.md`, derived from the ARCH filename)
+- QA specifications: `/specs/qa/QA-<N>-<slug>.md` (no-issue fallbacks: `QA-<slug>.md`, `QA-PR-<number>.md`)
+- QA results: `/specs/qa/QA-RESULTS-<N>-<slug>.md` (same stem as the plan, one appended section per run)
 - Context files: `/specs/context/<identifier>.md`
 - Branch naming: `{type}/{task-number}/{slug}`
 - Both `REQ-*.md`/`ARCH-*.md` artifacts also carry a `> **Issue:** #N` metadata row in their header, so an artifact's owning issue is recoverable even if the filename alone is ambiguous.
+
+**What's new in 6.0.0:** `/plan-qa` and `/execute-qa` ship as an optional QA gate, independent
+of `/review` — the developer decides whether to run them sequentially or in parallel, and in
+what order. `sync-skills` is now plugin-shipped (was repo-local in 5.x). The plugin description
+now mentions the QA gate. No migration is required.
 
 **Breaking change in 5.0.0:** artifacts written by `plan-requirements` / `plan-architecture` are
 now issue-prefixed (`REQ-<N>-<slug>.md` / `ARCH-<N>-<slug>.md`) when a task branch or linked

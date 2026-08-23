@@ -4,7 +4,7 @@
 > **Issue:** #[N] _(omit this row entirely when there is no linked issue — never `#none` or empty)_
 > **Phase:** 2 of 5 (System Architecture)
 > **Requirements source:** [path to REQ-*.md, or "Standalone brief — see Inferred Requirements"]
-> **Tasks:** TASKS-<N>-<slug>.md _(omit this row when there is no linked issue — match the `Issue:` row's presence/absence)_
+> **Tasks:** TASKS-<N>-<slug>.md _(use `TASKS-<slug>.md` when there is no linked issue — never omit this row; it is how implement and review resolve the task specs)_
 > **Type:** [feature | refactor | migration | infrastructure]
 
 ## Architecture Summary

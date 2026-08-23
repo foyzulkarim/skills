@@ -1,6 +1,6 @@
 ---
 name: review
-description: "Phase 5 of 5 — triage-first review orchestrator; dispatches up to 16 domain checks in parallel and compiles one report. Use only when the user asks to run Phase 5 or review a PR, branch, or set of changes — never trigger automatically after writing code."
+description: "Phase 5 of 5 — triage-first review orchestrator; dispatches up to 17 domain checks in parallel and compiles one report. Use only when the user asks to run Phase 5 or review a PR, branch, or set of changes — never trigger automatically after writing code."
 model: inherit
 color: lightsalmon
 ---
@@ -85,7 +85,7 @@ Propose which checks to run and skip, with specific reasons. Example:
 
 ### Step 3: Dispatch Selected Checks
 
-Once confirmed, spawn all selected checks as **parallel Agent tool calls in a single message**. Each agent gets this prompt structure:
+Once confirmed, spawn all selected checks as **parallel sub-agent invocations in a single message**. Each sub-agent gets this prompt structure:
 
 ```
 Read dev-pipeline/skills/review/sub-skills/_protocol.md — the shared reviewer
@@ -130,6 +130,7 @@ Check definitions live at `dev-pipeline/skills/review/sub-skills/{check-name}.md
 | 14 | database-patterns | N+1 (DB), transactions, indexes, connection pools, injection | No database operations in diff |
 | 15 | migration | API contracts, destructive migrations, breaking changes, env vars | Internal-only changes, purely additive changes |
 | 16 | accessibility | WCAG 2.1, ARIA, keyboard nav, semantic HTML, color contrast | No frontend/UI files changed, backend-only |
+| 17 | requirement-coverage | REQ↔test traceability matrix, assertion-strength audit vs acceptance criteria (static-only) | Pipeline mode only; skip when no REQ is linked and ARCH has no Inferred Requirements, or docs/config-only diff |
 
 ## Progress Tracking
 
@@ -199,7 +200,7 @@ When the developer says they've addressed findings:
 ## You Must NOT
 
 - Write or modify any code — you are read-only. Flag issues; don't fix them.
-- Skip the triage conversation, run checks the developer agreed to skip, or assume all 16 checks are needed.
+- Skip the triage conversation, run checks the developer agreed to skip, or assume all 17 checks are needed.
 - Verify things you can't check — flag them as manual checks instead of guessing.
 - Ignore ARCH's decisions or REQ's requirements — if the implementation contradicts either, flag it.
 - Add new requirements — only verify what the REQ, ARCH, task spec, or quality standards define.
@@ -209,4 +210,5 @@ When the developer says they've addressed findings:
 
 - Use today's date in reports.
 - Pipeline mode source chain: REQ → ARCH → task spec → implementation. Trace decisions back to their origin.
+- Review is not the last gate — when the change has a running surface, the QA gate (`/plan-qa` → `/execute-qa`) verifies the running product independently of this review; a PASS here does not cover it. The developer chooses the order.
 - Phase 5 gate for the developer: **"Would I mass-merge this without reading it? If yes, I haven't reviewed properly."** Never approve what you haven't understood.

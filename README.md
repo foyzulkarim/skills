@@ -1,16 +1,17 @@
 # foyzulkarim/skills — Claude Code Plugin Marketplace
 
-A plugin marketplace for [Claude Code](https://claude.ai/claude-code) with a structured 5-phase development pipeline.
+A plugin marketplace for [Claude Code](https://claude.ai/claude-code) with a structured 5-phase development pipeline and an optional QA gate that runs independently of review.
 
 ## Why use this?
 
-`dev-pipeline` turns a problem statement into a reviewed pull request through a structured 5-phase agentic workflow — with mode-appropriate verification baked into every task.
+`dev-pipeline` turns a problem statement into a reviewed pull request through a structured 5-phase agentic workflow (with an optional QA gate that runs independently of review) — mode-appropriate verification is baked into every task.
 
 What you get:
 
 - **Verified implementation** — every task ships with a verification mode (tdd, test-after, ui, or checklist) matched to its shape.
 - **Parallel lanes** — `move-to-worktree` lets multiple Phase 4 streams run side-by-side without stepping on each other.
-- **Triage-first review** — `/review` dispatches up to 16 domain checks in parallel and writes a single report.
+- **Triage-first review** — `/review` dispatches up to 17 domain checks in parallel and writes a single report.
+- **Manual QA as a first-class gate** — `/plan-qa` turns the specs and the diff into an executable QA specification; `/execute-qa` drives it against the running product (browser + shell) and writes an evidence-backed results artifact.
 
 For solo devs and small teams who want agent-driven development to ship with the same rigor they'd want from a human reviewer.
 
@@ -28,11 +29,11 @@ For solo devs and small teams who want agent-driven development to ship with the
 
 ## dev-pipeline
 
-A complete development workflow built on a 5-phase agentic framework:
+A complete development workflow built on a 5-phase agentic framework, with an optional QA gate that runs independently of review:
 
 ```
   ┌────────────────────────────────────────────────────────────┐
-  │  Pre: /start-task → issue → branch + context  (opt-in)     │
+  │  Pre: /start-task → issue → branch + context  (opt-in)    │
   └──────────────────────────┬─────────────────────────────────┘
                              │
                              ▼
@@ -57,13 +58,21 @@ A complete development workflow built on a 5-phase agentic framework:
   ┌────────────────────────────────────────────────────────────┐
   │  Phase 4     /implement                                    │
   │  Output: code + verification evidence                      │
-  └──────────────────────────┬─────────────────────────────────┘
-                             │
-                             ▼
-  ┌────────────────────────────────────────────────────────────┐
-  │  Phase 5     /review                                       │
-  │  Output: PR                                                │
-  └────────────────────────────────────────────────────────────┘
+  └──────────────┬─────────────────────────────┬───────────────┘
+                 │                             │
+                 ▼                             ▼
+  ┌───────────────────────────┐  ┌───────────────────────────┐
+  │  Phase 5   /review        │  │  QA gate (when applicable)│
+  │  Output: PR + report      │  │  /plan-qa                 │
+  │                           │  │    ↓                      │
+  │                           │  │  /execute-qa              │
+  │                           │  │  Output: QA-RESULTS-*.md  │
+  └──────────────┬────────────┘  └─────────────┬─────────────┘
+                 └───────────────┬─────────────┘
+                                 ▼
+                               merge
+        (QA gate is skipped when the change has
+         no running surface worth driving)
 
   ┌────────────────────────────────────────────────────────────┐
   │  /commit → use at any stage                                │
@@ -76,9 +85,12 @@ A complete development workflow built on a 5-phase agentic framework:
 | [/plan-architecture](./dev-pipeline/skills/plan-architecture) | 2 | Design HOW — collaborative system design producing `ARCH-*.md`. |
 | [/generate-tasks](./dev-pipeline/skills/generate-tasks) | 3 | Emit verification-ready task specs as `TASKS-<N>-<slug>.md` (sibling file alongside ARCH), each with a verification mode (tdd, test-after, ui, or checklist). |
 | [/implement](./dev-pipeline/skills/implement) | 4 | Mode-routed implementation from `TASKS-<N>-<slug>.md` (with ARCH for context); tdd, test-after, ui, or checklist per task. Collaborative or autonomous, one commit per task. |
-| [/review](./dev-pipeline/skills/review) | 5 | Triage-first code review — up to 16 checks, pipeline or general mode. |
+| [/review](./dev-pipeline/skills/review) | 5 | Triage-first code review — up to 17 checks, pipeline or general mode. |
+| [/plan-qa](./dev-pipeline/skills/plan-qa) | parallel | Interview-driven QA planning — turns specs + diff into an executable QA spec (`QA-*.md`) with falsifiable expectations, guards, and operator handoffs. Runs in parallel with Phase 5. |
+| [/execute-qa](./dev-pipeline/skills/execute-qa) | parallel | Executes a QA spec as written — mechanical asserts plus evidence-backed judgment against the plan's criteria; writes `QA-RESULTS-*.md`. |
 | [/start-task](./dev-pipeline/skills/start-task) | pre-1 | One-shot branch bootstrap from a GitHub issue, Jira key, local spec, or ad-hoc brief — zero confirmation by default. |
 | [/commit](./dev-pipeline/skills/commit) | any | One-shot conventional commit — script-curated context, zero confirmation by default, `ask` mode for review/selective staging. |
+| [/sync-skills](./dev-pipeline/skills/sync-skills) | any | Copy this repo's skills into another harness's skills directory by name — resolves the harness alias via `scripts/sync-targets.json`, with a discovery fallback for unmapped aliases. |
 | [/session-stats](./dev-pipeline/skills/session-stats) | any | Terminal dashboard of the current session — tokens, cache, cost, context %, tool-call histogram. |
 | [/setup-cost-tracking](./dev-pipeline/skills/setup-cost-tracking) | any | Install per-session cost tracking by wiring logger scripts into the Claude Code statusline and hooks. |
 | [/move-to-worktree](./dev-pipeline/skills/move-to-worktree) | parallel Phase 4 | Park the current branch in `.worktrees/<issue#>` to open a parallel lane. Requires `.worktrees/` gitignored. |
@@ -91,6 +103,8 @@ A complete development workflow built on a 5-phase agentic framework:
 - **Greenfield** → Phase 1 → 2 → 3 → 4 → 5
 - **New feature in an existing system** → Phase 2 → 3 → 4 → 5 (skip requirements; brief is enough)
 - **Bugfix** → Phase 1 (as RCA) → 3 → 4 → 5 (skip architecture)
+
+The QA gate (`/plan-qa` → `/execute-qa`) attaches to any scenario whose change has a running surface worth driving. Review and QA are independent gates — the developer chooses whether to run them sequentially or in parallel, and in what order.
 
 ### Case studies
 
@@ -120,7 +134,14 @@ dev-pipeline/
 │   ├── implement/
 │   │   └── modes/             # tdd, test-after, ui, checklist
 │   ├── review/
-│   │   └── sub-skills/        # 16 review check files + shared _protocol.md, dispatched by /review
+│   │   └── sub-skills/        # 17 review check files + shared _protocol.md, dispatched by /review
+│   ├── plan-qa/
+│   │   ├── SKILL.md
+│   │   └── artifact-template.md
+│   ├── execute-qa/
+│   │   ├── SKILL.md
+│   │   └── artifact-template.md
+│   ├── sync-skills/
 │   ├── commit/
 │   ├── session-stats/
 │   ├── setup-cost-tracking/
@@ -154,7 +175,7 @@ Each copy gets a `.synced-from` marker so the script only touches directories it
 
 **Harness targets:** `scripts/sync-targets.json` maps harness aliases to skills dirs (`~` is expanded). Current entries: `claude` → `~/.claude/skills`, `oh-my-pi` → `~/.omp/skills`, `opencode` → `~/.config/opencode/skills`.
 
-**Prefer natural language?** The repo-local `/sync-skills` skill (lives under `.claude/skills/sync-skills/`, not shipped with the plugin) wraps the script for you — say *"copy `commit` and `implement` to oh-my-pi"* and it handles alias resolution and discovery of new harnesses.
+**Prefer natural language?** The `/sync-skills` skill wraps the script for you — say *"copy `commit` and `implement` to oh-my-pi"* and it handles alias resolution and discovery of new harnesses.
 
 **Typical workflow:**
 ```bash

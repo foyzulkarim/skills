@@ -4,19 +4,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-A Claude Code plugin marketplace (`foyzulkarim/skills`) containing the `dev-pipeline` plugin — a collection of AI skills implementing a structured **5-phase development pipeline**.
+A Claude Code plugin marketplace (`foyzulkarim/skills`) containing the `dev-pipeline` plugin — a collection of AI skills implementing a structured **5-phase development pipeline with an optional QA gate that runs independently of review**.
 
 - **Current version:** see `dev-pipeline/.claude-plugin/plugin.json` — never restate it here.
 - **Language:** All documentation and comments are in English.
 - **No build system, test runner, or compiled code.** The entire value is in the `SKILL.md` files and bundled bash helper scripts.
 
-### The 5-Phase Pipeline
+### The 5-Phase Pipeline + QA Gate
 
 1. **Requirement Engineering** — capture WHAT and WHY (problem space)
 2. **System Architecture** — design HOW (solution space)
 3. **Task Generation** — break architecture into verification-ready tasks
 4. **Implementation** — mode-appropriate verification per task (tdd, test-after, ui, checklist)
-5. **Review & Merge** — verify before merge
+5. **Review** — verify the code before merge
+
+After Phase 4, two **independent merge gates** may run in parallel:
+
+- **Review** (Phase 5) — reads the code
+- **QA gate** (when applicable) — `/plan-qa` then `/execute-qa` drives the running product
+
+The QA gate is skipped when the change has no running surface worth driving (docs, script refactors). It is not a numbered phase and does not run in sequence with Phase 5.
 
 ## Plugin structure
 
@@ -41,6 +48,9 @@ dev-pipeline/
     │   ├── SKILL.md
     │   ├── gather.sh
     │   └── commit.sh
+    ├── execute-qa/
+    │   ├── SKILL.md
+    │   └── artifact-template.md
     ├── finish-worktree/
     │   ├── SKILL.md
     │   └── finish-worktree.sh
@@ -51,10 +61,14 @@ dev-pipeline/
     ├── plan-architecture/SKILL.md
     │   ├── file-tree.sh
     │   └── search-codebase.sh
+    ├── plan-qa/
+    │   ├── SKILL.md
+    │   └── artifact-template.md
     ├── plan-requirements/SKILL.md
     ├── release-notes/SKILL.md
+    ├── sync-skills/SKILL.md
     ├── review/SKILL.md
-    │   ├── sub-skills/                  ← 16 review check files + _protocol.md, dispatched by /review
+    │   ├── sub-skills/                  ← 17 review check files + _protocol.md, dispatched by /review
     │   └── report-template.md
     ├── session-stats/SKILL.md
     │   └── dashboard.sh
@@ -102,13 +116,21 @@ When adding a new skill:
   ┌────────────────────────────────────────────────────────────┐
   │  Phase 4     /implement                                    │
   │  Output: code + verification evidence                      │
-  └──────────────────────────┬─────────────────────────────────┘
-                             │
-                             ▼
-  ┌────────────────────────────────────────────────────────────┐
-  │  Phase 5     /review                                       │
-  │  Output: PR                                                │
-  └────────────────────────────────────────────────────────────┘
+  └──────────────┬─────────────────────────────┬───────────────┘
+                 │                             │
+                 ▼                             ▼
+  ┌───────────────────────────┐  ┌───────────────────────────┐
+  │  Phase 5   /review        │  │  QA gate (when applicable)│
+  │  Output: PR + report      │  │  /plan-qa                 │
+  │                           │  │    ↓                      │
+  │                           │  │  /execute-qa              │
+  │                           │  │  Output: QA-RESULTS-*.md  │
+  └──────────────┬────────────┘  └─────────────┬─────────────┘
+                 └───────────────┬─────────────┘
+                                 ▼
+                               merge
+        (QA gate is skipped when the change has
+         no running surface worth driving)
 
   ┌────────────────────────────────────────────────────────────┐
   │  /commit → conventional commit (use at any stage)          │
@@ -121,11 +143,14 @@ When adding a new skill:
 - **plan-architecture** (Phase 2) — Collaborative system design. Reads REQ when present, runs from a brief otherwise. Bundled scripts (`file-tree.sh`, `search-codebase.sh`) detect project structure and tech stack. Outputs `/specs/architecture/ARCH-<N>-<slug>.md` (or `ARCH-<slug>.md` with no linked issue), architecture-only; the task specs are emitted separately by generate-tasks as `TASKS-<N>-<slug>.md`.
 - **generate-tasks** (Phase 3) — Reads ARCH (and the linked REQ) and emits verification-ready task specs as `TASKS-<N>-<slug>.md` alongside ARCH, each with a verification mode (tdd, test-after, ui, or checklist) and a matching verification plan. ARCH's `> **Tasks:**` header row names the file.
 - **implement** (Phase 4) — Implements tasks from `TASKS-<N>-<slug>.md` (with ARCH for context), routing each to its verification mode (bundled `modes/*.md`, loaded per task): tdd (RED-GREEN-REFACTOR), test-after (increment then cover), ui (evidence-backed human checklist), checklist (command outcomes). Collaborative by default; `auto` runs one task or the whole plan behind a single approval gate, with one task-scoped commit per task.
-- **review** (Phase 5) — Triage-first review with up to 16 domain-specific checks. Two modes: pipeline (verifies task implementation against ARCH/REQ, including each task's verification-mode evidence) and general (PR/branch/staged). Checks are plain reference files (`sub-skills/<check>.md`, **not independently invocable skills**) dispatched via parallel Agent tool calls; each agent reads the shared `sub-skills/_protocol.md` (role, false-positive rules, tracing protocol, output format) plus its check file, and receives a filtered diff, tech stack summary, `CLAUDE.md` content, and (pipeline mode) ARCH + REQ content.
+- **review** (Phase 5) — Triage-first review with up to 17 domain-specific checks. Two modes: pipeline (verifies task implementation against ARCH/REQ, including each task's verification-mode evidence) and general (PR/branch/staged). Checks are plain reference files (`sub-skills/<check>.md`, **not independently invocable skills**) dispatched via parallel Agent tool calls; each agent reads the shared `sub-skills/_protocol.md` (role, false-positive rules, tracing protocol, output format) plus its check file, and receives a filtered diff, tech stack summary, `CLAUDE.md` content, and (pipeline mode) ARCH + REQ content.
+- **plan-qa** (post-implementation QA gate, independent of review) — QA planning. The developer chooses whether to run it before, alongside, or after `/review`. Interviews the developer (walk the artifacts → mine the developer → confirm) to turn the specs and the diff into an executable QA specification: cases with tagged steps (`[bash]`/`[browser]`), `Guard:`-codified project traps, a Coverage Map over every changed file, identities, preconditions (P0 = automated suite), and named operator handoffs. Every Expected line is falsifiable — `[assert]` (machine-verifiable) or `[judge]` with an explicit pass/fail criterion fixed at plan time. Outputs `/specs/qa/QA-<N>-<slug>.md`. Declaration skill: nothing project-specific is baked in; scenario types are open-ended (browser + shell today; storybook, performance, accessibility later). Skip when the change has no running surface worth driving.
+- **execute-qa** (post-implementation QA gate, independent of review) — Executes a QA specification as written: preconditions first (red P0 = no run), cases in order with their tagged drivers and guards, verbatim operator handoffs. `[assert]` lines verify mechanically; `[judge]` lines are judged only against the plan's written criterion, with evidence quoted and ambiguity escalating to PARTIAL — never a guessed PASS. Writes verdicts (PASS / PASS (judged) / FAIL / PARTIAL / SKIPPED) and findings to `/specs/qa/QA-RESULTS-<N>-<slug>.md`, appending one section per run; never modifies the plan.
 
 ### Supporting skills (non-phase)
 
 - **start-task** — Pre-pipeline bootstrap, zero-confirmation by default. Detects the task source from the args (GitHub issue number, Jira key, local spec path, or ad-hoc), fetches the task, derives `{type}/{number}/{slug}`, then a bundled script (`gh-start-task.sh`, GitHub path) or manual git steps sync main, create and push the branch, and write `specs/context/<id>.md`. Rejects local spec paths containing `..` to prevent path traversal.
+- **sync-skills** — Natural-language wrapper over `scripts/sync-skills.sh`. The user names a harness ("copy the skills to oh-my-pi"); the skill resolves it to a skills directory via `scripts/sync-targets.json` and runs the sync. Maps canonical aliases (`claude`, `oh-my-pi`, `opencode`) directly; unknown aliases probe conventional paths, confirm with the user, and offer to persist the mapping. Use only when the user asks to copy/sync/push the skills to another harness — never trigger automatically.
 - **commit** — Standalone one-shot conventional commit. Bundled scripts (`gather.sh`/`commit.sh`) own all git inspection and mutation; the diff is adaptively curated in bash so the LLM drafts the message in a single pass. Zero-confirmation by default; `ask` argument enables draft confirmation and selective staging. Automatically excludes files matching sensitive patterns (`.env`, `secret`, `credential`, `token`, `api-key`, `private-key`, `password`) from staging, and unstages embedded git repositories (a nested `.worktrees/<N>` or stray clone that `git add -A` would commit as a `160000` gitlink) while preserving `.gitmodules`-registered submodules.
 - **session-stats** — Terminal dashboard of the current session. A bundled script (`dashboard.sh`) locates the transcript JSONL via `CLAUDE_CODE_SESSION_ID`, aggregates tokens/cost/tools with `jq`, and prints cards; the LLM only relays the output verbatim.
 - **setup-cost-tracking** — One-time system-level setup for per-session cost capture. Wires logger scripts into the Claude Code statusline and Stop hooks, **preserving any existing user configuration**. Idempotent; safe to re-run. Additive only — backs up settings files before editing and records the original command for reversal.
@@ -140,6 +165,8 @@ When adding a new skill:
 - **New feature** in an existing system — Phase 2 → 3 → 4 → 5 (skip requirements; brief is enough)
 - **Bugfix** — Phase 1 (as RCA) → 3 → 4 → 5 (skip architecture)
 
+The QA gate (`/plan-qa` → `/execute-qa`) attaches to any scenario whose change has a running surface worth driving. Review and QA are independent gates — the developer chooses whether to run them sequentially or in parallel, and in what order.
+
 ### Artifact paths
 
 - `/specs/requirements/REQ-<N>-<slug>.md` — produced by plan-requirements; `<N>` is the linked issue number, omitted (along with the `Issue:` row) when there is none
@@ -147,6 +174,8 @@ When adding a new skill:
 - `/specs/tasks/TASKS-<N>-<slug>.md` — produced by generate-tasks; sibling of ARCH, shares the `<N>-<slug>` stem
 - `/specs/context/<identifier>.md` — produced by start-task
 - `/specs/reviews/CODE-REVIEW-*.md` — produced by review; pipeline mode saves as `CODE-REVIEW-PIPELINE-<N>-<slug>.md` (derived from the ARCH filename), general mode as `CODE-REVIEW-{PR,BRANCH,STAGED,DIFF}-*.md`
+- `/specs/qa/QA-<N>-<slug>.md` — produced by plan-qa; the executable QA specification (no-issue fallbacks: `QA-<slug>.md`, `QA-PR-<number>.md`)
+- `/specs/qa/QA-RESULTS-<N>-<slug>.md` — produced by execute-qa; same stem as the plan with a `RESULTS` infix, one appended section per run — results never go into the plan file
 - Existing `REQ-<slug>.md` / `ARCH-<slug>.md` files from before 5.0.0 keep working — both naming shapes are read indefinitely, no migration required. Pre-split ARCH docs with embedded `# Tasks` also keep working (implement's legacy detection falls back to the embedded section; run `/generate-tasks` to migrate)
 
 **Important:** These artifacts merge to `master` with their feature branch and are retired to the GitHub wiki afterwards, once the PR has merged and the issue has closed — run `/archive-issue <issue#>` then.
@@ -231,7 +260,7 @@ The `scripts/sync-skills.sh` helper copies repo skills into `~/.claude/skills/` 
 | `scripts/sync-skills.sh list-targets` | Print harness aliases from `scripts/sync-targets.json` and their resolved dirs |
 | `scripts/sync-skills.sh push --force <skill>` | Overwrite even an unmanaged (unmarked) directory at the target |
 
-**Harness targets:** `scripts/sync-targets.json` maps harness aliases → skills dirs (`~` allowed). The repo-local `/sync-skills` skill (`.claude/skills/sync-skills/`, not shipped with the plugin) turns natural-language requests like "copy the skills to oh-my-pi" into the right `--to` invocation, and on an unmapped harness probes conventional paths, confirms, and offers to add the mapping.
+**Harness targets:** `scripts/sync-targets.json` maps harness aliases → skills dirs (`~` allowed). The `/sync-skills` skill turns natural-language requests like "copy the skills to oh-my-pi" into the right `--to` invocation, and on an unmapped harness probes conventional paths, confirms, and offers to add the mapping.
 
 ### Running skill scripts directly
 

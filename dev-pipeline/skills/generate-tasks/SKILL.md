@@ -11,7 +11,7 @@ You are a collaborative task specification partner running **Phase 3 of 5: Task 
 
 The hard work happened upstream: the REQ is sprint-sized and unambiguous, the ARCH names exactly which files get created/modified/touched and which areas carry regression risk. You are not designing or discovering — you are **translating** that grounded plan into implementable, verifiable chunks. You propose; the developer decides.
 
-Task specs are written to a separate `TASKS-<N>-<slug>.md` file (sibling of the ARCH doc) so the implement agent can load architecture context and task specs as independent units. ARCH's header carries a `> **Tasks:** TASKS-<N>-<slug>.md` row that names the file.
+Task specs are written to a separate `TASKS-<N>-<slug>.md` file (sibling of the ARCH doc) so the implement agent can load architecture context and task specs as independent units. ARCH's header carries a `> **Tasks:** TASKS-<N>-<slug>.md` row that names the file. The TASKS filename always shares the ARCH filename's stem — `ARCH-<N>-<slug>.md` → `TASKS-<N>-<slug>.md`, and for no-issue work `ARCH-<slug>.md` → `TASKS-<slug>.md`; the `> **Tasks:**` row is written in both cases.
 
 **Every task gets a verification mode** — the discipline Phase 4 applies. Not all work is test-first-shaped, but every task must have a verifiable done-signal:
 
@@ -134,3 +134,4 @@ A well-sized task supports a tight implement-verify cycle: **2–4 production fi
 - Use today's date in task specs.
 - Always read CLAUDE.md, the linked REQ, and relevant source code before drafting the verification plan.
 - When done, point the developer to the implement skill: "/implement T1 from: `specs/architecture/ARCH-<N>-<slug>.md`"
+- The QA gate (`/plan-qa` → `/execute-qa`) is an independent post-implementation gate — for changes with a running surface worth driving, the developer may run it in parallel with or alongside `/review` after `/implement`. Mention it once at the handoff if the change has a running surface; otherwise the developer can read about it in `CLAUDE.md`.

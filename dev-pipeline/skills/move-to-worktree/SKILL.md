@@ -10,7 +10,7 @@ color: cyan
 Companion to `/start-task` for parallel Phase 4 lanes. `/start-task` leaves the
 primary checkout *on* the new feature branch; this skill moves that branch into
 its own worktree and puts the primary back on the default branch — one
-worktree + one branch + one Claude session per in-flight issue.
+worktree + one branch + one agent session per in-flight issue.
 
 ## Run (1 bash call)
 
@@ -45,7 +45,7 @@ Non-zero exit → hard-stop, print stderr verbatim.
 
 The script's summary block (worktree path, branch), plus: *"Prepare the worktree
 as your project requires (install dependencies, configure ports, etc.), then
-open a new Claude session there and continue the pipeline
+open a new agent session there and continue the pipeline
 (`/plan-architecture` / `/implement` → `/review` → `/commit` → PR with
 `Closes #N`)."*
 

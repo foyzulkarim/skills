@@ -1,6 +1,6 @@
 ---
 name: archive-issue
-description: "Retire a closed issue's working artifacts out of specs/ into the GitHub wiki. Use only when the user asks to archive a finished issue, empty out specs/ for a done task, or move an issue's requirements/architecture/tasks/review docs to the wiki."
+description: "Retire a closed issue's working artifacts out of specs/ into the GitHub wiki. Use only when the user asks to archive a finished issue, empty out specs/ for a done task, or move an issue's requirements/architecture/tasks/review/QA docs to the wiki."
 model: inherit
 color: gold
 ---
@@ -8,14 +8,14 @@ color: gold
 # Archive Issue
 
 Once an issue closes, GitHub is the source of truth for its scope — but its requirements,
-architecture, and code-review docs under `specs/` still hold reasoning worth keeping. This
+architecture, code-review, and QA docs under `specs/` still hold reasoning worth keeping. This
 skill retires them out of `specs/` straight into the GitHub wiki. **Nothing archived is ever
 committed to the main repo** — the wiki is the only place this content lives.
 
 This skill resolves everything from the issue number alone via `gh issue view` plus the
-artifact naming contract (`REQ-<N>-<slug>.md` / `ARCH-<N>-<slug>.md` / `TASKS-<N>-<slug>.md`
-and the `> **Issue:** #N` metadata row) that `plan-requirements`, `plan-architecture`, and
-`generate-tasks` write. There is no separate anchor file — GitHub already holds the title,
+artifact naming contract (`REQ-<N>-<slug>.md` / `ARCH-<N>-<slug>.md` / `TASKS-<N>-<slug>.md` /
+`QA-<N>-<slug>.md` / `QA-RESULTS-<N>-<slug>.md` and the `> **Issue:** #N` metadata row) that
+`plan-requirements`, `plan-architecture`, `generate-tasks`, `plan-qa`, and `execute-qa` write. There is no separate anchor file — GitHub already holds the title,
 URL, and state.
 
 **Declared dependency:** matching review reports to this issue reads the `Target` metadata
@@ -64,6 +64,8 @@ archive" while files for `<N>` remain unmatched under `specs/`:
 | `specs/tasks/TASKS-<N>-*.md` | same three-tier fallback as REQ (the TASKS file shares the `<N>-<slug>` stem with ARCH; ARCH's `> **Tasks:**` header row names it explicitly when present) |
 | `specs/reviews/CODE-REVIEW-PIPELINE-<N>-*.md` | glob — the filename already carries `<N>` because it derives from the ARCH filename (`review/SKILL.md`'s pipeline-mode save step) |
 | `specs/reviews/CODE-REVIEW-{PR,BRANCH,STAGED,DIFF}-*.md` | read **every** file's `Target` row (`review/report-template.md:8`) and match it to issue `<N>` — never by assuming a PR number equals the issue number, and never by directory. Branch-mode: `Target` is a branch name — match if it is `{type}/<N>/{slug}`. PR-mode: `Target` is a PR URL — resolve its head branch (`gh pr view <PR#> --json headRefName`) and match that the same way. Staged/diff-mode reports carry no branch reference and can only be attributed if the report content otherwise names issue `<N>` explicitly |
+| `specs/qa/QA-<N>-*.md` | same three-tier fallback as REQ (glob → `> **Issue:** #<N>` header row → slug match). A `QA-PR-<number>.md` fallback (general-mode plan with no issue) attributes like a PR-mode review report: resolve the PR's head branch via `gh pr view <number> --json headRefName` and match `{type}/<N>/{slug}` |
+| `specs/qa/QA-RESULTS-<N>-*.md` | shares its plan's stem with a `RESULTS` infix (`QA-21-billing.md` → `QA-RESULTS-21-billing.md`) — attribute it exactly as its plan resolved; a results file whose plan is unattributed stays unattributed too |
 
 Most issues (bugs, chores, small enhancements) never had a REQ/ARCH/review doc — only archive
 what actually exists. Don't invent placeholder pages for missing docs, and don't rename
@@ -112,7 +114,7 @@ wiki's git tree.
 
 ## Step 4 — Write the sub-pages
 
-Carry the REQ/ARCH/TASKS/review content over largely as-is — these are already well-formed
+Carry the REQ/ARCH/TASKS/review/QA content over largely as-is — these are already well-formed
 docs; don't rewrite them, just relocate them into `.wiki/issue-NNN/` **under their original
 filenames** and drop anything that's now stale (e.g. a REQ doc's "next step: run
 `/plan-architecture`" footer no longer applies once archived). Only for documents that
@@ -132,7 +134,7 @@ number — no grouping model:
 ## Step 6 — Retire the sources from the main repo
 
 `git rm`, in the **main repo** (not `.wiki/`): `specs/context/<N>.md`, whichever of
-`specs/requirements/`/`specs/architecture/`/`specs/tasks/` were mirrored, and every review
+`specs/requirements/`/`specs/architecture/`/`specs/tasks/`/`specs/qa/` were mirrored, and every review
 report Step 2 successfully attributed — **excluding** anything named in the unresolved
 block. Commit this separately from the wiki push in Step 7 — they're two different repos
 with two different histories.
