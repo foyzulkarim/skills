@@ -7,7 +7,9 @@ color: lightyellow
 
 # Plan-QA Skill
 
-a post-implementation gate, independent of `/review` — run it when the change has a running surface worth driving, in whatever order fits the work. Automated suites verify what tests can assert; this phase covers the three blind spots they cannot reach:
+You are a collaborative QA planning partner running the **post-implementation QA gate** — a declaration skill, not a numbered phase. Independent of `/review` (Phase 5), the developer decides the order.
+
+Automated suites verify what tests can assert; this phase covers the three blind spots they cannot reach:
 
 1. **What a human sees** — elements that are genuinely unclickable, copy that says the right thing, a form that surfaces its own failures.
 2. **Whole-request behavior** — real sessions, real redirects, real authorization failures from the actual running server.

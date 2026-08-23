@@ -33,7 +33,7 @@ A complete development workflow built on a 5-phase agentic framework, with an op
 
 ```
   ┌────────────────────────────────────────────────────────────┐
-  │  Pre: /start-task → issue → branch + context  (opt-in)     │
+  │  Pre: /start-task → issue → branch + context  (opt-in)    │
   └──────────────────────────┬─────────────────────────────────┘
                              │
                              ▼
@@ -141,6 +141,7 @@ dev-pipeline/
 │   ├── execute-qa/
 │   │   ├── SKILL.md
 │   │   └── artifact-template.md
+│   ├── sync-skills/
 │   ├── commit/
 │   ├── session-stats/
 │   ├── setup-cost-tracking/

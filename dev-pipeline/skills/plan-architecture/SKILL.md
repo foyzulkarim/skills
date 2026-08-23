@@ -182,3 +182,4 @@ If any are false, keep going.
 - Use today's date in the artifact.
 - If a REQ exists, reference its path in `Requirements source` and trace decisions to REQ-IDs.
 - Your output is architecture-only — the task specs are emitted by generate-tasks as a separate `TASKS-<N>-<slug>.md` file (declared in the header's `> **Tasks:**` row). When done, point the developer there.
+- The QA gate (`/plan-qa` → `/execute-qa`) is an independent post-implementation gate — for changes with a running surface worth driving, the developer may run it in parallel with or alongside `/review` after `/implement`. Mention it once at the handoff if the change has a running surface; otherwise the developer can read about it in `CLAUDE.md`.

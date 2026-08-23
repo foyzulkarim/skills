@@ -66,6 +66,7 @@ dev-pipeline/
     │   └── artifact-template.md
     ├── plan-requirements/SKILL.md
     ├── release-notes/SKILL.md
+    ├── sync-skills/SKILL.md
     ├── review/SKILL.md
     │   ├── sub-skills/                  ← 17 review check files + _protocol.md, dispatched by /review
     │   └── report-template.md
@@ -149,6 +150,7 @@ When adding a new skill:
 ### Supporting skills (non-phase)
 
 - **start-task** — Pre-pipeline bootstrap, zero-confirmation by default. Detects the task source from the args (GitHub issue number, Jira key, local spec path, or ad-hoc), fetches the task, derives `{type}/{number}/{slug}`, then a bundled script (`gh-start-task.sh`, GitHub path) or manual git steps sync main, create and push the branch, and write `specs/context/<id>.md`. Rejects local spec paths containing `..` to prevent path traversal.
+- **sync-skills** — Natural-language wrapper over `scripts/sync-skills.sh`. The user names a harness ("copy the skills to oh-my-pi"); the skill resolves it to a skills directory via `scripts/sync-targets.json` and runs the sync. Maps canonical aliases (`claude`, `oh-my-pi`, `opencode`) directly; unknown aliases probe conventional paths, confirm with the user, and offer to persist the mapping. Use only when the user asks to copy/sync/push the skills to another harness — never trigger automatically.
 - **commit** — Standalone one-shot conventional commit. Bundled scripts (`gather.sh`/`commit.sh`) own all git inspection and mutation; the diff is adaptively curated in bash so the LLM drafts the message in a single pass. Zero-confirmation by default; `ask` argument enables draft confirmation and selective staging. Automatically excludes files matching sensitive patterns (`.env`, `secret`, `credential`, `token`, `api-key`, `private-key`, `password`) from staging, and unstages embedded git repositories (a nested `.worktrees/<N>` or stray clone that `git add -A` would commit as a `160000` gitlink) while preserving `.gitmodules`-registered submodules.
 - **session-stats** — Terminal dashboard of the current session. A bundled script (`dashboard.sh`) locates the transcript JSONL via `CLAUDE_CODE_SESSION_ID`, aggregates tokens/cost/tools with `jq`, and prints cards; the LLM only relays the output verbatim.
 - **setup-cost-tracking** — One-time system-level setup for per-session cost capture. Wires logger scripts into the Claude Code statusline and Stop hooks, **preserving any existing user configuration**. Idempotent; safe to re-run. Additive only — backs up settings files before editing and records the original command for reversal.

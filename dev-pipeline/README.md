@@ -99,11 +99,15 @@ Teardown counterpart to `/move-to-worktree`, run after an issue's PR has squash-
 
 ### /archive-issue (supporting)
 
-Retires a closed issue's `specs/` artifacts (context, requirements, architecture, review reports) into the GitHub wiki, once GitHub itself becomes the source of truth for the issue. Resolves everything from the issue number via `gh issue view` and the artifact naming contract below — no separate anchor file. Bootstraps the wiki index on first use; the wiki push requires explicit confirmation.
+Retires a closed issue's `specs/` artifacts (context, requirements, architecture, tasks, review reports, QA plans, QA results) into the GitHub wiki, once GitHub itself becomes the source of truth for the issue. Resolves everything from the issue number via `gh issue view` and the artifact naming contract below — no separate anchor file. Bootstraps the wiki index on first use; the wiki push requires explicit confirmation.
 
 ### /release-notes (supporting)
 
 Drafts a changelog entry for the next release by summarizing commits since the last git tag, suggests the next semver version, and prepends the entry to `CHANGELOG.md`. Version baseline comes from `git describe --tags`, never from a project manifest.
+
+### /sync-skills (supporting)
+
+Natural-language wrapper over `scripts/sync-skills.sh` for distributing this plugin's skills to other agent harnesses. The user names a harness ("copy the skills to oh-my-pi"); the skill resolves the alias to a skills directory via `scripts/sync-targets.json` (mapped: `claude`, `oh-my-pi`, `opencode`) and runs the sync. Unknown aliases probe conventional paths (`~/.<name>/skills`, `~/.config/<name>/skills`), confirm with the user, and offer to persist the mapping. All mutation lives in the script — the skill parses intent, invokes, and relays.
 
 ### /session-stats (supporting)
 
@@ -143,6 +147,11 @@ The QA gate (`/plan-qa` → `/execute-qa`) attaches to any scenario whose change
 - Context files: `/specs/context/<identifier>.md`
 - Branch naming: `{type}/{task-number}/{slug}`
 - Both `REQ-*.md`/`ARCH-*.md` artifacts also carry a `> **Issue:** #N` metadata row in their header, so an artifact's owning issue is recoverable even if the filename alone is ambiguous.
+
+**What's new in 6.0.0:** `/plan-qa` and `/execute-qa` ship as an optional QA gate, independent
+of `/review` — the developer decides whether to run them sequentially or in parallel, and in
+what order. `sync-skills` is now plugin-shipped (was repo-local in 5.x). The plugin description
+now mentions the QA gate. No migration is required.
 
 **Breaking change in 5.0.0:** artifacts written by `plan-requirements` / `plan-architecture` are
 now issue-prefixed (`REQ-<N>-<slug>.md` / `ARCH-<N>-<slug>.md`) when a task branch or linked

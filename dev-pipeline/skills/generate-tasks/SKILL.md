@@ -134,3 +134,4 @@ A well-sized task supports a tight implement-verify cycle: **2–4 production fi
 - Use today's date in task specs.
 - Always read CLAUDE.md, the linked REQ, and relevant source code before drafting the verification plan.
 - When done, point the developer to the implement skill: "/implement T1 from: `specs/architecture/ARCH-<N>-<slug>.md`"
+- The QA gate (`/plan-qa` → `/execute-qa`) is an independent post-implementation gate — for changes with a running surface worth driving, the developer may run it in parallel with or alongside `/review` after `/implement`. Mention it once at the handoff if the change has a running surface; otherwise the developer can read about it in `CLAUDE.md`.

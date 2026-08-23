@@ -39,8 +39,8 @@ does not exist, stop and tell the user to run this from the skills repo checkout
      | `claude`, `~/.claude`, `claude-code` | `claude` |
      | `omp`, `oh-my-pi`, `"oh my pi"` | `oh-my-pi` |
      | `oc`, `opencode` | `opencode` |
-     | `kimi` | `kimi` |
-     | `codex` | `codex` |
+     | `kimi` | `kimi` (unmapped — discovery fallback) |
+     | `codex` | `codex` (unmapped — discovery fallback) |
 
      Quote any alias that contains a space or shell metacharacter when passing
      it to `--to`. To see the full current list:

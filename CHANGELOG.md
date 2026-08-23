@@ -1,5 +1,48 @@
 # Changelog
 
+## v6.0.0 — 2026-08-23
+
+### Features
+
+- **`/plan-qa`** — post-implementation QA planning. Independent of `/review` (the developer
+  chooses whether to run them sequentially or in parallel, and in what order). Interviews the
+  developer to turn the specs and the diff into an executable QA specification: cases with
+  `[bash]` / `[browser]` tagged steps, project traps codified as `Guard:`s on the exact steps
+  that need them, a Coverage Map over every changed file, identities, preconditions, and
+  named operator handoffs for the few actions an agent genuinely cannot do. Every Expected
+  line is falsifiable — `[assert]` (machine-verifiable) or `[judge]` with an explicit pass/fail
+  criterion fixed at plan time. Produces `/specs/qa/QA-<N>-<slug>.md`. Skip when the change
+  has no running surface worth driving (a docs change, a script refactor).
+- **`/execute-qa`** — runs a `/plan-qa` specification as written: preconditions first (a red
+  automated suite means the run does not begin), cases in order with their tagged drivers
+  and guards, verbatim operator handoffs. `[assert]` lines verify mechanically; `[judge]`
+  lines are judged only against the plan's written criterion, with the observed evidence
+  quoted next to the verdict and ambiguity escalating to PARTIAL — never a guessed pass.
+  Appends one run section of verdicts and findings to `/specs/qa/QA-RESULTS-<N>-<slug>.md`;
+  never modifies the plan.
+- **`sync-skills`** — promoted from repo-local (`/Users/foyzul/.claude/skills/sync-skills/`)
+  to plugin-shipped (`dev-pipeline/skills/sync-skills/`). Other-harness distribution (oh-my-pi,
+  opencode, kimi, codex) is now a default part of the plugin, not a one-off on the host.
+- **`requirement-coverage` review check** — new 17th sub-skill under `review/sub-skills/`.
+  Static-only audit of test assertions against REQ acceptance criteria and ARCH edge-case
+  rows: every criterion traced to a test that asserts it, every test traced back to a
+  criterion. Distinguishes Covered / Weak / Uncovered / Manual and groups orphan tests.
+- **QA gate wired into the pipeline.** `plan-architecture`, `generate-tasks`, `implement`,
+  and `review` now know the QA gate exists; the last task of `/implement` points the developer
+  at both review and `/plan-qa` (when applicable) and notes that the two are independent.
+  `archive-issue` and `release-notes` recognise the new `specs/qa/QA-*.md` and
+  `specs/qa/QA-RESULTS-*.md` artifact paths.
+
+### Maintenance
+
+- Plugin description now mentions the QA gate; `plugin.json` and `marketplace.json` are
+  byte-identical on the field.
+- Pipeline diagram in `CLAUDE.md`, `README.md`, and `dev-pipeline/README.md` updated to show
+  the parallel Phase 5 / QA gate topology; the three copies are kept identical.
+- `task-completion` review sub-skill switched its regression-guard wording from "passes" to
+  "exists and asserts" with a `🛑 static only` marker — consistent with the new
+  `requirement-coverage` discipline.
+
 ## v5.0.0 — 2026-07-24
 
 ### Breaking
