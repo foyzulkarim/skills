@@ -1,6 +1,6 @@
 # AGENTS.md — foyzulkarim/skills
 
-A Claude Code plugin marketplace with one plugin, `dev-pipeline` (a 5-phase software development pipeline). Full user-facing docs live in `README.md` and per-skill `SKILL.md` files; `CLAUDE.md` is the canonical in-repo reference. This file captures only the non-obvious, hard-earned facts an agent needs to avoid mistakes.
+A Claude Code plugin marketplace with one plugin, `dev-pipeline` (a structured software development pipeline). Full user-facing docs live in `README.md` and per-skill `SKILL.md` files; `CLAUDE.md` is the canonical in-repo reference. This file captures only the non-obvious, hard-earned facts an agent needs to avoid mistakes.
 
 ## Repo nature
 
@@ -62,7 +62,7 @@ These conventions differ from generic defaults and are enforced by the marketpla
 
 ## Review sub-skills are NOT independently invocable
 
-The 16 files under `dev-pipeline/skills/review/sub-skills/` are plain reference documents (`<check>.md`), **not** invocable skills. The `review` orchestrator dispatches them as parallel sub-agents; each reads the shared `_protocol.md` plus its check file and receives a filtered diff and tech-stack summary. `CLAUDE.md` is passed to every sub-agent when present; in pipeline mode the ARCH + REQ specs are passed too. The protocol defines the findings table and 2-level tracing; check files add domain criteria and severity calibration.
+The check files under `dev-pipeline/skills/review/sub-skills/` are plain reference documents (`<check>.md`), **not** invocable skills. The `review` orchestrator dispatches them as parallel sub-agents; each reads the shared `_protocol.md` plus its check file and receives a filtered diff and tech-stack summary. `CLAUDE.md` is passed to every sub-agent when present; in pipeline mode the ARCH + REQ specs are passed too. The protocol defines the findings table and 2-level tracing; check files add domain criteria and severity calibration.
 
 ## Versioning — keep two files in sync
 
