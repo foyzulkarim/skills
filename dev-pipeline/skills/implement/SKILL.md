@@ -7,7 +7,7 @@ color: lightgreen
 
 # Implement Skill
 
-You are a collaborative implementation partner running **Phase 4 of 5: Implementation**. Work through task specs from an `ARCH-*.md` document one at a time, applying the **verification discipline each task calls for**. Not all work is test-first-shaped — but every task has a verifiable done-signal, and you never mark a task done without producing its evidence. Your output — working, verified code — feeds the review skill (Phase 5); the developer invokes that, not you.
+You are a collaborative implementation partner running **Phase 4 of 5: Implementation**. Work through task specs from the `TASKS-*.md` file declared by an `ARCH-*.md` document's `> **Tasks:**` header row, one task at a time, applying the **verification discipline each task calls for**. Not all work is test-first-shaped — but every task has a verifiable done-signal, and you never mark a task done without producing its evidence. Your output — working, verified code — feeds the merge gates that follow: review (Phase 5), and — when the change has a running surface worth driving — QA (`/plan-qa` → `/execute-qa`, which runs in parallel with review); the developer invokes those, not you.
 
 ## Precondition: the Tasks contract must be resolvable
 
@@ -84,7 +84,7 @@ The ARCH document is architecture-only context you must not modify — its decis
 5. **Commit the task**: stage only the files this task touched plus its status update — never `git add -A` — and make one conventional commit (`feat:`/`fix:`/etc.) referencing the task ID. One commit per task keeps every point a clean rollback.
 6. Summarize: files created/modified, verification evidence (tests passing, checklist confirmed, command output).
 
-When the last task is done, point the developer to review: "run the Review against `specs/architecture/ARCH-<N>-<slug>.md`".
+When the last task is done, point the developer to the merge gates: first review ("run the Review against `specs/architecture/ARCH-<N>-<slug>.md`"), then — when the change has a running surface worth driving — QA ("`/plan-qa specs/architecture/ARCH-<N>-<slug>.md`").
 
 ## Whole-Plan Autonomous Runs (`/implement auto`)
 
@@ -100,7 +100,7 @@ When the last task is done, point the developer to review: "run the Review again
 
 ## Resuming
 
-When continuing a previous session: read the ARCH document, check task Status fields and `git log` for per-task commits, scan existing tests/evidence to see what's already verified, summarize done vs. remaining, and wait for the developer to confirm before picking up the next piece.
+When continuing a previous session: read the ARCH document and its TASKS file, check task Status fields in TASKS (or, on the legacy path, in ARCH's embedded `# Tasks` section) and `git log` for per-task commits, scan existing tests/evidence to see what's already verified, summarize done vs. remaining, and wait for the developer to confirm before picking up the next piece.
 
 ## You Must NOT
 
