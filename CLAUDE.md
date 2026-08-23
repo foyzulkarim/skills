@@ -258,7 +258,7 @@ The `scripts/sync-skills.sh` helper copies repo skills into `~/.claude/skills/` 
 | `scripts/sync-skills.sh list-targets` | Print harness aliases from `scripts/sync-targets.json` and their resolved dirs |
 | `scripts/sync-skills.sh push --force <skill>` | Overwrite even an unmanaged (unmarked) directory at the target |
 
-**Harness targets:** `scripts/sync-targets.json` maps harness aliases → skills dirs (`~` allowed). The repo-local `/sync-skills` skill (`.claude/skills/sync-skills/`, not shipped with the plugin) turns natural-language requests like "copy the skills to oh-my-pi" into the right `--to` invocation, and on an unmapped harness probes conventional paths, confirms, and offers to add the mapping.
+**Harness targets:** `scripts/sync-targets.json` maps harness aliases → skills dirs (`~` allowed). The `/sync-skills` skill turns natural-language requests like "copy the skills to oh-my-pi" into the right `--to` invocation, and on an unmapped harness probes conventional paths, confirms, and offers to add the mapping.
 
 ### Running skill scripts directly
 

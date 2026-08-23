@@ -90,6 +90,7 @@ A complete development workflow built on a 5-phase agentic framework, with an op
 | [/execute-qa](./dev-pipeline/skills/execute-qa) | parallel | Executes a QA spec as written — mechanical asserts plus evidence-backed judgment against the plan's criteria; writes `QA-RESULTS-*.md`. |
 | [/start-task](./dev-pipeline/skills/start-task) | pre-1 | One-shot branch bootstrap from a GitHub issue, Jira key, local spec, or ad-hoc brief — zero confirmation by default. |
 | [/commit](./dev-pipeline/skills/commit) | any | One-shot conventional commit — script-curated context, zero confirmation by default, `ask` mode for review/selective staging. |
+| [/sync-skills](./dev-pipeline/skills/sync-skills) | any | Copy this repo's skills into another harness's skills directory by name — resolves the harness alias via `scripts/sync-targets.json`, with a discovery fallback for unmapped aliases. |
 | [/session-stats](./dev-pipeline/skills/session-stats) | any | Terminal dashboard of the current session — tokens, cache, cost, context %, tool-call histogram. |
 | [/setup-cost-tracking](./dev-pipeline/skills/setup-cost-tracking) | any | Install per-session cost tracking by wiring logger scripts into the Claude Code statusline and hooks. |
 | [/move-to-worktree](./dev-pipeline/skills/move-to-worktree) | parallel Phase 4 | Park the current branch in `.worktrees/<issue#>` to open a parallel lane. Requires `.worktrees/` gitignored. |
@@ -173,7 +174,7 @@ Each copy gets a `.synced-from` marker so the script only touches directories it
 
 **Harness targets:** `scripts/sync-targets.json` maps harness aliases to skills dirs (`~` is expanded). Current entries: `claude` → `~/.claude/skills`, `oh-my-pi` → `~/.omp/skills`, `opencode` → `~/.config/opencode/skills`.
 
-**Prefer natural language?** The repo-local `/sync-skills` skill (lives under `.claude/skills/sync-skills/`, not shipped with the plugin) wraps the script for you — say *"copy `commit` and `implement` to oh-my-pi"* and it handles alias resolution and discovery of new harnesses.
+**Prefer natural language?** The `/sync-skills` skill wraps the script for you — say *"copy `commit` and `implement` to oh-my-pi"* and it handles alias resolution and discovery of new harnesses.
 
 **Typical workflow:**
 ```bash

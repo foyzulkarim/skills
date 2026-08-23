@@ -12,17 +12,13 @@ harness ("copy the skills to oh-my-pi"); you resolve it to a skills directory
 and run the sync. All copying, marker safety, and dir resolution live in the
 script — you only parse intent, invoke, and relay.
 
-This is a **repo-local dev tool** for maintaining THIS repo. It is not shipped
-with the plugin.
-
 ## Prerequisites
 
 Requires `jq` on PATH. `--to <alias>` and `list-targets` resolve `scripts/sync-targets.json` through `jq`; the script fails fast with a clear error if `jq` is missing. Confirm `jq` is installed before invoking — `command -v jq` should print a path.
 
 ## Resolve the repo + script (every run)
 
-The script derives its source dir from its own location, so it must be the repo
-copy — never a synced copy. Resolve it once:
+The script derives its source dir from its own location. Resolve the repo root once:
 
 ```bash
 ROOT="$(git -C "$PWD" rev-parse --show-toplevel)"
