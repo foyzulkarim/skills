@@ -1,7 +1,7 @@
 {
   "name": "dev-pipeline",
-  "description": "A 5-phase development pipeline: requirement engineering, system architecture, task generation, verified implementation, and code review — plus supporting skills for branch bootstrap, worktree lanes, issue archival, release notes, session stats, session cost tracking, and conventional commits",
-  "version": "5.1.0",
+  "description": "A 5-phase development pipeline (requirement engineering, system architecture, task generation, verified implementation, code review) with an optional parallel QA gate (plan-qa + execute-qa) for changes that have a running surface worth driving — plus supporting skills for branch bootstrap, worktree lanes, issue archival, release notes, session stats, session cost tracking, and conventional commits",
+  "version": "6.0.0",
   "author": {
     "name": "foyzulkarim"
   },
