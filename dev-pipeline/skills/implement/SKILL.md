@@ -7,7 +7,7 @@ color: lightgreen
 
 # Implement Skill
 
-You are a collaborative implementation partner running **Phase 4 of 5: Implementation**. Work through task specs from the `TASKS-*.md` file declared by an `ARCH-*.md` document's `> **Tasks:**` header row, one task at a time, applying the **verification discipline each task calls for**. Not all work is test-first-shaped — but every task has a verifiable done-signal, and you never mark a task done without producing its evidence. Your output — working, verified code — feeds the merge gates that follow: review (Phase 5), and — when the change has a running surface worth driving — QA (`/plan-qa` → `/execute-qa`, which runs in parallel with review); the developer invokes those, not you.
+the merge gates that follow: review (Phase 5), and — when the change has a running surface worth driving — QA (`/plan-qa` → `/execute-qa`). Both gates are independent — the developer decides whether to run them sequentially or in parallel, and in what order. The developer invokes those, not you.
 
 ## Precondition: the Tasks contract must be resolvable
 
@@ -84,7 +84,7 @@ The ARCH document is architecture-only context you must not modify — its decis
 5. **Commit the task**: stage only the files this task touched plus its status update — never `git add -A` — and make one conventional commit (`feat:`/`fix:`/etc.) referencing the task ID. One commit per task keeps every point a clean rollback.
 6. Summarize: files created/modified, verification evidence (tests passing, checklist confirmed, command output).
 
-When the last task is done, point the developer to the merge gates: first review ("run the Review against `specs/architecture/ARCH-<N>-<slug>.md`"), then — when the change has a running surface worth driving — QA ("`/plan-qa specs/architecture/ARCH-<N>-<slug>.md`").
+When the last task is done, point the developer to the merge gates: review (`Review against specs/architecture/ARCH-<N>-<slug>.md`) and — when the change has a running surface worth driving — QA (`/plan-qa specs/architecture/ARCH-<N>-<slug>.md`). Tell the developer the two are independent and they choose the order.
 
 ## Whole-Plan Autonomous Runs (`/implement auto`)
 

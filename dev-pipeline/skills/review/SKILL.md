@@ -210,5 +210,5 @@ When the developer says they've addressed findings:
 
 - Use today's date in reports.
 - Pipeline mode source chain: REQ → ARCH → task spec → implementation. Trace decisions back to their origin.
-- Review is not the last gate — when the change has a running surface, the QA gate (`/plan-qa` → `/execute-qa`, running in parallel with review) verifies the running product; a PASS here does not cover it.
+- Review is not the last gate — when the change has a running surface, the QA gate (`/plan-qa` → `/execute-qa`) verifies the running product independently of this review; a PASS here does not cover it. The developer chooses the order.
 - Phase 5 gate for the developer: **"Would I mass-merge this without reading it? If yes, I haven't reviewed properly."** Never approve what you haven't understood.

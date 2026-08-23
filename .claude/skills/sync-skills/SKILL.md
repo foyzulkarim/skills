@@ -1,6 +1,6 @@
 ---
 name: sync-skills
-description: "Copy this repo's skills into another agent harness's skills directory by name — resolves the harness alias to its path via scripts/sync-targets.json and runs sync-skills.sh. Use when the user says to copy/sync/push the skills to another harness (oh-my-pi, opencode, kimi, codex, etc.), e.g. \"copy the skills to oh-my-pi\" or \"push commit and implement to opencode\"."
+description: "Copy this repo's skills into another agent harness's skills directory by name — resolves the harness alias to its path via scripts/sync-targets.json and runs sync-skills.sh. Use only when the user asks to copy/sync/push the skills to another harness (oh-my-pi, opencode, kimi, codex, etc.) — never trigger automatically."
 model: inherit
 color: orange
 ---
@@ -14,6 +14,10 @@ script — you only parse intent, invoke, and relay.
 
 This is a **repo-local dev tool** for maintaining THIS repo. It is not shipped
 with the plugin.
+
+## Prerequisites
+
+Requires `jq` on PATH. `--to <alias>` and `list-targets` resolve `scripts/sync-targets.json` through `jq`; the script fails fast with a clear error if `jq` is missing. Confirm `jq` is installed before invoking — `command -v jq` should print a path.
 
 ## Resolve the repo + script (every run)
 
@@ -31,7 +35,19 @@ does not exist, stop and tell the user to run this from the skills repo checkout
 
 1. **Parse the request** into:
    - a **harness alias** — normalize the user's phrasing to a canonical key
-     ("omp" / "oh my pi" → `oh-my-pi`; "oc" → `opencode`). To see valid keys:
+     using this table (additions to `scripts/sync-targets.json` are how the
+     table grows over time):
+
+     | User phrasing | Canonical alias |
+     |---------------|-----------------|
+     | `claude`, `~/.claude`, `claude-code` | `claude` |
+     | `omp`, `oh-my-pi`, `"oh my pi"` | `oh-my-pi` |
+     | `oc`, `opencode` | `opencode` |
+     | `kimi` | `kimi` |
+     | `codex` | `codex` |
+
+     Quote any alias that contains a space or shell metacharacter when passing
+     it to `--to`. To see the full current list:
      ```bash
      bash "$ROOT/scripts/sync-skills.sh" list-targets
      ```
@@ -41,7 +57,7 @@ does not exist, stop and tell the user to run this from the skills repo checkout
 
 2. **Run** (push, the common case):
    ```bash
-   bash "$ROOT/scripts/sync-skills.sh" --to <alias> push [skill...]
+   bash "$ROOT/scripts/sync-skills.sh" --to "<alias>" push [skill...]
    ```
    Echo the resolved destination (from `list-targets`) before/with the run, then
    relay the script's summary verbatim.

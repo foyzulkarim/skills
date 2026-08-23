@@ -35,15 +35,16 @@ Code coverage measures whether lines execute; this check measures whether **the 
 ```
 ## Requirement Coverage
 
-**Suite run:** *(not executed — static analysis only)*
+**Suite run:** *(not executed — static analysis only; tests audited for assertion content, not run)*
+
 **Criteria:** X/Y covered · N weak · N uncovered · N manual
 
 | Req | Criterion (abridged) | Test evidence | Run | Status |
 |-----|----------------------|---------------|-----|--------|
-| R1 | duplicate email → 409 + error body | `auth.test.ts:88` — asserts status and body | ✅ pass | ✅ Covered |
-| R2 | resume restores values and step | `wizard.test.ts:41` — asserts values only | ✅ pass | 🟠 Weak — current step not asserted |
+| R1 | duplicate email → 409 + error body | `auth.test.ts:88` — asserts status and body | 🛑 static only | ✅ Covered |
+| R2 | resume restores values and step | `wizard.test.ts:41` — asserts values only | 🛑 static only | 🟠 Weak — current step not asserted |
 | R3 | soft-deleted email reactivates | none found (whole test tree searched) | — | 🔴 Uncovered |
-| E2 | dependency down 30s → retry | `client.test.ts:112` — mocks failure, asserts recovery | ✅ pass | ✅ Covered |
+| E2 | dependency down 30s → retry | `client.test.ts:112` — mocks failure, asserts recovery | 🛑 static only | ✅ Covered |
 | N1 | banner copy reads correctly | QA plan case QA-7 | — | ⚠️ Manual — owned by QA plan |
 
 **Orphan tests** (no requirement trace):
@@ -52,4 +53,4 @@ Code coverage measures whether lines execute; this check measures whether **the 
 | "caches lookups for 5 min" | `service.test.ts:203` | uncaptured inferred requirement — consider adding to REQ/ARCH |
 ```
 
-Zero-findings variant: the same header block with all criteria ✅ and `**Result:** ✅ Every criterion covered by a passing, semantically matching test.` The coverage checklist lists every criterion ID with its verdict and the suite-run line.
+Zero-findings variant: the same header block with all criteria ✅ and `**Result:** ✅ Every criterion covered by an existing test with semantically matching assertions (static-only audit — tests were not executed).` The coverage checklist lists every criterion ID with its verdict and the suite-run line.

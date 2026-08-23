@@ -1,6 +1,6 @@
 # dev-pipeline
 
-A structured 5-phase development pipeline for Claude Code — from requirement engineering through code review, with an optional parallel manual-QA gate.
+A structured 5-phase development pipeline for Claude Code — from requirement engineering through code review, with an optional QA gate that runs independently of review.
 
 ## The pipeline
 
@@ -74,11 +74,12 @@ Implementation partner that routes each task to the verification discipline it n
 
 Comprehensive code review with a triage-first approach. Proposes relevant checks, runs them as parallel agents, and produces a combined report. Up to 17 specialized checks. Two modes: pipeline (verifies implementation against `ARCH-*.md`) and general (PR/branch/staged).
 
-### /plan-qa (parallel gate)
+### /plan-qa (QA gate)
 
-Post-implementation QA planning — runs in parallel with `/review`, not after it. The review reads the code; `/plan-qa` simultaneously turns what shipped into an executable QA specification for the running product. Interviews the developer to turn the specs and the diff into an executable QA specification: cases with tagged steps (`[bash]`/`[browser]`), project traps codified as `Guard:`s on the exact steps that need them, a Coverage Map over every changed file, identities, preconditions, and named operator handoffs for the few actions an agent genuinely cannot do. Every Expected line is falsifiable — `[assert]` (machine-verifiable) or `[judge]` with an explicit pass/fail criterion fixed at plan time. Produces `/specs/qa/QA-<N>-<slug>.md`. Skip this gate when the change has no running surface worth driving.
+Post-implementation QA planning — independent of `/review` (the developer chooses whether to run them sequentially or in parallel, and in what order). Interviews the developer to turn the specs and the diff into an executable QA specification: cases with tagged steps (`[bash]`/`[browser]`), project traps codified as `Guard:`s on the exact steps that need them, a Coverage Map over every changed file, identities, preconditions, and named operator handoffs for the few actions an agent genuinely cannot do. Every Expected line is falsifiable — `[assert]` (machine-verifiable) or `[judge]` with an explicit pass/fail criterion fixed at plan time. Produces `/specs/qa/QA-<N>-<slug>.md`. Skip this gate when the change has no running surface worth driving.
 
-### /execute-qa (parallel gate)
+
+### /execute-qa (QA gate)
 
 Runs after `/plan-qa` produces the specification. Preconditions run first (a red automated suite means the run does not begin); cases execute in order with their tagged drivers and guards; operator handoffs print verbatim and wait. `[assert]` lines verify mechanically; `[judge]` lines are judged only against the plan's written criterion, with the observed evidence quoted next to the verdict and ambiguity escalating to PARTIAL — never a guessed pass. Appends one run section of verdicts and findings to `/specs/qa/QA-RESULTS-<N>-<slug>.md`; never modifies the plan.
 
@@ -123,7 +124,7 @@ One-shot conventional commit — bundled scripts (`gather.sh`/`commit.sh`) own a
 - **Bugfix (needs root-cause analysis)** → Phase 1 (as RCA) → 3 → 4 → 5 (skip architecture)
 - **Trivial bugfix (known cause, doesn't touch the design, under ~half a day)** → Phase 3 → 4 → 5 (skip both requirements and architecture)
 
-The QA gate (`/plan-qa` → `/execute-qa`) attaches to any scenario whose change has a running surface worth driving; it runs in parallel with Phase 5, not after it.
+The QA gate (`/plan-qa` → `/execute-qa`) attaches to any scenario whose change has a running surface worth driving. Review and QA are independent gates — the developer chooses whether to run them sequentially or in parallel, and in what order.
 
 ## Install
 

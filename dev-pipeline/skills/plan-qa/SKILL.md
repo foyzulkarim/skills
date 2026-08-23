@@ -1,13 +1,13 @@
 ---
 name: plan-qa
-description: "Post-implementation QA planning — run in parallel with /review, only when the change has a running surface worth driving. Interviews the developer to turn the specs and the diff into an executable QA specification (specs/qa/QA-<N>-<slug>.md) that /execute-qa runs. The agent drives browser and shell; the human steps in only at named handoff points. Use only when the user asks to plan manual QA — never trigger automatically."
+description: "Post-implementation QA planning — independent of /review (the developer chooses whether to run them sequentially or in parallel), only when the change has a running surface worth driving. Interviews the developer to turn the specs and the diff into an executable QA specification (specs/qa/QA-<N>-<slug>.md) that /execute-qa runs. The agent drives browser and shell; the human steps in only at named handoff points. Use only when the user asks to plan manual QA — never trigger automatically."
 model: inherit
 color: lightyellow
 ---
 
 # Plan-QA Skill
 
-You are a QA planning partner running the **QA Planning** skill — a post-implementation parallel gate, not a numbered phase. Run alongside `/review`; do not run after it. Automated suites verify what tests can assert; this phase covers the three blind spots they cannot reach:
+a post-implementation gate, independent of `/review` — run it when the change has a running surface worth driving, in whatever order fits the work. Automated suites verify what tests can assert; this phase covers the three blind spots they cannot reach:
 
 1. **What a human sees** — elements that are genuinely unclickable, copy that says the right thing, a form that surfaces its own failures.
 2. **Whole-request behavior** — real sessions, real redirects, real authorization failures from the actual running server.
@@ -15,7 +15,7 @@ You are a QA planning partner running the **QA Planning** skill — a post-imple
 
 The agent cannot QA "against the requirements" cold — the knowledge of *which click-paths matter and where things break invisibly* lives in the developer's head and in the specs. Your job is to extract that knowledge into a QA specification complete enough that executing it (the `/execute-qa` skill) needs no context beyond the artifact. Like plan-requirements and plan-architecture, this is a **declaration skill**: the conversation is the value; the artifact is its record and the execution contract.
 
-This phase runs **in parallel with review (Phase 5)** — review reads the code while this phase plans QA against the running product. Skip it when the change has no running surface worth driving (a docs change, a script refactor).
+QA is **independent of review (Phase 5)** — the developer decides the order. Some teams run them side by side, others run review first; either works. Skip QA when the change has no running surface worth driving (a docs change, a script refactor).
 
 **Scenario types are open-ended.** Today's drivers are `browser` (Playwright) and `bash` (HTTP, database, shell); the case format is designed so future scenario types — storybook, performance, accessibility — slot in as new areas with new drivers. Cases are always expressed in human-readable, agent-executable form, never as test code.
 
@@ -172,6 +172,6 @@ If any are false, keep the conversation going.
 ## Reminders
 
 - Use today's date in the plan.
-- Pipeline mode: link the REQ, ARCH, and review report in the header (review runs in parallel — omit the review link only if no report exists yet). Trace each case's `Req` column to real REQ-IDs.
+- Pipeline mode: link the REQ, ARCH, and review report in the header (review may run before, alongside, or after this plan — omit the review link only if no report exists yet). Trace each case's `Req` column to real REQ-IDs.
 - The plan is this skill's deliverable; the results artifact is `/execute-qa`'s.
 - Like the other `specs/` artifacts, QA plans merge with the branch and are retired by `/archive-issue <issue#>` after the PR merges.

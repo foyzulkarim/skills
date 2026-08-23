@@ -1,10 +1,10 @@
 # foyzulkarim/skills — Claude Code Plugin Marketplace
 
-A plugin marketplace for [Claude Code](https://claude.ai/claude-code) with a structured 5-phase development pipeline and an optional parallel QA gate.
+A plugin marketplace for [Claude Code](https://claude.ai/claude-code) with a structured 5-phase development pipeline and an optional QA gate that runs independently of review.
 
 ## Why use this?
 
-`dev-pipeline` turns a problem statement into a reviewed pull request through a structured 5-phase agentic workflow (with an optional parallel QA gate) — mode-appropriate verification is baked into every task.
+`dev-pipeline` turns a problem statement into a reviewed pull request through a structured 5-phase agentic workflow (with an optional QA gate that runs independently of review) — mode-appropriate verification is baked into every task.
 
 What you get:
 
@@ -29,7 +29,7 @@ For solo devs and small teams who want agent-driven development to ship with the
 
 ## dev-pipeline
 
-A complete development workflow built on a 5-phase agentic framework, with an optional parallel QA gate:
+A complete development workflow built on a 5-phase agentic framework, with an optional QA gate that runs independently of review:
 
 ```
   ┌────────────────────────────────────────────────────────────┐
@@ -103,7 +103,7 @@ A complete development workflow built on a 5-phase agentic framework, with an op
 - **New feature in an existing system** → Phase 2 → 3 → 4 → 5 (skip requirements; brief is enough)
 - **Bugfix** → Phase 1 (as RCA) → 3 → 4 → 5 (skip architecture)
 
-The QA gate (`/plan-qa` → `/execute-qa`) attaches to any scenario whose change has a running surface worth driving; it runs in parallel with Phase 5, not after it.
+The QA gate (`/plan-qa` → `/execute-qa`) attaches to any scenario whose change has a running surface worth driving. Review and QA are independent gates — the developer chooses whether to run them sequentially or in parallel, and in what order.
 
 ### Case studies
 
