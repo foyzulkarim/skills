@@ -19,7 +19,11 @@ Like review (Phase 5), your deliverable is a verdict artifact: `specs/qa/QA-RESU
 
 1. **Read the plan end-to-end** before executing anything: scope, shell setup, preconditions, identities, operator handoffs, every case, every `Guard:`.
 2. **Run every precondition in order; stop if any fails.** A red P0 means fix the suite first, not "run anyway."
-3. **Execute cases in plan order**, each step with its tagged driver (`[bash]` = shell command, `[browser]` = Playwright action). Apply every `Guard:` on the step it annotates.
+3. **Execute cases in plan order**, each step with its tagged driver
+   (`[bash]` = shell command, `[browser]` = a `qa-browser` command — see Browser
+   Driver below). Apply every `Guard:` on the step it annotates. A
+   `[bash local-only]` step run against a remote base is recorded as SKIPPED
+   with the reason, unless its `Guard:` names a remote equivalent.
 4. **Verify each Expected line by its tier** (see Verdicts below).
 5. **At an operator handoff** (always a case's final step): print the plan's verbatim instruction —
 
@@ -30,6 +34,78 @@ Like review (Phase 5), your deliverable is a verdict artifact: `specs/qa/QA-RESU
 7. **A failing case does not stop the run** unless it breaks the environment for later cases — note it and continue.
 8. **Never edit cases mid-run.** A case the developer decides to skip is a scope change — record it as SKIPPED with the reason. Structural errors in the plan (a broken helper, a wrong selector, a `[judge]` line missing its criterion) may be fixed, then noted in the run's notes.
 
+## Environments
+
+`/execute-qa <plan> [--base <url> | --env <name>]`
+
+- No flag → `--env local`.
+- `--env <name>` loads `.env.qa.<name>` (gitignored) from the repo root:
+
+      QA_BASE_URL=https://uat.yourapp.com
+      QA_USER_MEMBER=qa-member@example.com
+      QA_PASS_MEMBER=...
+
+- `--base <url>` overrides `QA_BASE_URL` directly.
+- Record the resolved base URL and env name in the run header of QA-RESULTS.
+- The production guard applies to every environment: never run against
+  production or any environment sharing production data stores.
+
+## Browser Driver
+
+All `[browser]` steps run through the persistent session CLI at
+`scripts/qa-browser.mjs` (requires `playwright` as a devDependency and
+`npx playwright install chromium` once).
+
+**Run lifecycle:** start the daemon once before the first case, stop it after
+the last — never per case:
+
+    node scripts/qa-browser.mjs serve --base $QA_BASE_URL &   # headed, visible
+    ...all cases...
+    node scripts/qa-browser.mjs stop
+
+**Step → command mapping:**
+
+| Plan step | Command |
+|---|---|
+| Navigate to `/path` | `goto /path` |
+| Click X | `click "text=X"` (or role=/css selector) |
+| Fill field | `fill "<selector>" <value>` — secrets as `env:NAME`, never literal |
+| Assert visible text | `assert-visible "..."` |
+| Assert aria attribute | `assert-aria "<selector>" <attr> <value>` |
+| Assert URL | `assert-url <substring>` |
+| No console errors | `console-errors` |
+| Capture network request | `network <filter>` |
+| Screenshot | `screenshot specs/qa/evidence/<case>.png` |
+| Sign in as `<identity>` | `new-context <identity> <identity>` (loads saved state), else drive the login flow once then `save-state <identity>` |
+| Mock/block a request | `route mock|abort <pattern> ...` |
+
+**Rules:**
+
+- Every command prints one JSON line and exits 0/1 — `[assert]` verdicts are
+  read off the exit code. Chain independent steps with `&&` in one shell call.
+- Any failed command auto-captures a screenshot to `.qa-shots/`; move or
+  reference that path as the case's evidence in QA-RESULTS.
+- One browser instance per run; one context per identity. Never launch a second
+  browser or reuse a context across identities.
+- **Lanes:** if the plan has one lane, execute exactly as above — no subagents,
+  no `--ctx` needed. If it has N lanes, spawn one subagent per lane; every
+  command a lane issues carries `--ctx <lane>` (e.g. `goto /a --ctx lane2`),
+  which routes to that lane's context without touching the shared active
+  pointer. Each context has its own cookies/storage AND its own console-error
+  and network buffers, so lanes cannot drain or read each other's evidence.
+  Each subagent records its own cases; the parent merges them into QA-RESULTS
+  in case-ID order, with a per-lane line in the run header. Verdict rules are
+  unchanged per case.
+- Secrets pass only as `env:NAME` references resolved by the daemon — a literal
+  credential in a command is a run error.
+- **Log correlation:** when a case asserts paired browser/terminal behavior,
+  snapshot the log offset before the browser action and assert only on the new
+  slice:
+
+      OFF=$(wc -c < /tmp/dev.log)
+      node scripts/qa-browser.mjs click "text=Reset password"
+      tail -c +$((OFF+1)) /tmp/dev.log | grep "password reset requested"
+
 ## Verdicts
 
 Every Expected line is verified by the tier the plan tagged it with:
@@ -39,13 +115,20 @@ Every Expected line is verified by the tier the plan tagged it with:
   1. **The criterion is the plan's, not yours.** Judge only against what the `[judge]` line says would pass or fail. A `[judge]` line with no criterion is a structural plan error — flag it and get a criterion from the developer; never improvise one mid-run.
   2. **Every judged verdict quotes its evidence** — the rendered text, output excerpt, or screenshot reference the judgment was made on, recorded next to the verdict so a human can audit the call without re-running.
   3. **Ambiguity escalates, never defaults.** If the observation doesn't clearly pass or fail the criterion, the line is PARTIAL and flagged for the developer — not a guessed PASS. Agents are agreeable; "close enough" is exactly the failure QA exists to catch.
+- **`[judge-visual]`** — open and view the screenshot the case captured, then
+  judge against the criterion written in the line (and the named design
+  reference, if any). Same three rules as `[judge]`: the criterion is the
+  plan's, the verdict describes what was observed in the image, ambiguity is
+  PARTIAL — never a guessed PASS. The screenshot path is recorded next to the
+  verdict as its evidence. A `[judge-visual]` line with no captured screenshot
+  is a structural plan error.
 
 Case verdicts:
 
 | Verdict | Meaning |
 |---|---|
 | PASS | Every `[assert]` verified, no `[judge]` lines |
-| PASS (judged) | All lines green, at least one via `[judge]` — evidence quoted |
+| PASS (judged) | All lines green, at least one via `[judge]` or `[judge-visual]` — evidence quoted |
 | FAIL | Any line failed — exact evidence recorded (HTTP status, DOM mismatch, console error, quoted output vs. criterion) |
 | PARTIAL | An ambiguous `[judge]` line, or a case verified only in part — flagged for the developer |
 | SKIPPED | Developer-decided scope change, with the reason |
