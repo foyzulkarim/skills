@@ -235,7 +235,7 @@ invoked from directory B. Record each command's JSON as evidence.
 
 ## Task T3: Skill-doc contracts — execute-qa, plan-qa template, coverage check
 
-> **Status:** not started
+> **Status:** done
 > **Verification:** checklist
 > **Effort:** m
 > **Priority:** high

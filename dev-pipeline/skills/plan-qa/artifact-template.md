@@ -43,8 +43,27 @@ Any fixture commands to create them go here, before the first case.
 ## 4. Operator Handoffs
 Every operator-assisted case, its trigger, and the exact verbatim action.
 
+## 4a. Lanes
+One line per lane: lane → identity/identities → case IDs → why this lane is
+separate. Lane 1 is the serial lane — every operator-handoff and log-correlation
+case is pinned to it. A single-lane plan says so explicitly ("serial plan — one
+lane") and executes without subagents or `--ctx`. No identity and no mutable
+state may appear in more than one lane.
+
 ## 5–[N]. Cases by Area
-One numbered section per logical area, each containing its case table.
+One numbered section per logical area, each containing its case table:
+
+| ID | Req | Driver | Operator | Steps | Expected |
+
+- The **Req** column carries the REQ-ID(s) the case verifies — pipeline mode
+  only; omit the column in general/bug mode.
+- Steps are tagged `[bash]` or `[browser]`; a step that can only run where the
+  process is local (dev-log slicing, direct DB reads, seed scripts) is tagged
+  `[bash local-only]` and gets a remote-equivalent `Guard:` when one exists.
+- Browser steps use relative URLs (`goto /settings` — never a hardcoded host).
+- Every Expected line is tagged with its tier: `[assert]`, `[judge]` with a
+  written criterion, or `[judge-visual]` with a written criterion (the preceding
+  step must capture the screenshot).
 
 ## N+1. Migration / Deploy Risk
 Anything the test suite cannot reach: migration rehearsal, schema

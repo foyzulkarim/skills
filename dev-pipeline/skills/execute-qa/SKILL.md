@@ -49,6 +49,12 @@ Like review (Phase 5), your deliverable is a verdict artifact: `specs/qa/QA-RESU
 - Record the resolved base URL and env name in the run header of QA-RESULTS.
 - The production guard applies to every environment: never run against
   production or any environment sharing production data stores.
+- **Environment failures fail hard.** Before the first case runs, verify: the
+  `.env.qa.<name>` file exists, every `env:NAME` the plan references resolves in
+  the environment, and the base URL answers (e.g. `curl -sf -o /dev/null
+  "$QA_BASE_URL"`). Any failure stops the run at the precondition stage with a
+  message naming exactly what is missing or unreachable and how to fix it —
+  never start a run that cannot reach its environment.
 
 ## Browser Driver
 
@@ -63,39 +69,57 @@ the last — never per case:
     ...all cases...
     node scripts/qa-browser.mjs stop
 
-**Step → command mapping:**
+**Step → command mapping** (targets are ALWAYS prefixed — `text=` / `css=` / `role=`; the
+driver rejects unprefixed targets with a usage error):
 
 | Plan step | Command |
 |---|---|
-| Navigate to `/path` | `goto /path` |
-| Click X | `click "text=X"` (or role=/css selector) |
-| Fill field | `fill "<selector>" <value>` — secrets as `env:NAME`, never literal |
-| Assert visible text | `assert-visible "..."` |
-| Assert aria attribute | `assert-aria "<selector>" <attr> <value>` |
+| Navigate to `/path` | `goto /path` (waits for network idle; `goto /path --until load` for long-polling pages) |
+| Wait for an element / network idle | `wait-for "css=#el"` / `wait-for --until networkidle` — never bash sleep loops |
+| Click X | `click "text=X"` |
+| Fill field | `fill "css=#field" <value>` — secrets as `env:NAME`, never literal |
+| Type per character | `type "css=#field" <text>` (no clear-first; click first to position the cursor) |
+| Assert visible text/element | `assert-visible "text=..."` / `assert-visible "css=..."` |
+| Assert text content | `expect-text "css=#el" <expected>` |
+| Assert aria attribute | `assert-aria "css=#el" <attr> <value>` |
 | Assert URL | `assert-url <substring>` |
-| No console errors | `console-errors` |
-| Capture network request | `network <filter>` |
-| Screenshot | `screenshot specs/qa/evidence/<case>.png` |
+| Read attribute / count matches | `get-attr "css=#el" <attr>` / `count "css=.item"` |
+| No console errors | `console-errors` (includes uncaught exceptions tagged `pageerror:`) |
+| Capture / assert network request | `network <filter>` / `expect-request POST /login 302` |
+| Screenshot | `screenshot specs/qa/evidence/<case>.png` (returned path is absolute) |
+| Mock/block/introspect a request | `route mock\|abort <pattern> ...` / `route list` / `route clear` |
 | Sign in as `<identity>` | `new-context <identity> <identity>` (loads saved state), else drive the login flow once then `save-state <identity>` |
-| Mock/block a request | `route mock|abort <pattern> ...` |
+| Check daemon liveness | `status` (contexts, URLs, pid, base, browser-connected) |
+| Anything else | `eval <js>` — last resort only; whitespace collapses, keep to one-liners |
+
+**Driver environment variables** (all documented in the script header):
+`QA_BASE_URL` (base for relative `goto`; `--base` overrides), `QA_BROWSER_PORT`
+(daemon port, default 8787; `--port` overrides on both serve and client),
+`QA_STATE_DIR` (saved auth states, default `.qa-state`), `QA_SHOT_DIR` (failure
+auto-screenshots, default `.qa-shots`), `QA_CMD_TIMEOUT_MS` (per-command timeout
+guard, default 30000), `QA_NET_BUF` (per-context network buffer, default 200).
+Secrets reach the daemon only as `env:NAME` references resolved daemon-side.
 
 **Rules:**
 
-- Every command prints one JSON line and exits 0/1 — `[assert]` verdicts are
-  read off the exit code. Chain independent steps with `&&` in one shell call.
+- Every command prints one JSON line (`{ok, cmd, elapsedMs, …}`) and exits 0/1 —
+  `[assert]` verdicts are read off the exit code. Chain independent steps with
+  `&&` in one shell call.
 - Any failed command auto-captures a screenshot to `.qa-shots/`; move or
   reference that path as the case's evidence in QA-RESULTS.
 - One browser instance per run; one context per identity. Never launch a second
   browser or reuse a context across identities.
 - **Lanes:** if the plan has one lane, execute exactly as above — no subagents,
-  no `--ctx` needed. If it has N lanes, spawn one subagent per lane; every
-  command a lane issues carries `--ctx <lane>` (e.g. `goto /a --ctx lane2`),
-  which routes to that lane's context without touching the shared active
-  pointer. Each context has its own cookies/storage AND its own console-error
-  and network buffers, so lanes cannot drain or read each other's evidence.
-  Each subagent records its own cases; the parent merges them into QA-RESULTS
-  in case-ID order, with a per-lane line in the run header. Verdict rules are
-  unchanged per case.
+  no `--ctx` needed. If it has N lanes, spawn one subagent per lane. Each lane's
+  FIRST browser command is `new-context <identity>` — contexts are created
+  explicitly, never implicitly; a `--ctx` naming a nonexistent context fails
+  loudly. Every later command a lane issues carries `--ctx <lane>` (e.g.
+  `goto /a --ctx lane2`), which routes to that lane's context without touching
+  the shared active pointer. Each context has its own cookies/storage AND its
+  own console-error and network buffers, so lanes cannot drain or read each
+  other's evidence. Each subagent records its own cases; the parent merges them
+  into QA-RESULTS in case-ID order, with a per-lane line in the run header.
+  Verdict rules are unchanged per case.
 - Secrets pass only as `env:NAME` references resolved by the daemon — a literal
   credential in a command is a run error.
 - **Log correlation:** when a case asserts paired browser/terminal behavior,
