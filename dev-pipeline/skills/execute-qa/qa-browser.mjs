@@ -2,6 +2,10 @@
 /**
  * qa-browser — persistent, headed Playwright session driven one command at a time.
  *
+ * THREAT MODEL: the daemon binds 127.0.0.1 only — never expose it beyond loopback.
+ * Any local process can drive the browser; that is fine on a dev box, surprising in
+ * a container/CI with untrusted workloads.
+ *
  * Guarantees:
  *  - Browser is VISIBLE (headed by default; --headless to opt out).
  *  - Browser stays OPEN across steps/cases (daemon holds the session).
@@ -10,6 +14,13 @@
  * Usage:
  *   node qa-browser.mjs serve [--headless] [--port 8787] [--base http://localhost:3000]
  *   node qa-browser.mjs <command> [args...] [--ctx <lane>] [--port 8787]
+ *
+ * Startup banner: on listen, the daemon prints exactly ONE JSON line to stdout
+ *   {"ok":true,"serving":<port>,...} — consumers parsing stdout must skip it.
+ *
+ * Target syntax (REQUIRED everywhere a target is taken — no guessing):
+ *   text=Save        visible text        css=.error        CSS selector
+ *   role=button      ARIA role           (unprefixed targets are rejected with usage)
  *
  * Lanes / parallelism:
  *   Contexts are created ONLY by `new-context <name>` — never implicitly. A lane's
@@ -20,41 +31,62 @@
  *   (commands auto-create and reuse the "default" context, as before).
  *
  * Commands:
- *   goto <url>                        navigate (relative allowed if --base/QA_BASE_URL set)
- *   click <selector>
- *   fill <selector> <value>           value may be env:NAME → daemon substitutes secret,
- *                                     never echoed to output or transcript
- *   press <selector> <key>
- *   assert-visible <text|selector>
- *   assert-aria <selector> <attr> <value>
+ *   goto <url> [--until load|domcontentloaded|networkidle]   navigate (default: networkidle)
+ *   wait-for <target>                 wait until target is visible
+ *   wait-for --until <load-state>     wait for a load state (e.g. networkidle)
+ *   click <target>
+ *   fill <target> <value>             clears first; value may be env:NAME → daemon
+ *                                     substitutes the secret, never echoed
+ *   type <target> <text>              per-character typing (no clear-first); types at
+ *                                     the focused cursor — click first to position it
+ *   press <target> <key>
+ *   assert-visible <target>
+ *   assert-aria <target> <attr> <value>
  *   assert-url <substring>
- *   console-errors                    errors since last check (ok if none)
- *   network [filter]                  recent requests (method, url, status)
- *   screenshot <path>
- *   eval <js>
+ *   expect-text <target> <expected>   textContent contains expected (expected/actual on fail)
+ *   get-attr <target> <attr>          read an attribute value
+ *   count <target>                    number of matches (disambiguation)
+ *   expect-request <method> <urlPattern> [status]   assert a request was captured
+ *   console-errors                    console errors + pageerror: exceptions since last check
+ *   network [filter]                  recent requests (method, url, status), with count
+ *   route abort <urlPattern>          block matching requests
+ *   route mock <urlPattern> <status> <body...>   fulfill with mock JSON response
+ *   route list                        show active mocks/aborts on this context
+ *   route clear                       remove all routes
+ *   screenshot <path>                 relative paths resolve against the CALLER's cwd;
+ *                                     the returned path is always absolute
+ *   eval <js>                         LAST RESORT — prefer the commands above. Args are
+ *                                     joined with single spaces: internal whitespace and
+ *                                     newlines collapse, so pass simple one-liners only.
  *   new-context <name> [state]        fresh identity; optional saved auth state to load;
  *                                     REPLACES (and closes) any same-name context
  *   use-context <name>
  *   save-state <name>                 persist cookies+localStorage → .qa-state/<name>.json
- *   route abort <urlPattern>          block matching requests (active context)
- *   route mock <urlPattern> <status> <body...>   fulfill with mock response
- *   route clear                       remove all routes on active context
  *   status                            daemon liveness: contexts, urls, pid, port, browser
  *   stop                              final command — daemon rejects later commands
  *
- * Every command prints one JSON line {"ok":true|false,...}, exit 0/1.
- * Every command runs under a timeout guard (QA_CMD_TIMEOUT_MS, default 30000) — a
- * stuck command fails with a diagnostic instead of hanging the daemon.
- * Any failed command auto-captures a screenshot to $QA_SHOT_DIR (default .qa-shots/)
- * and includes its path in the output.
+ * Environment variables:
+ *   QA_BASE_URL        default base for relative goto (same as --base)
+ *   QA_BROWSER_PORT    daemon port (default 8787; --port overrides on both sides)
+ *   QA_STATE_DIR       saved auth states (default .qa-state)
+ *   QA_SHOT_DIR        failure auto-screenshots (default .qa-shots; relative → caller cwd)
+ *   QA_CMD_TIMEOUT_MS  per-command timeout guard (default 30000)
+ *   QA_NET_BUF         per-context network ring buffer size (default 200)
+ *   env:NAME           in fill/type values: resolved daemon-side, never echoed back
+ *
+ * Response envelope: every command prints ONE JSON line and exits 0/1:
+ *   {"ok":bool, "cmd":<name>, "elapsedMs":<n>, ...payload}
+ * Listing commands include "count". Any failed command (except timeouts — the page is
+ * stuck then) auto-captures a screenshot and includes its absolute path.
  */
-
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
+import crypto from "node:crypto";
 import { parseArgs } from "node:util";
 
 const PORT = Number(process.env.QA_BROWSER_PORT || 8787);
+const MAX_BODY = 1_000_000;
 const [, , cmd, ...args] = process.argv;
 
 if (!cmd) {
@@ -115,6 +147,7 @@ if (cmd !== "serve") {
   const SHOT_DIR = process.env.QA_SHOT_DIR || ".qa-shots";
   const NET_BUF = Number(process.env.QA_NET_BUF || 200);
   const CMD_TIMEOUT_MS = Number(process.env.QA_CMD_TIMEOUT_MS || 30000);
+  const LOAD_STATES = ["load", "domcontentloaded", "networkidle"];
 
   const browser = await engine.launch({ headless: values.headless }); // headed by default → visible
   const contexts = new Map();
@@ -149,7 +182,7 @@ if (cmd !== "serve") {
     }
     const ctx = await browser.newContext(opts);
     const page = await ctx.newPage();
-    const entry = { ctx, page, consoleErrors: [], requests: [] };
+    const entry = { ctx, page, consoleErrors: [], requests: [], routes: [] };
     page.on("console", (m) => m.type() === "error" && entry.consoleErrors.push(m.text()));
     page.on("pageerror", (e) => entry.consoleErrors.push(`pageerror: ${e.message}`));
     page.on("response", (r) => {
@@ -166,6 +199,15 @@ if (cmd !== "serve") {
     return new URL(u, values.base).href;
   }
 
+  // Mandatory explicit prefixes — no heuristic guessing between text and selectors.
+  function resolveTarget(page, target) {
+    if (!target) throw new Error("missing target — use text= / css= / role=");
+    if (target.startsWith("text=")) return page.getByText(target.slice(5));
+    if (target.startsWith("css=")) return page.locator(target.slice(4));
+    if (target.startsWith("role=")) return page.getByRole(target.slice(5));
+    throw new Error(`unprefixed target "${target}" — use text= / css= / role= (e.g. css=.error, text=Save, role=button)`);
+  }
+
   // env:NAME → secret substituted daemon-side, never echoed back
   function expandEnv(v) {
     if (typeof v === "string" && v.startsWith("env:")) {
@@ -176,50 +218,97 @@ if (cmd !== "serve") {
     return v;
   }
 
+  // What a fill/type response may reveal about the value: env refs echo the
+  // reference; literals echo length + short fingerprint — never the value.
+  function valueEcho(raw) {
+    if (raw.startsWith("env:")) return raw;
+    return { length: raw.length, sha256: crypto.createHash("sha256").update(raw).digest("hex").slice(0, 8) };
+  }
+
   // Handlers receive the request's resolved context entry (null for commands
-  // that need no page: status, stop, new-context).
+  // that need no page: status, stop, new-context) and the caller's cwd.
   const handlers = {
-    async goto([url], entry) {
-      const res = await entry.page.goto(resolveUrl(url), { waitUntil: "domcontentloaded" });
+    async goto(a, entry) {
+      let until = "networkidle";
+      const ui = a.indexOf("--until");
+      if (ui !== -1) { until = a[ui + 1]; a.splice(ui, 2); }
+      if (!LOAD_STATES.includes(until)) return { ok: false, error: `--until must be ${LOAD_STATES.join("|")}` };
+      const res = await entry.page.goto(resolveUrl(a[0]), { waitUntil: until });
       return { ok: true, url: entry.page.url(), status: res?.status() ?? null };
     },
-    async click([selector], entry) {
-      await entry.page.locator(selector).first().click({ timeout: 10_000 });
-      return { ok: true, clicked: selector };
+    async "wait-for"(a, entry) {
+      const ui = a.indexOf("--until");
+      if (ui !== -1) {
+        const state = a[ui + 1];
+        if (!LOAD_STATES.includes(state)) return { ok: false, error: `--until must be ${LOAD_STATES.join("|")}` };
+        await entry.page.waitForLoadState(state, { timeout: 10_000 });
+        return { ok: true, waited: state };
+      }
+      await resolveTarget(entry.page, a[0]).first().waitFor({ state: "visible", timeout: 10_000 });
+      return { ok: true, visible: a[0] };
     },
-    async fill([selector, ...rest], entry) {
+    async click([target], entry) {
+      await resolveTarget(entry.page, target).first().click({ timeout: 10_000 });
+      return { ok: true, clicked: target };
+    },
+    async fill([target, ...rest], entry) {
       const raw = rest.join(" ");
-      await entry.page.locator(selector).first().fill(expandEnv(raw), { timeout: 10_000 });
-      return { ok: true, filled: selector, value: raw.startsWith("env:") ? raw : "(literal)" };
+      await resolveTarget(entry.page, target).first().fill(expandEnv(raw), { timeout: 10_000 });
+      return { ok: true, filled: target, value: valueEcho(raw) };
     },
-    async press([selector, key], entry) {
-      await entry.page.locator(selector).first().press(key, { timeout: 10_000 });
+    async type([target, ...rest], entry) {
+      const raw = rest.join(" ");
+      await resolveTarget(entry.page, target).first().pressSequentially(expandEnv(raw), { timeout: 10_000 });
+      return { ok: true, typed: target, value: valueEcho(raw) };
+    },
+    async press([target, key], entry) {
+      await resolveTarget(entry.page, target).first().press(key, { timeout: 10_000 });
       return { ok: true, pressed: key };
     },
     async "assert-visible"([target], entry) {
-      const loc = /[=\[\.#>]/.test(target) ? entry.page.locator(target) : entry.page.getByText(target);
-      const visible = await loc.first().isVisible({ timeout: 10_000 }).catch(() => false);
+      const visible = await resolveTarget(entry.page, target).first().isVisible({ timeout: 10_000 }).catch(() => false);
       return { ok: visible, target, visible };
     },
-    async "assert-aria"([selector, attr, expected], entry) {
-      const actual = await entry.page.locator(selector).first().getAttribute(`aria-${attr.replace(/^aria-/, "")}`);
-      return { ok: actual === expected, selector, expected, actual };
+    async "assert-aria"([target, attr, expected], entry) {
+      const actual = await resolveTarget(entry.page, target).first().getAttribute(`aria-${attr.replace(/^aria-/, "")}`);
+      return { ok: actual === expected, target, expected, actual };
     },
     async "assert-url"([substr], entry) {
       return { ok: entry.page.url().includes(substr), url: entry.page.url(), expected: substr };
     },
+    async "expect-text"([target, ...rest], entry) {
+      const expected = rest.join(" ");
+      const actual = ((await resolveTarget(entry.page, target).first().textContent({ timeout: 10_000 })) || "").trim();
+      return { ok: actual.includes(expected), expected, actual: actual.slice(0, 200) };
+    },
+    async "get-attr"([target, attr], entry) {
+      const value = await resolveTarget(entry.page, target).first().getAttribute(attr, { timeout: 10_000 });
+      return { ok: true, target, attr, value };
+    },
+    async count([target], entry) {
+      return { ok: true, target, count: await resolveTarget(entry.page, target).count() };
+    },
+    async "expect-request"([method, pattern, status], entry) {
+      const m = (method || "").toUpperCase();
+      const hit = entry.requests.find(
+        (r) => r.method === m && r.url.includes(pattern || "") && (!status || r.status === Number(status))
+      );
+      if (hit) return { ok: true, request: hit };
+      return { ok: false, error: `no ${m} ${pattern}${status ? ` → ${status}` : ""} captured`, recent: entry.requests.slice(-10) };
+    },
     async "console-errors"(_args, entry) {
       const errs = entry.consoleErrors.splice(0);
-      return { ok: errs.length === 0, errors: errs };
+      return { ok: errs.length === 0, errors: errs, count: errs.length };
     },
     async network([filter], entry) {
       const list = filter ? entry.requests.filter((r) => r.url.includes(filter)) : entry.requests;
-      return { ok: true, requests: list.slice(-30) };
+      return { ok: true, requests: list.slice(-30), count: list.length };
     },
-    async screenshot([p], entry) {
-      fs.mkdirSync(path.dirname(p) || ".", { recursive: true });
-      await entry.page.screenshot({ path: p, fullPage: true });
-      return { ok: true, path: p };
+    async screenshot([p], entry, callerCwd) {
+      const abs = path.resolve(callerCwd || ".", p);
+      fs.mkdirSync(path.dirname(abs), { recursive: true });
+      await entry.page.screenshot({ path: abs, fullPage: true });
+      return { ok: true, path: abs };
     },
     async eval(a, entry) {
       const result = await entry.page.evaluate(a.join(" "));
@@ -240,20 +329,26 @@ if (cmd !== "serve") {
       active = name;
       return { ok: true, context: name };
     },
-    async "save-state"([name], entry) {
+    async "save-state"([name], entry, callerCwd) {
       if (!name) return { ok: false, error: "save-state <name>" };
-      fs.mkdirSync(STATE_DIR, { recursive: true });
-      const p = path.join(STATE_DIR, `${name}.json`);
+      const dir = path.isAbsolute(STATE_DIR) ? STATE_DIR : path.resolve(callerCwd || ".", STATE_DIR);
+      fs.mkdirSync(dir, { recursive: true });
+      const p = path.join(dir, `${name}.json`);
       await entry.ctx.storageState({ path: p });
       return { ok: true, saved: p };
     },
     async route([action, pattern, status, ...body], entry) {
       if (action === "clear") {
         await entry.ctx.unrouteAll({ behavior: "ignoreErrors" });
+        entry.routes = [];
         return { ok: true, routes: "cleared" };
+      }
+      if (action === "list") {
+        return { ok: true, routes: entry.routes, count: entry.routes.length };
       }
       if (action === "abort") {
         await entry.ctx.route(`**${pattern}**`, (r) => r.abort());
+        entry.routes.push({ action: "abort", pattern });
         return { ok: true, aborting: pattern };
       }
       if (action === "mock") {
@@ -261,9 +356,10 @@ if (cmd !== "serve") {
         await entry.ctx.route(`**${pattern}**`, (r) =>
           r.fulfill({ status: Number(status) || 200, contentType: "application/json", body: payload })
         );
+        entry.routes.push({ action: "mock", pattern, status: Number(status) || 200 });
         return { ok: true, mocking: pattern, status: Number(status) || 200 };
       }
-      return { ok: false, error: `route abort|mock|clear` };
+      return { ok: false, error: `route abort|mock|clear|list` };
     },
     async status() {
       return {
@@ -297,12 +393,25 @@ if (cmd !== "serve") {
   http
     .createServer(async (req, res) => {
       let body = "";
-      req.on("data", (c) => (body += c));
+      let tooBig = false;
+      req.on("data", (c) => {
+        body += c;
+        if (body.length > MAX_BODY && !tooBig) {
+          tooBig = true;
+          res.setHeader("content-type", "application/json");
+          res.statusCode = 413;
+          res.end(JSON.stringify({ ok: false, error: `request body too large (>${MAX_BODY} bytes)` }));
+          req.destroy();
+        }
+      });
       req.on("end", async () => {
-        let out, cmdName, entry = null;
+        if (tooBig) return;
+        const started = Date.now();
+        let out, cmdName, entry = null, callerCwd = null;
         try {
           const parsed = JSON.parse(body);
           cmdName = parsed.cmd;
+          callerCwd = parsed.cwd;
           const cmdArgs = parsed.args || [];
           const ctxName = parsed.ctx || null;
 
@@ -326,9 +435,9 @@ if (cmd !== "serve") {
               if (!contexts.has(active)) await makeContext(active);
               entry = contexts.get(active);
             }
-            if (!out) out = await withTimeout(handlers[cmdName](cmdArgs, entry), cmdName);
+            if (!out) out = await withTimeout(handlers[cmdName](cmdArgs, entry, callerCwd), cmdName);
           } else {
-            out = await withTimeout(handlers[cmdName](cmdArgs, null), cmdName);
+            out = await withTimeout(handlers[cmdName](cmdArgs, null, callerCwd), cmdName);
           }
         } catch (e) {
           out = { ok: false, error: e.message };
@@ -339,15 +448,20 @@ if (cmd !== "serve") {
         // screenshot would either block or show nothing useful.
         if (out && out.ok === false && !out.timedOut && !NO_AUTOSHOT.has(cmdName) && entry && !browserDead) {
           try {
-            fs.mkdirSync(SHOT_DIR, { recursive: true });
-            const p = path.join(SHOT_DIR, `fail-${Date.now()}-${cmdName}.png`);
-            // short guard: the page may be stuck in the navigation that just timed out
+            const dir = path.isAbsolute(SHOT_DIR) ? SHOT_DIR : path.resolve(callerCwd || ".", SHOT_DIR);
+            fs.mkdirSync(dir, { recursive: true });
+            const p = path.join(dir, `fail-${Date.now()}-${cmdName}.png`);
+            // short guard: the page may be stuck in the navigation that just failed
             await Promise.race([
               entry.page.screenshot({ path: p, fullPage: true }),
               new Promise((_, rej) => setTimeout(() => rej(new Error("auto-shot timeout")), 5_000)),
             ]);
             out.screenshot = p;
           } catch { /* page may be gone; ignore */ }
+        }
+        if (out && cmdName) {
+          out.cmd = cmdName;
+          out.elapsedMs = Date.now() - started;
         }
         res.setHeader("content-type", "application/json");
         res.end(JSON.stringify(out));
