@@ -2,10 +2,17 @@
 
 _Read `_protocol.md` first. This check uses the specialized output format below, not the generic findings table. It is static-only — assertions are read and audited, never executed._
 
-**Scope:** the linked REQ (or ARCH's Inferred Requirements when no REQ exists), the TASKS verification plans, every test file covering changed production code (search the whole test tree, not just the diff), and the changed production files for orphan analysis. Pipeline mode only.
+**Scope:** the linked REQ (or ARCH's Inferred Requirements when no REQ exists), the TASKS verification plans, every test file covering changed production code (search the whole test tree, not just the diff), any `specs/qa/QA-*.md` plan's `Req` column, and the changed production files for orphan analysis. Pipeline mode only.
 **Report section title:** `Requirement Coverage`
 
 Code coverage measures whether lines execute; this check measures whether **the asserted behavior is the required behavior**. A suite can be green with every branch covered while an acceptance criterion has no test, a test asserts a weaker version of its criterion, or a test asserts what the code does rather than what the requirement says. Trace both directions: every requirement to the assertions that prove it, and every test back to the requirement it serves.
+
+## Mechanical Pass (do this first, before reading any assertion)
+
+Two traces that need no judgment — run them mechanically and report what they find:
+
+- **Every REQ-ID is claimed** by ≥1 QA-case `Req` column entry, automated test, or TASKS verification plan. An unclaimed REQ-ID is 🔴 Uncovered even before assertion strength is considered — nothing anywhere answers for it.
+- **Every changed production file traces to ≥1 REQ-ID** via the specs (REQ/ARCH/TASKS) or the QA plan's Coverage Map. An untraceable changed file is possible scope creep — 🟡 with the file named and your best guess at which requirement it serves.
 
 ## Severity Calibration
 
@@ -51,6 +58,11 @@ Code coverage measures whether lines execute; this check measures whether **the 
 | Test | File:line | Likely intent |
 |------|-----------|---------------|
 | "caches lookups for 5 min" | `service.test.ts:203` | uncaptured inferred requirement — consider adding to REQ/ARCH |
+
+**Orphan files** (changed, trace to no requirement):
+| File | Likely intent |
+|------|---------------|
+| `src/legacy/cleanup.ts` | possible scope creep — no REQ-ID claims it |
 ```
 
 Zero-findings variant: the same header block with all criteria ✅ and `**Result:** ✅ Every criterion covered by an existing test with semantically matching assertions (static-only audit — tests were not executed).` The coverage checklist lists every criterion ID with its verdict and the suite-run line.

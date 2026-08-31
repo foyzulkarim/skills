@@ -21,15 +21,51 @@ QA is **independent of review (Phase 5)** — the developer decides the order. S
 
 **Scenario types are open-ended.** Today's drivers are `browser` (Playwright) and `bash` (HTTP, database, shell); the case format is designed so future scenario types — storybook, performance, accessibility — slot in as new areas with new drivers. Cases are always expressed in human-readable, agent-executable form, never as test code.
 
+## Environment Portability
+
+Plans are environment-agnostic; the environment is chosen at run time.
+
+- **Relative URLs only.** Every `[browser]` navigation target is written relative to
+  `$BASE` (e.g. `goto /settings`, never `goto http://localhost:3000/settings`). An
+  absolute URL in a step is a plan error unless the case deliberately targets an
+  external surface (a third-party OAuth page, a webhook receiver) — document why.
+- **Tag environment-bound steps.** A `[bash]` step that can only run where the
+  process is local — dev-log slicing, direct database reads, seed scripts — is
+  tagged `[bash local-only]`. Against a remote base, /execute-qa records these
+  lines as SKIPPED with the reason; provide a remote equivalent in the step's
+  `Guard:` when one exists (an admin API call, a log-tail command for the host).
+- **Identities are per-environment.** The Identities section names accounts
+  logically (`qa-member`, `qa-admin`); credentials come from the run's env file,
+  never from the plan.
+
 **Nothing project-specific is baked into this skill.** Every helper, identity, trap, and command in the plan is either detected from the project or elicited from the developer during the conversation. Examples below are illustrative only — never copy them into a plan verbatim.
 
-## Two Entry Modes
+## Three Entry Modes
 
-**Pipeline mode** — `/plan-qa specs/architecture/ARCH-<N>-<slug>.md`. The REQ, ARCH, and TASKS exist. Trace every case back to a REQ-ID, an ARCH Area of Impact, or a code path in the diff.
+**Pipeline mode** — `/plan-qa specs/architecture/ARCH-<N>-<slug>.md`. The REQ, ARCH,
+and TASKS exist. Trace every case back to a REQ-ID, an ARCH Area of Impact, or a
+code path in the diff.
 
-**General mode** — `/plan-qa PR 21` or `/plan-qa branch feat/21/…`. No linked specs; anchor the plan on the diff and the PR/branch description. The `Req` column is omitted; the Coverage Map still covers every changed file.
+**General mode** — `/plan-qa PR 21` or `/plan-qa branch feat/21/…`. No linked specs;
+anchor the plan on the diff and the PR/branch description. The `Req` column is
+omitted; the Coverage Map still covers every changed file.
 
-Default to pipeline mode when an ARCH exists; fall back to general mode otherwise.
+**Bug mode** — `/plan-qa bug #123` or `/plan-qa bug "<description>"`. No specs, no
+pipeline — the reproduction is the requirement. Phase A/B collapse into one short
+exchange: "Walk me through the repro — what did you do, what happened, what should
+have happened?" The plan then contains exactly:
+
+1. **The repro case** — the developer's steps, asserting the fixed behavior
+   (`[assert]` where observable, `[judge-visual]` for rendering bugs, with the
+   screenshot as evidence). The broken behavior must be falsifiably absent.
+2. **Regression smoke** over the changed files' blast radius, from the Coverage
+   Map as usual.
+
+Omission rules follow general mode (no `Req` column, omit missing spec links).
+Output naming unchanged: `QA-<N>-<slug>.md`, or `QA-<slug>.md` without an issue.
+
+Default to pipeline mode when an ARCH exists; general mode for spec-less feature
+work; bug mode when the work is a fix with a reproduction.
 
 ## Preflight
 
@@ -104,6 +140,34 @@ Guards come **from Phase B and from the code** — this skill ships none. Illust
 3. [browser] Assert visible: `Status: Trialing`  Guard: Assert in the rendered DOM, not curl — SSR streaming splits interpolated text with comment markers, so the raw HTML never contains the joined string
 ```
 
+## Lanes
+
+Parallelism is decided at plan time, not run time. Every case belongs to exactly
+one lane; cases in a lane run sequentially, lanes run in parallel. A plan with a
+single lane is a serial plan — that is the default and always valid.
+
+Phase A proposes candidate scenarios already grouped into lanes, with the reason
+for each split. Phase B adds one probe: "which of these could collide if run at
+the same time?" — answers become lane assignments, exactly as traps become Guards.
+
+Two cases must NOT share a lane boundary (i.e. must be in the SAME lane, or the
+plan stays single-lane) when they share any of:
+
+- an identity (one context per identity; an identity never appears in two lanes)
+- mutable backend state (the same rows, records, or files either one writes)
+- a throttle, rate limit, or cache one of them can exhaust or poison
+- an environment reset step
+
+Always pinned to lane 1 (the serial lane):
+
+- every case with an operator handoff (one human, one prompt at a time)
+- every case using log correlation (parallel actions interleave the dev log and
+  break offset slicing)
+
+The plan's **Lanes section** lists: lane → identity/identities → case IDs → why
+this lane is separate. The Readiness Gate gains one line: no identity and no
+mutable state appears in more than one lane.
+
 ## Case Format
 
 Each case is a table row in its area section:
@@ -119,6 +183,14 @@ Each case is a table row in its area section:
 - **Expected** — one observable result per line, every line **falsifiable** and tagged with its verification tier:
   - `[assert]` — machine-verifiable: visible text, `aria-*` value, `role`, HTTP status, JSON key/value, console error, network request URL/method/status, database row count or column value. **The default tier** — use it whenever a mechanical observable exists.
   - `[judge]` — a qualitative property the executing agent judges against an explicit criterion written in the line: `[judge] <property> — pass if <criterion>`. Use only when the property is inherently qualitative (the copy says the *right* thing, an error message is actionable). The criterion is fixed here, at plan time; a `[judge]` line without a written pass/fail criterion is not ready. "Looks right" is not a criterion.
+  - `[judge-visual]` — a visual property judged from a screenshot of the rendered
+    surface: `[judge-visual] <property> — pass if <criterion>`. The preceding step
+    must capture the screenshot (`screenshot specs/qa/evidence/<case>.png`). Use for
+    layout, emphasis, visual hierarchy, and "is this what the requirement asked
+    for" checks that no DOM assert can express. When a design reference exists
+    (Figma frame export, mockup), name it in the line — the judgment compares
+    screenshot against reference. Same rule as `[judge]`: no written pass/fail
+    criterion, not ready. "Matches the design" alone is not a criterion.
 
 Illustrative example (a generic settings toggle — derive real cases from the conversation):
 
@@ -167,6 +239,7 @@ Write the artifact only when **all** of these are true:
 - Every trap surfaced in Phase B is a `Guard:` on a specific step.
 - Shell helpers and identities are agreed and expressed as real commands for this project.
 - Every unavoidable human action is a named operator handoff, final step of its case.
+- No identity and no mutable state appears in more than one lane.
 - The developer has explicitly confirmed the scenario list.
 
 If any are false, keep the conversation going.

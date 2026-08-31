@@ -86,8 +86,8 @@ A complete development workflow built on a 5-phase agentic framework, with an op
 | [/generate-tasks](./dev-pipeline/skills/generate-tasks) | 3 | Emit verification-ready task specs as `TASKS-<N>-<slug>.md` (sibling file alongside ARCH), each with a verification mode (tdd, test-after, ui, or checklist). |
 | [/implement](./dev-pipeline/skills/implement) | 4 | Mode-routed implementation from `TASKS-<N>-<slug>.md` (with ARCH for context); tdd, test-after, ui, or checklist per task. Collaborative or autonomous, one commit per task. |
 | [/review](./dev-pipeline/skills/review) | 5 | Triage-first code review — up to 17 checks, pipeline or general mode. |
-| [/plan-qa](./dev-pipeline/skills/plan-qa) | parallel | Interview-driven QA planning — turns specs + diff into an executable QA spec (`QA-*.md`) with falsifiable expectations, guards, and operator handoffs. Runs in parallel with Phase 5. |
-| [/execute-qa](./dev-pipeline/skills/execute-qa) | parallel | Executes a QA spec as written — mechanical asserts plus evidence-backed judgment against the plan's criteria; writes `QA-RESULTS-*.md`. |
+| [/plan-qa](./dev-pipeline/skills/plan-qa) | parallel | Interview-driven QA planning — pipeline/general/bug entry modes, environment-portable plans, plan-time parallel lanes, falsifiable expectations (`[assert]`/`[judge]`/`[judge-visual]`), guards, and operator handoffs. Runs in parallel with Phase 5. |
+| [/execute-qa](./dev-pipeline/skills/execute-qa) | parallel | Executes a QA spec as written against any environment (`--env`/`--base`) — drives the bundled persistent Playwright daemon, runs lanes as parallel subagents, mechanical asserts plus evidence-backed judgment; writes `QA-RESULTS-*.md`. |
 | [/start-task](./dev-pipeline/skills/start-task) | pre-1 | One-shot branch bootstrap from a GitHub issue, Jira key, local spec, or ad-hoc brief — zero confirmation by default. |
 | [/commit](./dev-pipeline/skills/commit) | any | One-shot conventional commit — script-curated context, zero confirmation by default, `ask` mode for review/selective staging. |
 | [/sync-skills](./dev-pipeline/skills/sync-skills) | any | Copy this repo's skills into another harness's skills directory by name — resolves the harness alias via `scripts/sync-targets.json`, with a discovery fallback for unmapped aliases. |
@@ -140,6 +140,7 @@ dev-pipeline/
 │   │   └── artifact-template.md
 │   ├── execute-qa/
 │   │   ├── SKILL.md
+│   │   ├── qa-browser.mjs
 │   │   └── artifact-template.md
 │   ├── sync-skills/
 │   ├── commit/

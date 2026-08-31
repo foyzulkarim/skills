@@ -21,3 +21,8 @@ node_modules/
 
 # Tool caches
 .serena/
+
+# QA runtime artifacts (execute-qa / qa-browser)
+.env.qa.*
+.qa-state/
+.qa-shots/
