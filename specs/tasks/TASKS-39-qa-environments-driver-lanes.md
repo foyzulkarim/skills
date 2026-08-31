@@ -298,7 +298,7 @@ issue demands of the requirement-coverage check.
 
 ## Task T4: Housekeeping — scratch-file removal, version bump, docs sync
 
-> **Status:** not started
+> **Status:** done
 > **Verification:** checklist
 > **Effort:** s
 > **Priority:** medium
