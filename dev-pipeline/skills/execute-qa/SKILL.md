@@ -58,9 +58,14 @@ Like review (Phase 5), your deliverable is a verdict artifact: `specs/qa/QA-RESU
 
 ## Browser Driver
 
-All `[browser]` steps run through the persistent session CLI at
-`scripts/qa-browser.mjs` (requires `playwright` as a devDependency and
-`npx playwright install chromium` once).
+All `[browser]` steps run through the persistent session CLI bundled with this
+skill at `{base_directory}/qa-browser.mjs`. Playwright resolves from the
+**target** project's `node_modules`, so set the driver up once per target
+before the first run (the copy is what makes `scripts/qa-browser.mjs` below a
+real path):
+
+    cp {base_directory}/qa-browser.mjs scripts/qa-browser.mjs
+    npm i -D playwright && npx playwright install chromium
 
 **Run lifecycle:** start the daemon once before the first case, stop it after
 the last — never per case:
@@ -88,7 +93,7 @@ driver rejects unprefixed targets with a usage error):
 | Capture / assert network request | `network <filter>` / `expect-request POST /login 302` |
 | Screenshot | `screenshot specs/qa/evidence/<case>.png` (returned path is absolute) |
 | Mock/block/introspect a request | `route mock\|abort <pattern> ...` / `route list` / `route clear` |
-| Sign in as `<identity>` | `new-context <identity> <identity>` (loads saved state), else drive the login flow once then `save-state <identity>` |
+| Sign in as `<identity>` | `new-context <name> <identity>` (loads saved state; `<name>` is the identity in a serial run, the lane in a lane run), else drive the login flow once then `save-state <identity>` |
 | Check daemon liveness | `status` (contexts, URLs, pid, base, browser-connected) |
 | Anything else | `eval <js>` — last resort only; whitespace collapses, keep to one-liners |
 
@@ -111,15 +116,20 @@ Secrets reach the daemon only as `env:NAME` references resolved daemon-side.
   browser or reuse a context across identities.
 - **Lanes:** if the plan has one lane, execute exactly as above — no subagents,
   no `--ctx` needed. If it has N lanes, spawn one subagent per lane. Each lane's
-  FIRST browser command is `new-context <identity>` — contexts are created
-  explicitly, never implicitly; a `--ctx` naming a nonexistent context fails
-  loudly. Every later command a lane issues carries `--ctx <lane>` (e.g.
-  `goto /a --ctx lane2`), which routes to that lane's context without touching
-  the shared active pointer. Each context has its own cookies/storage AND its
-  own console-error and network buffers, so lanes cannot drain or read each
-  other's evidence. Each subagent records its own cases; the parent merges them
-  into QA-RESULTS in case-ID order, with a per-lane line in the run header.
-  Verdict rules are unchanged per case.
+  FIRST browser command is `new-context <lane>` — contexts are created
+  explicitly, never implicitly, and the context NAME is the lane name: every
+  later command a lane issues carries `--ctx <lane>` (e.g. `new-context lane2`
+  then `goto /a --ctx lane2`), which routes to that lane's context by exact
+  name — the driver matches `--ctx` against the `new-context` name — without
+  touching the shared active pointer. To load a saved identity into the lane's
+  context, create it as `new-context <lane> <identity>`; a lane that needs more
+  than one identity creates one context per identity
+  (`new-context <lane>-<identity> <identity>`) and addresses each with its own
+  `--ctx`. A `--ctx` naming a nonexistent context fails loudly. Each context has
+  its own cookies/storage AND its own console-error and network buffers, so
+  lanes cannot drain or read each other's evidence. Each subagent records its
+  own cases; the parent merges them into QA-RESULTS in case-ID order, with a
+  per-lane line in the run header. Verdict rules are unchanged per case.
 - Secrets pass only as `env:NAME` references resolved by the daemon — a literal
   credential in a command is a run error.
 - **Log correlation:** when a case asserts paired browser/terminal behavior,

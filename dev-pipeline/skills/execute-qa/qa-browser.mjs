@@ -2,9 +2,11 @@
 /**
  * qa-browser — persistent, headed Playwright session driven one command at a time.
  *
- * THREAT MODEL: the daemon binds 127.0.0.1 only — never expose it beyond loopback.
- * Any local process can drive the browser; that is fine on a dev box, surprising in
- * a container/CI with untrusted workloads.
+ * THREAT MODEL: the daemon binds 127.0.0.1 only and rejects browser-borne
+ * requests (any Origin/Referer header, non-loopback Host, or non-JSON
+ * content-type is refused) — never expose it beyond loopback. Any local
+ * process can still drive the browser; that is fine on a dev box, surprising
+ * in a container/CI with untrusted workloads.
  *
  * Guarantees:
  *  - Browser is VISIBLE (headed by default; --headless to opt out).
@@ -109,6 +111,14 @@ if (cmd !== "serve") {
     { host: "127.0.0.1", port, path: "/cmd", method: "POST", headers: { "content-type": "application/json" } },
     (res) => {
       let data = "";
+      // A daemon death mid-command must never look like success: without these
+      // handlers a cut connection prints nothing and exits 0.
+      const lostDaemon = () => {
+        console.log(JSON.stringify({ ok: false, error: "daemon closed connection mid-command" }));
+        process.exit(1);
+      };
+      res.on("error", lostDaemon);
+      res.on("close", () => { if (!res.complete) lostDaemon(); });
       res.on("data", (c) => (data += c));
       res.on("end", () => {
         console.log(data);
@@ -117,7 +127,7 @@ if (cmd !== "serve") {
     }
   );
   req.on("error", () => {
-    console.log(JSON.stringify({ ok: false, error: `daemon not running on :${port} — start with: node qa-browser.mjs serve --port ${port}` }));
+    console.log(JSON.stringify({ ok: false, error: `daemon not running or connection lost on :${port} — start with: node qa-browser.mjs serve --port ${port}` }));
     process.exit(1);
   });
   req.end(body);
@@ -140,7 +150,17 @@ if (cmd !== "serve") {
     process.exit(2);
   }
 
-  const { chromium, firefox, webkit } = await import("playwright");
+  let pw;
+  try {
+    pw = await import("playwright");
+  } catch {
+    console.error(JSON.stringify({
+      ok: false,
+      error: "playwright not found — copy this script into the target project, then: npm i -D playwright && npx playwright install chromium",
+    }));
+    process.exit(1);
+  }
+  const { chromium, firefox, webkit } = pw;
   const engine = { chromium, firefox, webkit }[values.browser] || chromium;
 
   const STATE_DIR = process.env.QA_STATE_DIR || ".qa-state";
@@ -266,8 +286,14 @@ if (cmd !== "serve") {
       return { ok: true, pressed: key };
     },
     async "assert-visible"([target], entry) {
-      const visible = await resolveTarget(entry.page, target).first().isVisible({ timeout: 10_000 }).catch(() => false);
-      return { ok: visible, target, visible };
+      // Wait up to 10s for visibility, then assert — isVisible() alone returns
+      // immediately (its timeout option is ignored) and false-fails async UI.
+      try {
+        await resolveTarget(entry.page, target).first().waitFor({ state: "visible", timeout: 10_000 });
+        return { ok: true, target, visible: true };
+      } catch {
+        return { ok: false, target, visible: false };
+      }
     },
     async "assert-aria"([target, attr, expected], entry) {
       const actual = await resolveTarget(entry.page, target).first().getAttribute(`aria-${attr.replace(/^aria-/, "")}`);
@@ -408,6 +434,22 @@ if (cmd !== "serve") {
         if (tooBig) return;
         const started = Date.now();
         let out, cmdName, entry = null, callerCwd = null;
+        // Loopback contract: the bundled Node client sends no Origin/Referer, a
+        // loopback Host, and content-type application/json. Anything else is a
+        // browser-borne cross-origin probe (no-cors text/plain POST from a page
+        // — loopback is mixed-content-exempt) or DNS rebinding — reject before
+        // parsing. Local processes remain allowed; that risk is documented.
+        const host = String(req.headers.host || "").toLowerCase();
+        const hostOk =
+          host === `127.0.0.1:${values.port}` ||
+          host === `localhost:${values.port}` ||
+          host === `[::1]:${values.port}`;
+        if (req.headers.origin || req.headers.referer || !hostOk || req.headers["content-type"] !== "application/json") {
+          res.statusCode = 403;
+          res.setHeader("content-type", "application/json");
+          res.end(JSON.stringify({ ok: false, error: "rejected: daemon accepts only its local client (loopback Host, no Origin/Referer, content-type application/json)" }));
+          return;
+        }
         try {
           const parsed = JSON.parse(body);
           cmdName = parsed.cmd;
@@ -432,8 +474,12 @@ if (cmd !== "serve") {
                 entry = contexts.get(ctxName);
               }
             } else {
-              if (!contexts.has(active)) await makeContext(active);
-              entry = contexts.get(active);
+              // Capture the name BEFORE the await: a concurrent new-context /
+              // use-context could otherwise rebind `active` mid-resolution and
+              // route this serial command onto a lane's context.
+              const name = active;
+              if (!contexts.has(name)) await makeContext(name);
+              entry = contexts.get(name);
             }
             if (!out) out = await withTimeout(handlers[cmdName](cmdArgs, entry, callerCwd), cmdName);
           } else {
@@ -464,7 +510,15 @@ if (cmd !== "serve") {
           out.elapsedMs = Date.now() - started;
         }
         res.setHeader("content-type", "application/json");
-        res.end(JSON.stringify(out));
+        // eval can return unserializable values (BigInt, circular) — a throw
+        // here, inside an async listener, would kill the daemon and all lanes.
+        let payload;
+        try {
+          payload = JSON.stringify(out);
+        } catch {
+          payload = JSON.stringify({ ok: false, cmd: cmdName ?? null, error: "response not serializable (eval result?)" });
+        }
+        res.end(payload);
       });
     })
     .listen(Number(values.port), "127.0.0.1", () =>
