@@ -140,6 +140,7 @@ dev-pipeline/
 │   │   └── artifact-template.md
 │   ├── execute-qa/
 │   │   ├── SKILL.md
+│   │   ├── qa-browser.mjs
 │   │   └── artifact-template.md
 │   ├── sync-skills/
 │   ├── commit/

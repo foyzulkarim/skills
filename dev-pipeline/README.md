@@ -148,6 +148,12 @@ The QA gate (`/plan-qa` → `/execute-qa`) attaches to any scenario whose change
 - Branch naming: `{type}/{task-number}/{slug}`
 - Both `REQ-*.md`/`ARCH-*.md` artifacts also carry a `> **Issue:** #N` metadata row in their header, so an artifact's owning issue is recoverable even if the filename alone is ambiguous.
 
+**What's new in 6.1.0:** `/plan-qa` and `/execute-qa` now support environment-portable QA plans
+(`--env <name>` loads `.env.qa.<name>`; `--base <url>` overrides), plan-time parallel **lanes**
+with isolated contexts, a **bug-mode** entry point for regression tests, and `[judge-visual]`
+assertions judged from screenshots. `/execute-qa` ships the bundled `qa-browser.mjs` Playwright
+driver so `[browser]` steps run through a persistent headed daemon. No migration is required.
+
 **What's new in 6.0.0:** `/plan-qa` and `/execute-qa` ship as an optional QA gate, independent
 of `/review` — the developer decides whether to run them sequentially or in parallel, and in
 what order. `sync-skills` is now plugin-shipped (was repo-local in 5.x). The plugin description

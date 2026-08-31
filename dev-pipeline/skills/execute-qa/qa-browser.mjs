@@ -87,7 +87,20 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { parseArgs } from "node:util";
 
-const PORT = Number(process.env.QA_BROWSER_PORT || 8787);
+function requireNumber(envName, fallback) {
+  const raw = process.env[envName];
+  const value = Number(raw === undefined ? fallback : raw);
+  if (!Number.isFinite(value) || value < 0 || Math.floor(value) !== value) {
+    console.error(JSON.stringify({
+      ok: false,
+      error: `${envName} must be a non-negative integer (got ${raw === undefined ? "<unset>" : `"${raw}"`})`,
+    }));
+    process.exit(2);
+  }
+  return value;
+}
+
+const PORT = requireNumber("QA_BROWSER_PORT", 8787);
 const MAX_BODY = 1_000_000;
 const [, , cmd, ...args] = process.argv;
 
@@ -119,7 +132,7 @@ if (cmd !== "serve") {
       };
       res.on("error", lostDaemon);
       res.on("close", () => { if (!res.complete) lostDaemon(); });
-      res.on("data", (c) => (data += c));
+      res.on("data", (chunk) => (data += chunk));
       res.on("end", () => {
         console.log(data);
         try { process.exit(JSON.parse(data).ok ? 0 : 1); } catch { process.exit(1); }
@@ -161,56 +174,129 @@ if (cmd !== "serve") {
     process.exit(1);
   }
   const { chromium, firefox, webkit } = pw;
-  const engine = { chromium, firefox, webkit }[values.browser] || chromium;
+  const engines = { chromium, firefox, webkit };
+  if (!engines[values.browser]) {
+    console.error(JSON.stringify({
+      ok: false,
+      error: `unknown --browser "${values.browser}" — use chromium, firefox, or webkit`,
+    }));
+    process.exit(2);
+  }
+  const engine = engines[values.browser];
 
   const STATE_DIR = process.env.QA_STATE_DIR || ".qa-state";
   const SHOT_DIR = process.env.QA_SHOT_DIR || ".qa-shots";
-  const NET_BUF = Number(process.env.QA_NET_BUF || 200);
-  const CMD_TIMEOUT_MS = Number(process.env.QA_CMD_TIMEOUT_MS || 30000);
+  const NET_BUF = requireNumber("QA_NET_BUF", 200);
+  const CMD_TIMEOUT_MS = requireNumber("QA_CMD_TIMEOUT_MS", 30000);
   const LOAD_STATES = ["load", "domcontentloaded", "networkidle"];
+
+  // Path helpers: reject traversal and absolute escapes so a compromised plan
+  // cannot read/write arbitrary files via screenshot/save-state/new-context.
+  function ensureInside(base, target) {
+    const realBase = path.resolve(base);
+    const realTarget = path.resolve(target);
+    const rel = path.relative(realBase, realTarget);
+    if (rel.startsWith("..") || path.isAbsolute(rel)) {
+      throw new Error(`path "${target}" escapes allowed directory "${base}"`);
+    }
+  }
+
+  function resolveShotPath(p, callerCwd) {
+    if (!p) throw new Error("screenshot <path>");
+    const abs = path.resolve(callerCwd || ".", p);
+    ensureInside(callerCwd || ".", abs);
+    return abs;
+  }
+
+  function resolveStatePath(name, callerCwd) {
+    if (!name || /[\\/]/.test(name) || name === ".." || name.startsWith(".")) {
+      throw new Error(`invalid state name "${name}"`);
+    }
+    const dir = path.isAbsolute(STATE_DIR) ? STATE_DIR : path.resolve(callerCwd || ".", STATE_DIR);
+    const p = path.join(dir, `${name}.json`);
+    ensureInside(dir, p);
+    return p;
+  }
 
   const browser = await engine.launch({ headless: values.headless }); // headed by default → visible
   const contexts = new Map();
+  const pendingContexts = new Map();
   let active = "default";
   let browserDead = false;
   let stopping = false;
-  browser.on("disconnected", () => { browserDead = true; });
+  browser.on("disconnected", () => {
+    browserDead = true;
+    console.error(JSON.stringify({ ok: false, error: "browser disconnected" }));
+    for (const entry of contexts.values()) {
+      try { entry.ctx.close().catch(() => {}); } catch { /* already gone */ }
+    }
+  });
 
   // Never leave an orphaned browser when the daemon is killed.
   for (const sig of ["SIGINT", "SIGTERM"]) {
-    process.on(sig, async () => {
-      try { await browser.close(); } catch { /* already gone */ }
-      process.exit(0);
+    process.on(sig, () => {
+      stopping = true;
+      browser.close().catch(() => { /* already gone */ }).finally(() => process.exit(0));
     });
   }
 
   function withTimeout(p, cmdName) {
-    return Promise.race([
-      p,
-      new Promise((_, rej) =>
-        setTimeout(() => rej(new Error(`${cmdName} timed out after ${CMD_TIMEOUT_MS}ms`)), CMD_TIMEOUT_MS)
-      ),
-    ]);
+    let timer;
+    const timeout = new Promise((_, rej) => {
+      timer = setTimeout(() => rej(new Error(`${cmdName} timed out after ${CMD_TIMEOUT_MS}ms`)), CMD_TIMEOUT_MS);
+    });
+    const watched = p.finally(() => clearTimeout(timer));
+    // Swallow late rejections of the watched promise once the race has been
+    // decided by the timeout — otherwise they become unhandled rejections.
+    watched.catch(() => {});
+    return Promise.race([watched, timeout]);
   }
 
-  async function makeContext(name, stateName) {
+  async function makeContext(name, stateName, callerCwd) {
     const opts = {};
     if (stateName) {
-      const p = path.join(STATE_DIR, `${stateName}.json`);
-      if (!fs.existsSync(p)) throw new Error(`no saved state "${stateName}" (${p})`);
+      const p = resolveStatePath(stateName, callerCwd);
+      if (!fs.existsSync(p)) throw new Error(`no saved state "${stateName}"`);
       opts.storageState = p;
     }
-    const ctx = await browser.newContext(opts);
-    const page = await ctx.newPage();
-    const entry = { ctx, page, consoleErrors: [], requests: [], routes: [] };
-    page.on("console", (m) => m.type() === "error" && entry.consoleErrors.push(m.text()));
-    page.on("pageerror", (e) => entry.consoleErrors.push(`pageerror: ${e.message}`));
-    page.on("response", (r) => {
-      entry.requests.push({ method: r.request().method(), url: r.url(), status: r.status() });
-      if (entry.requests.length > NET_BUF) entry.requests.shift();
-    });
-    contexts.set(name, entry);
-    return entry;
+    let ctx;
+    try {
+      ctx = await browser.newContext(opts);
+      const page = await ctx.newPage();
+      const entry = { ctx, page, consoleErrors: [], requests: [], routes: [] };
+      page.on("console", (m) => {
+        if (m.type() !== "error") return;
+        entry.consoleErrors.push(m.text());
+        if (entry.consoleErrors.length > NET_BUF) entry.consoleErrors.shift();
+      });
+      page.on("pageerror", (e) => {
+        entry.consoleErrors.push(`pageerror: ${e.message}`);
+        if (entry.consoleErrors.length > NET_BUF) entry.consoleErrors.shift();
+      });
+      page.on("response", (r) => {
+        entry.requests.push({ method: r.request().method(), url: r.url(), status: r.status() });
+        if (entry.requests.length > NET_BUF) entry.requests.shift();
+      });
+      contexts.set(name, entry);
+      return entry;
+    } catch (e) {
+      if (ctx) try { ctx.close().catch(() => {}); } catch { /* ignore */ }
+      throw e;
+    }
+  }
+
+  // Serialize context creation per name so concurrent serial commands (or lanes
+  // that accidentally omit --ctx) cannot create duplicate contexts for the same
+  // name and orphan the first one.
+  async function getOrCreateContext(name, callerCwd) {
+    const existing = contexts.get(name);
+    if (existing) return existing;
+    let pending = pendingContexts.get(name);
+    if (!pending) {
+      pending = makeContext(name, null, callerCwd).finally(() => pendingContexts.delete(name));
+      pendingContexts.set(name, pending);
+    }
+    return pending;
   }
 
   function resolveUrl(u) {
@@ -248,15 +334,18 @@ if (cmd !== "serve") {
   // Handlers receive the request's resolved context entry (null for commands
   // that need no page: status, stop, new-context) and the caller's cwd.
   const handlers = {
-    async goto(a, entry) {
+    async goto(args, entry) {
+      const a = [...args];
       let until = "networkidle";
       const ui = a.indexOf("--until");
       if (ui !== -1) { until = a[ui + 1]; a.splice(ui, 2); }
       if (!LOAD_STATES.includes(until)) return { ok: false, error: `--until must be ${LOAD_STATES.join("|")}` };
+      if (!a[0]) return { ok: false, error: "usage: goto <url> [--until load|domcontentloaded|networkidle]" };
       const res = await entry.page.goto(resolveUrl(a[0]), { waitUntil: until });
       return { ok: true, url: entry.page.url(), status: res?.status() ?? null };
     },
-    async "wait-for"(a, entry) {
+    async "wait-for"(args, entry) {
+      const a = [...args];
       const ui = a.indexOf("--until");
       if (ui !== -1) {
         const state = a[ui + 1];
@@ -264,6 +353,7 @@ if (cmd !== "serve") {
         await entry.page.waitForLoadState(state, { timeout: 10_000 });
         return { ok: true, waited: state };
       }
+      if (!a[0]) return { ok: false, error: "usage: wait-for <target> | --until <load-state>" };
       await resolveTarget(entry.page, a[0]).first().waitFor({ state: "visible", timeout: 10_000 });
       return { ok: true, visible: a[0] };
     },
@@ -315,12 +405,12 @@ if (cmd !== "serve") {
       return { ok: true, target, count: await resolveTarget(entry.page, target).count() };
     },
     async "expect-request"([method, pattern, status], entry) {
-      const m = (method || "").toUpperCase();
+      const reqMethod = (method || "").toUpperCase();
       const hit = entry.requests.find(
-        (r) => r.method === m && r.url.includes(pattern || "") && (!status || r.status === Number(status))
+        (r) => r.method === reqMethod && r.url.includes(pattern || "") && (!status || r.status === Number(status))
       );
       if (hit) return { ok: true, request: hit };
-      return { ok: false, error: `no ${m} ${pattern}${status ? ` → ${status}` : ""} captured`, recent: entry.requests.slice(-10) };
+      return { ok: false, error: `no ${reqMethod} ${pattern}${status ? ` → ${status}` : ""} captured`, recent: entry.requests.slice(-10) };
     },
     async "console-errors"(_args, entry) {
       const errs = entry.consoleErrors.splice(0);
@@ -331,7 +421,7 @@ if (cmd !== "serve") {
       return { ok: true, requests: list.slice(-30), count: list.length };
     },
     async screenshot([p], entry, callerCwd) {
-      const abs = path.resolve(callerCwd || ".", p);
+      const abs = resolveShotPath(p, callerCwd);
       fs.mkdirSync(path.dirname(abs), { recursive: true });
       await entry.page.screenshot({ path: abs, fullPage: true });
       return { ok: true, path: abs };
@@ -340,13 +430,13 @@ if (cmd !== "serve") {
       const result = await entry.page.evaluate(a.join(" "));
       return { ok: true, result };
     },
-    async "new-context"([name = "default", stateName]) {
+    async "new-context"([name = "default", stateName], _entry, callerCwd) {
       const old = contexts.get(name);
       if (old) {
         try { await old.ctx.close(); } catch { /* already closed */ }
         contexts.delete(name);
       }
-      await makeContext(name, stateName);
+      await makeContext(name, stateName, callerCwd);
       active = name;
       return { ok: true, context: name, state: stateName ?? null };
     },
@@ -357,9 +447,8 @@ if (cmd !== "serve") {
     },
     async "save-state"([name], entry, callerCwd) {
       if (!name) return { ok: false, error: "save-state <name>" };
-      const dir = path.isAbsolute(STATE_DIR) ? STATE_DIR : path.resolve(callerCwd || ".", STATE_DIR);
-      fs.mkdirSync(dir, { recursive: true });
-      const p = path.join(dir, `${name}.json`);
+      const p = resolveStatePath(name, callerCwd);
+      fs.mkdirSync(path.dirname(p), { recursive: true });
       await entry.ctx.storageState({ path: p });
       return { ok: true, saved: p };
     },
@@ -476,16 +565,18 @@ if (cmd !== "serve") {
             } else {
               // Capture the name BEFORE the await: a concurrent new-context /
               // use-context could otherwise rebind `active` mid-resolution and
-              // route this serial command onto a lane's context.
+              // route this serial command onto a lane's context. getOrCreateContext
+              // serializes creation per name so two concurrent serial commands
+              // cannot create duplicate contexts for the same active name.
               const name = active;
-              if (!contexts.has(name)) await makeContext(name);
-              entry = contexts.get(name);
+              entry = await getOrCreateContext(name, callerCwd);
             }
             if (!out) out = await withTimeout(handlers[cmdName](cmdArgs, entry, callerCwd), cmdName);
           } else {
             out = await withTimeout(handlers[cmdName](cmdArgs, null, callerCwd), cmdName);
           }
         } catch (e) {
+          console.error(e.stack || e.message);
           out = { ok: false, error: e.message };
           if (/timed out after \d+ms$/.test(e.message)) out.timedOut = true;
         }
@@ -498,10 +589,14 @@ if (cmd !== "serve") {
             fs.mkdirSync(dir, { recursive: true });
             const p = path.join(dir, `fail-${Date.now()}-${cmdName}.png`);
             // short guard: the page may be stuck in the navigation that just failed
-            await Promise.race([
-              entry.page.screenshot({ path: p, fullPage: true }),
-              new Promise((_, rej) => setTimeout(() => rej(new Error("auto-shot timeout")), 5_000)),
-            ]);
+            let shotTimer;
+            const shotPromise = entry.page.screenshot({ path: p, fullPage: true });
+            const watchedShot = shotPromise.finally(() => clearTimeout(shotTimer));
+            const shotTimeout = new Promise((_, rej) => {
+              shotTimer = setTimeout(() => rej(new Error("auto-shot timeout")), 5_000);
+            });
+            watchedShot.catch(() => {});
+            await Promise.race([watchedShot, shotTimeout]);
             out.screenshot = p;
           } catch { /* page may be gone; ignore */ }
         }
@@ -520,6 +615,10 @@ if (cmd !== "serve") {
         }
         res.end(payload);
       });
+    })
+    .on("error", (e) => {
+      console.error(JSON.stringify({ ok: false, error: `server error: ${e.message}` }));
+      process.exit(1);
     })
     .listen(Number(values.port), "127.0.0.1", () =>
       console.log(JSON.stringify({ ok: true, serving: Number(values.port), headed: !values.headless, base: values.base || null }))
