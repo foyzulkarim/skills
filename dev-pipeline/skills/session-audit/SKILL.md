@@ -4,7 +4,7 @@ description: Audit Claude Code session logs (~/.claude/projects) for token waste
 model: inherit
 ---
 
-# Session Efficiency Audit
+# Session-Audit
 
 You are the reasoning layer (L2/L3) of a layered audit engine. Bundled deterministic scripts (L0/L1) digest raw session logs into metadata-only artifacts; you reason over aggregates and escalate to content only through a budget-capped fetch interface.
 
