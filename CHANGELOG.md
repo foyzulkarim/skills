@@ -1,5 +1,13 @@
 # Changelog
 
+## v6.2.1 — 2026-09-04
+
+### Maintenance
+
+- `session-audit` SKILL.md H1 renamed `# Session Efficiency Audit` → `# Session-Audit` to
+  match the directory-name convention used by other skills (`Session-Stats`, `Sync-Skills`,
+  `Finish-Worktree`, …).
+
 ## v6.2.0 — 2026-09-04
 
 ### Features
@@ -13,6 +21,14 @@
 - **`sync-skills`** (`#38`) — promoted from repo-local to plugin-shipped. The
   `--to <harness>` alias resolves harness names (oh-my-pi, opencode, …) to skills
   directories via `scripts/sync-targets.json`; `list-targets` prints the resolved map.
+- **`session-audit`** — token-waste audit for Claude Code session logs. A 4-phase pipeline
+  (digest → landscape → hypothesis → attribution) over `~/.claude/projects/**`, with
+  intermediates in an ephemeral workdir and the dated report archived to
+  `~/.claude/audit-reports/`. Layered: bundled `bin/audit.js` owns the L0/L1 deterministic
+  pass; the LLM reasons over aggregates and escalates to content only through a budget-
+  capped `fetch` (~10 calls per audit, ≤2KB each). Reports rank findings by `habit` /
+  `skill_file` / `config` attribution, with concrete fixes and target metrics so the next
+  run is falsifiable. Requires Node.js for the bundled scripts.
 
 ### Maintenance
 
