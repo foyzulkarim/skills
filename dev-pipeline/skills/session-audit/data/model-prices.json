@@ -1,0 +1,72 @@
+{
+  "description": "Anthropic model prices and cache cost multipliers used by the session-efficiency auditor. Data only: no code lives here, and nothing in this file is derived at runtime.",
+  "unit": "USD per million tokens",
+  "source": "Anthropic first-party API list prices (platform.claude.com/docs/en/pricing)",
+  "updated": "2026-08-21",
+  "consumers": {
+    "src/pricing.js": "models -> per-session USD conversion of estWasteTokens",
+    "src/rules.js": "cacheMultipliers -> the PRICE constant behind the waste model"
+  },
+
+  "models": {
+    "claude-fable-5": { "input": 10, "output": 50 },
+    "claude-mythos-5": { "input": 10, "output": 50 },
+    "claude-opus-5": { "input": 5, "output": 25 },
+    "claude-opus-4-8": { "input": 5, "output": 25 },
+    "claude-opus-4-7": { "input": 5, "output": 25 },
+    "claude-opus-4-6": { "input": 5, "output": 25 },
+    "claude-sonnet-5": {
+      "input": 3,
+      "output": 15,
+      "intro": { "input": 2, "output": 10, "until": "2026-08-31" }
+    },
+    "claude-sonnet-4-6": { "input": 3, "output": 15 },
+    "claude-haiku-4-5": { "input": 1, "output": 5 }
+  },
+
+  "cacheMultipliers": {
+    "description": "Relative cost per input token. A cached prefix read costs 0.1x; a prefix that must be rewritten costs 1.25x. The gap between them is what every cache-waste rule prices.",
+    "input": 1,
+    "read": 0.1,
+    "write": 1.25,
+    "write1h": 2
+  },
+
+  "pseudoModels": {
+    "description": "Model-id slots in the session log that are not models. Claude Code stamps these on assistant entries it generated locally (interrupt notices, API-error replies): no API call, zero tokens in every usage field. Excluded from rate blending entirely — counting them as unpriced would put a spurious disclosure on every report, and counting them as $0 would drag a session's blended rate down.",
+    "ids": ["<synthetic>"]
+  },
+
+  "reference": {
+    "description": "Documented for humans, deliberately not read by any code. Adding a consumer for anything here means moving it into a section above.",
+
+    "fastMode": {
+      "note": "Claude Opus 5 / Opus 4.8 with speed=fast are billed at a premium. Session logs record the model id but not the speed parameter, so a fast-mode turn is indistinguishable from a standard one and is priced at the standard rate. Dollar figures are therefore a floor on any workload that used fast mode.",
+      "claude-opus-5": { "input": 10, "output": 50 }
+    },
+
+    "unpricedModels": {
+      "note": "Legacy ids that may appear in older session logs and have no published rate in the current reference. They are NOT given a fallback rate: a session on one of these contributes tokens to the headline and nothing to the dollar figure, and the omission surfaces as manifest.pricing.pricedWasteShare. A visible gap is a smaller error than a plausible wrong dollar. To price one, move it into `models` with a sourced rate.",
+      "ids": [
+        "claude-opus-4-5",
+        "claude-opus-4-1",
+        "claude-opus-4-0",
+        "claude-sonnet-4-5",
+        "claude-sonnet-4-0",
+        "claude-3-7-sonnet",
+        "claude-3-5-sonnet",
+        "claude-3-5-haiku",
+        "claude-3-opus",
+        "claude-3-haiku"
+      ]
+    },
+
+    "idNormalization": {
+      "note": "Session logs carry deployment ids, not the bare model id. Two suffixes are stripped before lookup, so only base ids belong in `models`.",
+      "examples": {
+        "claude-opus-5[1m]": "claude-opus-5",
+        "claude-haiku-4-5-20251001": "claude-haiku-4-5"
+      }
+    }
+  }
+}
