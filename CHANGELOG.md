@@ -1,5 +1,25 @@
 # Changelog
 
+## v6.2.0 — 2026-09-04
+
+### Features
+
+- **QA lane/coverage upgrades (`#40`)** — `/plan-qa` and `/execute-qa` now support
+  environment-portable QA plans (`--env <name>` loads `.env.qa.<name>`; `--base <url>`
+  overrides), plan-time parallel **lanes** with isolated contexts, a **bug-mode** entry
+  point for regression tests, and `[judge-visual]` assertions judged from screenshots.
+  `/execute-qa` ships the bundled `qa-browser.mjs` Playwright driver so `[browser]` steps
+  run through a persistent headed daemon.
+- **`sync-skills`** (`#38`) — promoted from repo-local to plugin-shipped. The
+  `--to <harness>` alias resolves harness names (oh-my-pi, opencode, …) to skills
+  directories via `scripts/sync-targets.json`; `list-targets` prints the resolved map.
+
+### Maintenance
+
+- Issue #39 specs artifacts retired to the GitHub wiki (`/archive-issue`).
+- README `Contribute` section renamed to a `test-locally` framing; external-contribution
+  steps dropped.
+
 ## v6.0.0 — 2026-08-23
 
 ### Features

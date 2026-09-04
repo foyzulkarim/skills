@@ -148,6 +148,12 @@ The QA gate (`/plan-qa` → `/execute-qa`) attaches to any scenario whose change
 - Branch naming: `{type}/{task-number}/{slug}`
 - Both `REQ-*.md`/`ARCH-*.md` artifacts also carry a `> **Issue:** #N` metadata row in their header, so an artifact's owning issue is recoverable even if the filename alone is ambiguous.
 
+**What's new in 6.2.0:** new `/session-audit` skill that audits Claude Code session logs
+(`~/.claude/projects`) for token waste and produces a ranked, attributed efficiency report —
+habit / skill_file / config — with full session ids for every claim so findings stay
+verifiable. Reports land at `~/.claude/audit-reports/<YYYY-MM-DDTHHMMSSZ>.md`. No migration
+required.
+
 **What's new in 6.1.0:** `/plan-qa` and `/execute-qa` now support environment-portable QA plans
 (`--env <name>` loads `.env.qa.<name>`; `--base <url>` overrides), plan-time parallel **lanes**
 with isolated contexts, a **bug-mode** entry point for regression tests, and `[judge-visual]`
