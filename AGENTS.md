@@ -5,7 +5,7 @@ A Claude Code plugin marketplace with one plugin, `dev-pipeline` (a structured s
 ## Repo nature
 
 - **No build system, test runner, or compiled code.** The repo is pure markdown instructions (`SKILL.md`) plus portable bash helper scripts. No `package.json`, `pyproject.toml`, or `Cargo.toml` exists.
-- **Bash** helpers require only standard utilities: `git`, `jq`, `find`, `grep`, `awk`, `sed`. **Node.js** is needed *only* when running the `setup-cost-tracking` skill (its statusline scripts are JS).
+- **Bash** helpers require only standard utilities: `git`, `jq`, `find`, `grep`, `awk`, `sed`. **Node.js** is needed by two skills: `setup-cost-tracking` (its statusline scripts are JS) and `session-audit` (its `bin/audit.js` is the L0/L1 runner for the audit pipeline).
 - All docs and comments are in English.
 
 ## Developer commands
@@ -78,6 +78,10 @@ patch release behind, which is exactly the failure the "two places" rule exists 
 ## Commit convention
 
 Conventional Commits: `feat:` (new skill/capability), `fix:`, `docs:`, `refactor:`, `chore:` (tooling/config), `test:` (script tests). The `commit` skill's `commit.sh` automatically excludes sensitive files (`.env`, `secret`, `credential`, `token`, `api-key`, `private-key`, `password`) from staging and never `--force`-pushes.
+
+## Working agreement (user-set)
+
+- Never modify files unless the user explicitly commands it. Analysis/report requests end at the report; an auto-approved plan is NOT permission to execute — wait for an explicit "fix", "apply", "do it", etc.
 
 ## Useful existing instruction files
 
